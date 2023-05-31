@@ -1,0 +1,58 @@
+package com.uroria.backend.common;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+
+public final class BackendParty implements Serializable {
+    @Serial private static final long serialVersionUID = 1;
+    private final UUID operator;
+    private final Collection<UUID> members;
+    private int currentServer;
+    public BackendParty(UUID operator, int currentServer) {
+        this.operator = operator;
+        this.members = new ArrayList<>();
+        this.currentServer = currentServer;
+        this.members.add(operator);
+    }
+
+    public void addMember(UUID uuid) {
+        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+        this.members.add(uuid);
+    }
+
+    public void removeMember(UUID uuid) {
+        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+        if (uuid.equals(this.operator)) {
+            this.members.clear();
+            return;
+        }
+        this.members.remove(uuid);
+    }
+
+    public void setCurrentServer(int currentServer) {
+        this.currentServer = currentServer;
+    }
+
+    public int getCurrentServer() {
+        return currentServer;
+    }
+
+    public void delete() {
+        this.members.clear();
+    }
+
+    public boolean isDeleted() {
+        return this.members.isEmpty();
+    }
+
+    public UUID getOperator() {
+        return operator;
+    }
+
+    public Collection<UUID> getMembers() {
+        return new ArrayList<>(this.members);
+    }
+}
