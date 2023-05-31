@@ -15,6 +15,8 @@ import org.slf4j.Logger;
         name = "Backend"
 )
 public final class BackendVelocityPlugin {
+    private static final Json CONFIG = new Json("backend.json", "./", BackendVelocityPlugin.class.getClassLoader().getResourceAsStream("backend.json"), ReloadSettings.MANUALLY);;
+
     private final Logger logger;
     private final ProxyServer proxyServer;
     private final BackendAPI backendAPI;
@@ -22,10 +24,9 @@ public final class BackendVelocityPlugin {
     public BackendVelocityPlugin(Logger logger, ProxyServer proxyServer) {
         this.logger = logger;
         this.proxyServer = proxyServer;
-        Json config = new Json("backend.json", "./", getClass().getClassLoader().getResourceAsStream("backend.json"), ReloadSettings.MANUALLY);
         BackendAPI backendAPI;
         try {
-            backendAPI = new BackendAPI(config.getString("pulsar.url"), config.getOrSetDefault("sentry.enabled", false), this.logger, this.proxyServer);
+            backendAPI = new BackendAPI(CONFIG.getString("pulsar.url"), CONFIG.getOrSetDefault("sentry.enabled", false), this.logger, this.proxyServer);
         } catch (Exception exception) {
             this.logger.error("Cannot connect to backend! Exiting...", exception);
             this.backendAPI = null;
@@ -42,5 +43,9 @@ public final class BackendVelocityPlugin {
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent proxyShutdownEvent) {
         this.backendAPI.shutdown();
+    }
+
+    static Json getConfig() {
+        return CONFIG;
     }
 }

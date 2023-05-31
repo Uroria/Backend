@@ -3,6 +3,7 @@ package com.uroria.backend.velocity;
 import com.uroria.backend.AbstractBackendAPI;
 import com.uroria.backend.PermissionManager;
 import com.uroria.backend.PlayerManager;
+import com.uroria.backend.StatsManager;
 import com.velocitypowered.api.proxy.ProxyServer;
 import io.sentry.Sentry;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ public final class BackendAPI extends AbstractBackendAPI {
     private final ProxyServer proxyServer;
     private final PlayerManagerImpl playerManager;
     private final PermissionManagerImpl permissionManager;
+    private final StatsManagerImpl statsManager;
     BackendAPI(String pulsarURL, boolean sentry, Logger logger, ProxyServer proxyServer) {
         super(pulsarURL);
         instance = this;
@@ -24,6 +26,7 @@ public final class BackendAPI extends AbstractBackendAPI {
         this.proxyServer = proxyServer;
         this.playerManager = new PlayerManagerImpl(this.pulsarClient, this.logger, proxyServer);
         this.permissionManager = new PermissionManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
+        this.statsManager = new StatsManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
     }
 
     @Override
@@ -72,6 +75,10 @@ public final class BackendAPI extends AbstractBackendAPI {
 
     public PermissionManager getPermissionManager() {
         return this.permissionManager;
+    }
+
+    public StatsManager getStatsManager() {
+        return this.statsManager;
     }
 
     public static BackendAPI getAPI() {

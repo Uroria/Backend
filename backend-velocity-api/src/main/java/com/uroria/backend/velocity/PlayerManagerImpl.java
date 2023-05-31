@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 public final class PlayerManagerImpl extends PlayerManager {
     private final ProxyServer proxyServer;
+    private final int keepAlive = BackendVelocityPlugin.getConfig().getOrSetDefault("cacheKeepAliveInMinutes.player", 10);
+
     PlayerManagerImpl(PulsarClient pulsarClient, Logger logger, ProxyServer proxyServer) {
         super(pulsarClient, logger);
         this.proxyServer = proxyServer;
@@ -58,7 +60,7 @@ public final class PlayerManagerImpl extends PlayerManager {
                 if (this.proxyServer.getPlayer(player.getUUID()).isEmpty()) markedForRemoval.add(player.getUUID());
             }
             return markedForRemoval;
-        }, 20, TimeUnit.MINUTES).run(markedForRemoval -> {
+        }, keepAlive, TimeUnit.MINUTES).run(markedForRemoval -> {
             for (UUID uuid : markedForRemoval) {
                 this.players.removeIf(player -> player.getUUID().equals(uuid));
             }

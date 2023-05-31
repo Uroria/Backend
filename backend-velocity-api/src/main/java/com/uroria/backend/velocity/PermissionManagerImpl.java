@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 
 public final class PermissionManagerImpl extends PermissionManager {
     private final ProxyServer proxyServer;
+    private final int keepAlive = BackendVelocityPlugin.getConfig().getOrSetDefault("cacheKeepAliveInMinutes.permission_holder", 10);
+
     PermissionManagerImpl(PulsarClient pulsarClient, Logger logger, ProxyServer proxyServer) {
         super(pulsarClient, logger);
         this.proxyServer = proxyServer;
@@ -58,7 +60,7 @@ public final class PermissionManagerImpl extends PermissionManager {
                 if (this.proxyServer.getPlayer(holder.getUUID()).isEmpty()) markedForRemoval.add(holder.getUUID());
             }
             return markedForRemoval;
-        }, 20, TimeUnit.MINUTES).run(markedForRemoval -> {
+        }, keepAlive, TimeUnit.MINUTES).run(markedForRemoval -> {
             for (UUID uuid : markedForRemoval) {
                 this.holders.removeIf(holder -> holder.getUUID().equals(uuid));
             }
