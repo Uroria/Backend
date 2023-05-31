@@ -15,6 +15,6 @@ tasks {
 }
 
 dependencies {
-    compileOnly(project(":backend-common"))
+    api(project(":backend-common"))
 }
 

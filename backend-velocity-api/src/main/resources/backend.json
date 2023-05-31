@@ -1,0 +1,9 @@
+{
+  "pulsar": {
+    "url": ""
+  },
+  "sentry": {
+    "enabled": false,
+    "dsn": ""
+  }
+}

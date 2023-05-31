@@ -211,7 +211,7 @@ public final class Uroria implements Server {
     public static void captureException(Throwable throwable) {
         if (!sentry) return;
         Sentry.captureException(throwable, scope -> {
-            scope.setTag("Module", "Backend");
+            scope.setTag("Service", "Backend");
 
             Thread thread = Thread.currentThread();
             scope.setContexts("Thread.Name", thread.getName());

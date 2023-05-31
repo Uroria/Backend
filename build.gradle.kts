@@ -52,7 +52,8 @@ subprojects {
 
         api("org.slf4j:slf4j-api:$slf4jVersion")
 
-        implementation("com.github.simplix-softworks:simplixstorage:${simplixStorageVersion}")
+        api("com.github.simplix-softworks:simplixstorage:${simplixStorageVersion}")
+
         implementation("net.kyori:adventure-api:${adventureVersion}")
         implementation("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
         implementation("net.kyori:adventure-text-minimessage:${adventureVersion}")
@@ -72,7 +73,7 @@ subprojects {
 
         shadowJar {
             transform(Log4j2PluginsCacheFileTransformer::class.java)
-
+            relocate("de.leonhard.storage", "com.uroria.storage")
         }
     }
 }

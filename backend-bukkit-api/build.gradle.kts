@@ -15,6 +15,6 @@ tasks {
 }
 
 dependencies {
-    implementation(project(":backend-api"))
+    api(project(":backend-api"))
 }
 

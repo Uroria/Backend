@@ -91,4 +91,13 @@ public final class BackendPlayer extends PropertyHolder implements Serializable 
     public void removeCrewMember(UUID uuid) {
         this.crew.remove(uuid);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (obj instanceof BackendPlayer player) {
+            return player.getUUID().equals(this.uuid);
+        }
+        return false;
+    }
 }
