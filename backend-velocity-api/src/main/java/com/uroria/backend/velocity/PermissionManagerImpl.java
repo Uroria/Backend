@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity;
 
-import com.uroria.backend.PermissionManager;
+import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.common.PermissionGroup;
 import com.uroria.backend.common.PermissionHolder;
 import com.uroria.backend.scheduler.BackendScheduler;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class PermissionManagerImpl extends PermissionManager {
     private final ProxyServer proxyServer;
-    private final int keepAlive = BackendVelocityPlugin.getConfig().getOrSetDefault("cacheKeepAliveInMinutes.permission_holder", 10);
+    private final int keepAlive = BackendVelocityPlugin.getConfig().getOrSetDefault("cacheKeepAliveInMinutes.permission_holder", 30);
 
     PermissionManagerImpl(PulsarClient pulsarClient, Logger logger, ProxyServer proxyServer) {
         super(pulsarClient, logger);
@@ -35,22 +35,24 @@ public final class PermissionManagerImpl extends PermissionManager {
 
     @Override
     public Optional<PermissionHolder> getPermissionHolder(UUID uuid) {
+        if (uuid == null) throw new NullPointerException("UUID cannot be null");
         return Optional.empty();
     }
 
     @Override
     public Optional<PermissionGroup> getPermissionGroup(String name) {
+        if (name == null) throw new NullPointerException("Name cannot be null");
         return Optional.empty();
     }
 
     @Override
     public void updatePermissionHolder(PermissionHolder permissionHolder) {
-
+        if (permissionHolder == null) throw new NullPointerException("PermissionHolder cannot be null");
     }
 
     @Override
     public void updatePermissionGroup(PermissionGroup permissionGroup) {
-
+        if (permissionGroup == null) throw new NullPointerException("PermissionGroup cannot be null");
     }
 
     private void runCacheChecker() {

@@ -1,5 +1,6 @@
-package com.uroria.backend;
+package com.uroria.backend.stats;
 
+import com.uroria.backend.AbstractManager;
 import com.uroria.backend.common.BackendStat;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;

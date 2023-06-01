@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity;
 
-import com.uroria.backend.StatsManager;
+import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.common.BackendStat;
 import com.uroria.backend.scheduler.BackendScheduler;
 import com.velocitypowered.api.proxy.ProxyServer;

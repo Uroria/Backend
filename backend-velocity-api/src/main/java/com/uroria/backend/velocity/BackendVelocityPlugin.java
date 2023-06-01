@@ -1,6 +1,8 @@
 package com.uroria.backend.velocity;
 
 import com.google.inject.Inject;
+import com.uroria.backend.velocity.listeners.PlayerLogin;
+import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -38,11 +40,14 @@ public final class BackendVelocityPlugin {
     @Subscribe
     public void onProxyInitializeEvent(ProxyInitializeEvent proxyInitializeEvent) {
         this.backendAPI.start();
+        EventManager eventManager = this.proxyServer.getEventManager();
+        eventManager.register(this, new PlayerLogin(this.backendAPI.getPlayerManager()));
     }
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent proxyShutdownEvent) {
         this.backendAPI.shutdown();
+        this.proxyServer.getEventManager().unregisterListeners(this);
     }
 
     static Json getConfig() {
