@@ -34,13 +34,13 @@ public final class PermissionManagerImpl extends PermissionManager {
     }
 
     @Override
-    public Optional<PermissionHolder> getPermissionHolder(UUID uuid) {
+    public Optional<PermissionHolder> getPermissionHolder(UUID uuid, int timeout) {
         if (uuid == null) throw new NullPointerException("UUID cannot be null");
         return Optional.empty();
     }
 
     @Override
-    public Optional<PermissionGroup> getPermissionGroup(String name) {
+    public Optional<PermissionGroup> getPermissionGroup(String name, int timeout) {
         if (name == null) throw new NullPointerException("Name cannot be null");
         return Optional.empty();
     }
