@@ -3,6 +3,7 @@ package com.uroria.backend.bukkit;
 import com.uroria.backend.bukkit.events.ServerStartEvent;
 import com.uroria.backend.bukkit.events.ServerUpdateEvent;
 import com.uroria.backend.common.BackendServer;
+import com.uroria.backend.server.BackendAllServersRequest;
 import com.uroria.backend.server.BackendServerRequest;
 import com.uroria.backend.server.BackendServerStart;
 import com.uroria.backend.server.BackendServerUpdate;
@@ -10,12 +11,16 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 public final class ServerManagerImpl extends BukkitServerManager {
     private BackendServerRequest request;
     private BackendServerUpdate update;
     private BackendServerStart start;
+    private BackendAllServersRequest requestAll;
+
     public ServerManagerImpl(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
     }
@@ -26,6 +31,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
             this.request = new BackendServerRequest(this.pulsarClient, identifier);
             this.update = new BackendServerUpdate(this.pulsarClient, identifier, this::checkServer);
             this.start = new BackendServerStart(this.pulsarClient, identifier);
+            this.requestAll = new BackendAllServersRequest(this.pulsarClient, identifier);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
             BackendAPI.captureException(exception);
@@ -38,6 +44,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
             if (this.request != null) this.request.close();
             if (this.update != null) this.update.close();
             if (this.start != null) this.start.close();
+            if (this.requestAll != null) this.requestAll.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
             BackendAPI.captureException(exception);
@@ -64,6 +71,12 @@ public final class ServerManagerImpl extends BukkitServerManager {
         }
 
         return this.request.request(id);
+    }
+
+    @Override
+    public List<Integer> getAllServers(int timeout) {
+        int randomInt = new Random().nextInt();
+        return this.requestAll.request(randomInt).orElseThrow(() -> new RuntimeException("Cannot get list"));
     }
 
     @Override

@@ -1,23 +1,23 @@
 package com.uroria.backend.velocity;
 
 import com.uroria.backend.common.BackendServer;
-import com.uroria.backend.server.BackendServerRequest;
-import com.uroria.backend.server.BackendServerStart;
-import com.uroria.backend.server.BackendServerUpdate;
-import com.uroria.backend.server.ServerManager;
+import com.uroria.backend.server.*;
 import com.uroria.backend.velocity.events.ServerStartEvent;
 import com.uroria.backend.velocity.events.ServerUpdateEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 public final class ServerManagerImpl extends ServerManager {
     private final ProxyServer proxyServer;
     private BackendServerRequest request;
     private BackendServerUpdate update;
     private BackendServerStart start;
+    private BackendAllServersRequest requestAll;
     public ServerManagerImpl(PulsarClient pulsarClient, Logger logger, ProxyServer proxyServer) {
         super(pulsarClient, logger);
         this.proxyServer = proxyServer;
@@ -29,6 +29,7 @@ public final class ServerManagerImpl extends ServerManager {
             this.request = new BackendServerRequest(this.pulsarClient, identifier);
             this.update = new BackendServerUpdate(this.pulsarClient, identifier, this::checkServer);
             this.start = new BackendServerStart(this.pulsarClient, identifier);
+            this.requestAll = new BackendAllServersRequest(this.pulsarClient, identifier);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
             BackendAPI.captureException(exception);
@@ -41,6 +42,7 @@ public final class ServerManagerImpl extends ServerManager {
             if (this.request != null) this.request.close();
             if (this.update != null) this.update.close();
             if (this.start != null) this.start.close();
+            if (this.requestAll != null) this.requestAll.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
             BackendAPI.captureException(exception);
@@ -62,6 +64,12 @@ public final class ServerManagerImpl extends ServerManager {
         }
 
         return this.request.request(id);
+    }
+
+    @Override
+    public List<Integer> getAllServers(int timeout) {
+        int randomInteger = new Random().nextInt();
+        return this.requestAll.request(randomInteger).orElseThrow(() -> new RuntimeException("Cannot get server list"));
     }
 
     @Override

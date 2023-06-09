@@ -14,8 +14,7 @@ import com.uroria.backend.server.events.BackendEventManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -24,7 +23,7 @@ public final class BackendServerManager implements ServerManager {
     private final PulsarClient pulsarClient;
     private final BackendEventManager eventManager;
     private final CloudAPI api;
-    private final Collection<BackendServer> servers;
+    private final List<BackendServer> servers;
     private BackendServerResponse serverResponse;
     private BackendServerUpdate serverUpdate;
     private BackendServerStartAcknowledge startAcknowledge;
@@ -117,5 +116,14 @@ public final class BackendServerManager implements ServerManager {
             Uroria.captureException(exception);
             return null;
         }
+    }
+
+    public List<Integer> getAllServerIds() {
+        return this.servers.stream().map(BackendServer::getId).map(optionalInt -> optionalInt.orElse(null)).toList();
+    }
+
+    @Override
+    public List<BackendServer> getAllServers() {
+        return this.servers;
     }
 }
