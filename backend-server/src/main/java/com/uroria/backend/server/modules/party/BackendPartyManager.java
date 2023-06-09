@@ -22,9 +22,6 @@ public final class BackendPartyManager implements PartyManager {
     private final PulsarClient pulsarClient;
     private final RedisCommands<String, String> cachedParties;
     private final BackendEventManager eventManager;
-    private BackendPartyRequest requestReceiver;
-    private BackendPartyResponse responseSender;
-    private BackendPartyUpdate update;
 
     public BackendPartyManager(Logger logger, PulsarClient pulsarClient, StatefulRedisConnection<String, String> cache) {
         this.logger = logger;
@@ -35,9 +32,7 @@ public final class BackendPartyManager implements PartyManager {
 
     public void start() {
         try {
-            this.requestReceiver = new BackendPartyRequest(this.pulsarClient, this.logger, this);
-            this.responseSender = new BackendPartyResponse(this.pulsarClient);
-            this.update = new BackendPartyUpdate(this.logger, this, this.pulsarClient);
+
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
@@ -45,9 +40,7 @@ public final class BackendPartyManager implements PartyManager {
 
     public void shutdown() {
         try {
-            if (this.requestReceiver != null) this.requestReceiver.close();
-            if (this.responseSender != null) this.responseSender.close();
-            if (this.update != null) this.update.close();
+
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
         }
@@ -94,9 +87,5 @@ public final class BackendPartyManager implements PartyManager {
         String cachedObject = this.cachedParties.get("party:" + member);
         if (cachedObject == null) return null;
         return Uroria.getGson().fromJson(cachedObject, BackendParty.class);
-    }
-
-    BackendPartyResponse getResponseSender() {
-        return responseSender;
     }
 }
