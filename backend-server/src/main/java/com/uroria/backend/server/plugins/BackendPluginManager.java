@@ -1,8 +1,8 @@
 package com.uroria.backend.server.plugins;
 
-import com.uroria.backend.api.plugins.BackendPlugin;
-import com.uroria.backend.api.plugins.PluginConfiguration;
-import com.uroria.backend.api.plugins.PluginManager;
+import com.uroria.backend.pluginapi.plugins.BackendPlugin;
+import com.uroria.backend.pluginapi.plugins.PluginConfiguration;
+import com.uroria.backend.pluginapi.plugins.PluginManager;
 import com.uroria.backend.server.Uroria;
 
 import java.io.File;

@@ -1,6 +1,6 @@
 package com.uroria.backend.server.scheduler;
 
-import com.uroria.backend.api.scheduler.AsyncTask;
+import com.uroria.backend.pluginapi.scheduler.AsyncTask;
 import com.uroria.backend.server.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -3,6 +3,7 @@ package com.uroria.backend.bukkit;
 import com.uroria.backend.AbstractBackendAPI;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;
+import com.uroria.backend.stats.StatsManager;
 import io.sentry.Sentry;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
@@ -87,10 +88,9 @@ public final class BackendAPI extends AbstractBackendAPI {
         return this.permissionManager;
     }
 
-    /* Done later
     public StatsManager getStatsManager() {
         return this.statsManager;
-    }*/
+    }
 
     public static BackendAPI getAPI() {
         return instance;

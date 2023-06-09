@@ -1,7 +1,7 @@
 package com.uroria.backend.server.modules.server;
 
-import com.uroria.backend.api.BackendRegistry;
-import com.uroria.backend.api.modules.ServerManager;
+import com.uroria.backend.pluginapi.BackendRegistry;
+import com.uroria.backend.pluginapi.modules.ServerManager;
 import com.uroria.backend.common.BackendServer;
 import com.uroria.backend.common.Unsafe;
 import com.uroria.backend.common.helpers.ServerStatus;

@@ -9,7 +9,7 @@ java {
 tasks {
     jar {
         manifest {
-            attributes["Automatic-Module-Name"] = "com.uroria.backend.api"
+            attributes["Automatic-Module-Name"] = "com.uroria.backend.pluginapi"
         }
     }
 }

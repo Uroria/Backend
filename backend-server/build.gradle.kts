@@ -6,6 +6,14 @@ application {
     mainClass.set("")
 }
 
+tasks {
+    jar {
+        manifest {
+            attributes["Automatic-Module-Name"] = "com.uroria.backend.server"
+        }
+    }
+}
+
 val log4jVersion: String by project.extra
 val sentryVersion: String by project.extra
 val mongoDBVersion: String by project.extra

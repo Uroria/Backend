@@ -5,12 +5,12 @@ import com.google.gson.GsonBuilder;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.uroria.backend.api.BackendRegistry;
-import com.uroria.backend.api.Server;
-import com.uroria.backend.api.events.EventManager;
-import com.uroria.backend.api.modules.*;
-import com.uroria.backend.api.plugins.PluginManager;
-import com.uroria.backend.api.scheduler.Scheduler;
+import com.uroria.backend.pluginapi.BackendRegistry;
+import com.uroria.backend.pluginapi.Server;
+import com.uroria.backend.pluginapi.events.EventManager;
+import com.uroria.backend.pluginapi.modules.*;
+import com.uroria.backend.pluginapi.plugins.PluginManager;
+import com.uroria.backend.pluginapi.scheduler.Scheduler;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.party.BackendPartyManager;
 import com.uroria.backend.server.modules.permission.BackendPermissionManager;
@@ -110,6 +110,7 @@ public final class Uroria implements Server {
         this.statsManager.start();
         this.permissionManager.start();
         this.serverManager.start();
+        this.partyManager.start();
 
         LOGGER.info("Starting plugins");
         this.pluginManager.startPlugins();
@@ -123,6 +124,7 @@ public final class Uroria implements Server {
         this.statsManager.shutdown();
         this.permissionManager.shutdown();
         this.serverManager.shutdown();
+        this.partyManager.shutdown();
 
         try {
             if (this.pulsarClient != null && !this.pulsarClient.isClosed()) {

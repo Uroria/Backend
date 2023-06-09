@@ -1,6 +1,6 @@
 package com.uroria.backend.server.scheduler;
 
-import com.uroria.backend.api.scheduler.Scheduler;
+import com.uroria.backend.pluginapi.scheduler.Scheduler;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;

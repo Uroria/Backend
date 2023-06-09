@@ -1,9 +1,9 @@
 package com.uroria.backend.server.events;
 
-import com.uroria.backend.api.BackendRegistry;
-import com.uroria.backend.api.events.Event;
-import com.uroria.backend.api.events.EventManager;
-import com.uroria.backend.api.events.Listener;
+import com.uroria.backend.pluginapi.BackendRegistry;
+import com.uroria.backend.pluginapi.events.Event;
+import com.uroria.backend.pluginapi.events.EventManager;
+import com.uroria.backend.pluginapi.events.Listener;
 import com.uroria.backend.server.Uroria;
 
 import java.lang.reflect.Method;
