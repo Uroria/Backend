@@ -28,9 +28,9 @@ public final class BackendPlayerManager implements PlayerManager {
     private final MongoCollection<Document> players;
     private final RedisCommands<String, String> cachedPlayers;
     private final BackendEventManager eventManager;
-    private BackendPlayerRequest requestReceiver;
-    private BackendPlayerResponse responseSender;
-    private BackendPlayerUpdate update;
+    private BackendPlayerUUIDResponse uuidResponse;
+    private BackendPlayerNameResponse nameResponse;
+    private BackendPlayerUpdate playerUpdate;
 
     public BackendPlayerManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> cache) {
         this.logger = logger;
@@ -42,9 +42,9 @@ public final class BackendPlayerManager implements PlayerManager {
 
     public void start() {
         try {
-            this.requestReceiver = new BackendPlayerRequest(this.pulsarClient, this.logger, this);
-            this.responseSender = new BackendPlayerResponse(this.pulsarClient);
-            this.update = new BackendPlayerUpdate(this.logger, this, this.pulsarClient);
+            this.uuidResponse = new BackendPlayerUUIDResponse(this.pulsarClient, this);
+            this.nameResponse = new BackendPlayerNameResponse(this.pulsarClient, this);
+            this.playerUpdate = new BackendPlayerUpdate(this.pulsarClient, this);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
@@ -52,9 +52,9 @@ public final class BackendPlayerManager implements PlayerManager {
 
     public void shutdown() {
         try {
-            if (this.requestReceiver != null) this.requestReceiver.close();
-            if (this.responseSender != null) this.responseSender.close();
-            if (this.update != null) this.update.close();
+            if (this.uuidResponse != null) this.uuidResponse.close();
+            if (this.nameResponse != null) this.nameResponse.close();
+            if (this.playerUpdate != null) this.playerUpdate.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
         }
@@ -106,6 +106,15 @@ public final class BackendPlayerManager implements PlayerManager {
 
     @Override
     public void updatePlayer(BackendPlayer player) {
+        updateDatabase(player);
+        this.playerUpdate.update(player);
+    }
+
+    void updateLocal(BackendPlayer player) {
+        updateDatabase(player);
+    }
+
+    private void updateDatabase(BackendPlayer player) {
         try {
             this.cachedPlayers.del("player:" + player.getUUID());
             String json = Uroria.getGson().toJson(player);
@@ -146,9 +155,5 @@ public final class BackendPlayerManager implements PlayerManager {
         String cachedObject = this.cachedPlayers.get("player:" + cachedObjectKey);
         if (cachedObject == null) return null;
         return Uroria.getGson().fromJson(cachedObject, BackendPlayer.class);
-    }
-
-    BackendPlayerResponse getResponseSender() {
-        return responseSender;
     }
 }

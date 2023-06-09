@@ -10,12 +10,13 @@ import java.util.UUID;
 
 public final class BackendClan extends PropertyHolder implements Serializable {
     @Serial private static final long serialVersionUID = 1;
-    private final String name;
-    private String tag;
-    private UUID operator;
     private final Collection<UUID> moderators;
     private final Collection<UUID> members;
     private final long foundingDate;
+    private String name;
+    private String tag;
+    private UUID operator;
+
     public BackendClan(String name, String tag, UUID operator, long foundingDate) {
         this.name = name;
         this.tag = tag;
@@ -24,6 +25,11 @@ public final class BackendClan extends PropertyHolder implements Serializable {
         this.members = new ArrayList<>();
         this.foundingDate = foundingDate;
         this.members.add(operator);
+    }
+
+    public void setName(String name) {
+        if (name == null) throw new NullPointerException("Name cannot be null");
+        this.name = name;
     }
 
     public void addModerator(UUID uuid) {

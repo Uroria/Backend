@@ -1,16 +1,13 @@
 package com.uroria.backend.velocity;
 
-import com.uroria.backend.common.utils.BackendInputStream;
-import com.uroria.backend.common.utils.BackendOutputStream;
+import com.uroria.backend.player.BackendPlayerNameRequest;
+import com.uroria.backend.player.BackendPlayerUUIDRequest;
 import com.uroria.backend.player.BackendPlayerUpdate;
 import com.uroria.backend.player.PlayerManager;
 import com.uroria.backend.common.BackendPlayer;
 import com.uroria.backend.scheduler.BackendScheduler;
 import com.uroria.backend.velocity.events.PlayerUpdateEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
-import org.apache.pulsar.client.api.Consumer;
-import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
@@ -23,9 +20,10 @@ import java.util.concurrent.TimeUnit;
 public final class PlayerManagerImpl extends PlayerManager {
     private final ProxyServer proxyServer;
     private final int keepAlive = BackendVelocityPlugin.getConfig().getOrSetDefault("cacheKeepAliveInMinutes.player", 20);
-    private BackendPlayerUpdate playerUpdate;
-    private Producer<byte[]> playerRequest;
-    private Consumer<byte[]> playerResponse;
+    private BackendPlayerUUIDRequest uuidRequest;
+    private BackendPlayerNameRequest nameRequest;
+    private BackendPlayerUpdate update;
+
     PlayerManagerImpl(PulsarClient pulsarClient, Logger logger, ProxyServer proxyServer) {
         super(pulsarClient, logger);
         this.proxyServer = proxyServer;
@@ -35,17 +33,9 @@ public final class PlayerManagerImpl extends PlayerManager {
     protected void start(String identifier) {
         runCacheChecker();
         try {
-            this.playerUpdate = new BackendPlayerUpdate(this.pulsarClient, identifier, this.logger, this);
-            this.playerRequest = this.pulsarClient.newProducer()
-                    .producerName(identifier)
-                    .topic("player:request")
-                    .create();
-            this.playerResponse = this.pulsarClient.newConsumer()
-                    .consumerName(identifier)
-                    .subscriptionName(identifier)
-                    .topic("player:response")
-                    .negativeAckRedeliveryDelay(500, TimeUnit.MILLISECONDS)
-                    .subscribe();
+            this.uuidRequest = new BackendPlayerUUIDRequest(this.pulsarClient, identifier);
+            this.nameRequest = new BackendPlayerNameRequest(this.pulsarClient, identifier);
+            this.update = new BackendPlayerUpdate(this.pulsarClient, identifier, this::checkPlayer);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
             BackendAPI.captureException(exception);
@@ -55,9 +45,9 @@ public final class PlayerManagerImpl extends PlayerManager {
     @Override
     protected void shutdown() {
         try {
-            if (this.playerUpdate != null) this.playerUpdate.close();
-            if (this.playerRequest != null) this.playerRequest.close();
-            if (this.playerResponse != null) this.playerResponse.close();
+            if (this.uuidRequest != null) this.uuidRequest.close();
+            if (this.nameRequest != null) this.nameRequest.close();
+            if (this.update != null) this.update.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
             BackendAPI.captureException(exception);
@@ -79,41 +69,7 @@ public final class PlayerManagerImpl extends PlayerManager {
             if (player.getUUID().equals(uuid)) return Optional.of(player);
         }
 
-        BackendPlayer player = null;
-        try {
-            BackendOutputStream output = new BackendOutputStream();
-            output.writePlayerRequest(uuid);
-            output.close();
-            this.playerRequest.send(output.toByteArray());
-
-            long startTime = System.currentTimeMillis();
-            while (true) {
-                if ((System.currentTimeMillis() - startTime) > timeout) break;
-                Message<byte[]> message = this.playerResponse.receive(timeout, TimeUnit.MILLISECONDS);
-                if (message == null) continue;
-                BackendInputStream input = new BackendInputStream(message.getData());
-                if (!input.readBoolean()) {
-                    this.playerResponse.negativeAcknowledge(message);
-                    continue;
-                }
-                UUID responseUUID = input.readUUID();
-                if (responseUUID == null || !responseUUID.equals(uuid)) {
-                    this.playerResponse.negativeAcknowledge(message);
-                    continue;
-                }
-                this.playerResponse.acknowledge(message);
-                if (input.readBoolean()) {
-                    player = input.readPlayer();
-                    input.close();
-                    break;
-                }
-                input.close();
-            }
-        } catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
-
-        return Optional.ofNullable(player);
+        return uuidRequest.request(uuid);
     }
 
     @Override
@@ -124,41 +80,7 @@ public final class PlayerManagerImpl extends PlayerManager {
             if (player.getCurrentName().isPresent() && player.getCurrentName().get().equals(name)) return Optional.of(player);
         }
 
-        BackendPlayer player = null;
-        try {
-            BackendOutputStream output = new BackendOutputStream();
-            output.writePlayerRequest(name);
-            output.close();
-            this.playerRequest.send(output.toByteArray());
-
-            long startTime = System.currentTimeMillis();
-            while (true) {
-                if ((System.currentTimeMillis() - startTime) > timeout) break;
-                Message<byte[]> message = this.playerResponse.receive(timeout, TimeUnit.MILLISECONDS);
-                if (message == null) continue;
-                BackendInputStream input = new BackendInputStream(message.getData());
-                if (input.readBoolean()) {
-                    this.playerResponse.negativeAcknowledge(message);
-                    continue;
-                }
-                String responseName = input.readUTF();
-                if (!responseName.equals(name)) {
-                    this.playerResponse.negativeAcknowledge(message);
-                    continue;
-                }
-                this.playerResponse.acknowledge(message);
-                if (input.readBoolean()) {
-                    player = input.readPlayer();
-                    input.close();
-                    break;
-                }
-                input.close();
-            }
-        } catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
-
-        return Optional.ofNullable(player);
+        return nameRequest.request(name);
     }
 
     @Override
@@ -166,7 +88,7 @@ public final class PlayerManagerImpl extends PlayerManager {
         if (player == null) throw new NullPointerException("Player cannot be null");
         try {
             checkPlayer(player);
-            this.playerUpdate.updatePlayer(player);
+            this.update.update(player);
         } catch (Exception exception) {
             this.logger.error("Cannot update player", exception);
             BackendAPI.captureException(exception);

@@ -6,14 +6,6 @@ application {
     mainClass.set("")
 }
 
-tasks {
-    jar {
-        manifest {
-            attributes["Version"] = ""
-        }
-    }
-}
-
 val log4jVersion: String by project.extra
 val sentryVersion: String by project.extra
 val mongoDBVersion: String by project.extra
@@ -32,4 +24,6 @@ dependencies {
     implementation("io.sentry:sentry:${sentryVersion}")
     implementation("org.mongodb:mongodb-driver-sync:${mongoDBVersion}")
     implementation("io.lettuce:lettuce-core:${lettuceVersion}")
+
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
 }

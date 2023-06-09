@@ -29,6 +29,10 @@ public abstract class PermissionManager extends AbstractManager {
     @Override
     abstract protected void shutdown();
 
+    abstract protected void checkPermissionHolder(PermissionHolder holder);
+
+    abstract protected void checkPermissionGroup(PermissionGroup group);
+
     /**
      * Gets the permissionholder from backend. If not registered a new one gets created and registered.
      * @param timeout Request timeout in ms

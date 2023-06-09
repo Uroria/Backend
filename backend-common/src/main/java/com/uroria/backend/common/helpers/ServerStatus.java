@@ -2,11 +2,11 @@ package com.uroria.backend.common.helpers;
 
 public enum ServerStatus {
     EMPTY(0),
-    PREPARED(1),
-    STARTING(2),
-    ONLINE(3),
-    OFFLINE(4),
-    DELETED(5);
+    STARTING(1),
+    READY(2),
+    INGAME(3),
+    CLOSED(4),
+    STOPPED(5);
     private final int id;
 
     ServerStatus(int id) {
@@ -21,6 +21,6 @@ public enum ServerStatus {
         for (ServerStatus serverStatus : values()) {
             if (serverStatus.getId() == id) return serverStatus;
         }
-        return null;
+        return EMPTY;
     }
 }

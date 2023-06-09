@@ -31,12 +31,10 @@ public final class BackendPermissionManager implements PermissionManager {
     private final MongoCollection<Document> holders;
     private final RedisCommands<String, String> cachedHolders;
     private final BackendEventManager eventManager;
-    private BackendPermissionHolderRequest holderRequestReceiver;
-    private BackendPermissionHolderResponse holderResponseSender;
-    private BackendPermissionGroupRequest groupRequestSender;
-    private BackendPermissionGroupResponse groupResponseSender;
-    private BackendPermissionHolderUpdate holderUpdate;
-    private BackendPermissionGroupUpdate groupUpdate;
+    private BackendHolderResponse holderResponse;
+    private BackendGroupResponse groupResponse;
+    private BackendHolderUpdate holderUpdate;
+    private BackendGroupUpdate groupUpdate;
 
     public BackendPermissionManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> cache) {
         this.logger = logger;
@@ -49,12 +47,10 @@ public final class BackendPermissionManager implements PermissionManager {
 
     public void start() {
         try {
-            this.holderRequestReceiver = new BackendPermissionHolderRequest(this.pulsarClient, this.logger, this);
-            this.holderResponseSender = new BackendPermissionHolderResponse(this.pulsarClient);
-            this.groupRequestSender = new BackendPermissionGroupRequest(this.pulsarClient, this.logger, this);
-            this.groupResponseSender = new BackendPermissionGroupResponse(this.pulsarClient);
-            this.holderUpdate = new BackendPermissionHolderUpdate(this.logger, this, this.pulsarClient);
-            this.groupUpdate = new BackendPermissionGroupUpdate(this.logger, this, this.pulsarClient);
+            this.holderResponse = new BackendHolderResponse(this.pulsarClient, this);
+            this.groupResponse = new BackendGroupResponse(this.pulsarClient, this);
+            this.holderUpdate = new BackendHolderUpdate(this.pulsarClient, this);
+            this.groupUpdate = new BackendGroupUpdate(this.pulsarClient, this);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
@@ -62,10 +58,8 @@ public final class BackendPermissionManager implements PermissionManager {
 
     public void shutdown() {
         try {
-            if (this.holderRequestReceiver != null) this.holderRequestReceiver.close();
-            if (this.holderResponseSender != null) this.holderResponseSender.close();
-            if (this.groupRequestSender != null) this.groupRequestSender.close();
-            if (this.groupResponseSender != null) this.groupResponseSender.close();
+            if (this.holderResponse != null) this.holderResponse.close();
+            if (this.groupResponse != null) this.groupResponse.close();
             if (this.holderUpdate != null) this.holderUpdate.close();
             if (this.groupUpdate != null) this.groupUpdate.close();
         } catch (Exception exception) {
@@ -114,6 +108,15 @@ public final class BackendPermissionManager implements PermissionManager {
 
     @Override
     public void updateGroup(PermissionGroup group) {
+        updateDatabase(group);
+        this.groupUpdate.update(group);
+    }
+
+    void updateLocal(PermissionGroup group) {
+        updateDatabase(group);
+    }
+
+    private void updateDatabase(PermissionGroup group) {
         Document newDocument = Document.parse(Uroria.getGson().toJson(group));
         Document document = this.groups.find(Filters.eq("name", group.getName())).first();
         if (document == null) {
@@ -133,6 +136,15 @@ public final class BackendPermissionManager implements PermissionManager {
 
     @Override
     public void updateHolder(PermissionHolder holder) {
+        updateDatabase(holder);
+        this.holderUpdate.update(holder);
+    }
+
+    void updateLocal(PermissionHolder holder) {
+        updateDatabase(holder);
+    }
+
+    private void updateDatabase(PermissionHolder holder) {
         try {
             this.cachedHolders.del("permission_holder:" + holder.getUUID());
             String json = Uroria.getGson().toJson(holder);
@@ -161,13 +173,5 @@ public final class BackendPermissionManager implements PermissionManager {
         String cachedObject = this.cachedHolders.get("permission_holder:" + uuid);
         if (cachedObject == null) return null;
         return Uroria.getGson().fromJson(cachedObject, PermissionHolder.class);
-    }
-
-    BackendPermissionHolderResponse getHolderResponseSender() {
-        return this.holderResponseSender;
-    }
-
-    BackendPermissionGroupResponse getGroupResponseSender() {
-        return this.groupResponseSender;
     }
 }

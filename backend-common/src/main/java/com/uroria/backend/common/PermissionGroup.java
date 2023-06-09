@@ -14,7 +14,7 @@ public final class PermissionGroup extends PropertyHolder implements Serializabl
     private final Map<String, Boolean> permissions;
     private int priority;
     public PermissionGroup(String name, int priority) {
-        this.name = name;
+        this.name = name.toLowerCase();
         this.permissions = new HashMap<>();
         this.priority = priority;
     }

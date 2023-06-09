@@ -1,60 +1,85 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PunishmentType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.Duration;
 
 public final class BackendPunishment implements Serializable {
     @Serial private static final long serialVersionUID = 1;
-    private final UUID affectedPlayer;
-    private int punishmentType;
-    private int reasonId;
-    private long endDate;
-    public BackendPunishment(UUID affectedPlayer) {
-        this.affectedPlayer = affectedPlayer;
-    }
 
-    public void punish(PunishmentType punishmentType, int reasonId, long endDate) {
-        this.punishmentType = punishmentType.getId();
+    private final String displayReason;
+    private final int reasonId;
+    private final int punishmentType;
+    private final long startMs;
+    private final long durationInMs;
+
+    public BackendPunishment(Component displayReason, int reasonId, PunishmentType punishmentType, Duration duration, long startMs) {
+        if (startMs == 0) throw new NullPointerException("Start ms cannot be null");
+        this.displayReason = MiniMessage.miniMessage().serialize(displayReason);
         this.reasonId = reasonId;
-        this.endDate = endDate;
+        this.punishmentType = punishmentType.getId();
+        this.startMs = startMs;
+        this.durationInMs = duration.toMillis();
     }
 
-    public void unpunish() {
-        this.punishmentType = 0;
-        this.endDate = 0;
-        this.reasonId = 0;
+    public BackendPunishment(int reasonId, Component displayReason, PunishmentType type, Duration duration) {
+        this.reasonId = reasonId;
+        this.displayReason = MiniMessage.miniMessage().serialize(displayReason);
+        this.punishmentType = type.getId();
+        if (type.isPermanent()) {
+            this.startMs = 0;
+            this.durationInMs = 0;
+            return;
+        }
+        this.durationInMs = duration.toMillis();
+        this.startMs = System.currentTimeMillis();
     }
 
-    public boolean isMuted() {
-        if (this.punishmentType == 0) return false;
-        return getPunishmentType().map(punishmentType -> punishmentType == PunishmentType.PERMANENT_MUTE || punishmentType == PunishmentType.TEMPORARY_MUTE).orElse(false);
+    public BackendPunishment(int reasonId, Component displayReason, PunishmentType type) {
+        if (!type.isPermanent()) throw new NullPointerException("Missing duration because PunishmentType is missing");
+        this.reasonId = reasonId;
+        this.displayReason = MiniMessage.miniMessage().serialize(displayReason);
+        this.punishmentType = type.getId();
+        this.startMs = 0;
+        this.durationInMs = 0;
     }
 
-    public boolean isBanned() {
-        if (this.punishmentType == 0) return false;
-        return !isMuted();
+    boolean isOutdated() {
+        if (getPunishmentType().isPermanent()) return false;
+        return getEndMs() < System.currentTimeMillis();
     }
 
-    public UUID getAffectedPlayer() {
-        return affectedPlayer;
+    public Component getDisplayReason() {
+        return MiniMessage.miniMessage().deserialize(displayReason);
     }
 
-    public Optional<Integer> getReason() {
-        if (reasonId == 0) return Optional.empty();
-        return Optional.of(reasonId);
+    public int getReasonId() {
+        return reasonId;
     }
 
-    public Optional<Long> getEndDate() {
-        if (endDate == 0) return Optional.empty();
-        return Optional.of(this.endDate);
+    public PunishmentType getPunishmentType() {
+        return PunishmentType.fromId(this.punishmentType);
     }
 
-    public Optional<PunishmentType> getPunishmentType() {
-        if (this.punishmentType == 0) return Optional.empty();
-        return Optional.ofNullable(PunishmentType.fromId(this.punishmentType));
+    /**
+     * The duration in ms
+     */
+    public long getDuration() {
+        return durationInMs;
+    }
+
+    /**
+     * The start date in ms
+     */
+    public long getStart() {
+        return startMs;
+    }
+
+    private long getEndMs() {
+        return this.startMs + this.durationInMs;
     }
 }

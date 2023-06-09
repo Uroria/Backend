@@ -15,11 +15,13 @@ public final class BackendPlayer extends PropertyHolder implements Serializable 
     @Serial
     private static final long serialVersionUID = 1;
     private final UUID uuid;
-    private String clan;
     private final Collection<UUID> crew;
+    private final Collection<BackendPunishment> outdatedPunishments;
+    private String clan;
     private String currentName;
     private Locale locale;
     private int status;
+    private BackendPunishment punishment;
     public BackendPlayer(UUID uuid, String currentName) {
         this.uuid = uuid;
         this.currentName = currentName;
@@ -27,6 +29,47 @@ public final class BackendPlayer extends PropertyHolder implements Serializable 
         this.locale = Locale.ENGLISH;
         this.clan = null;
         this.status = 0;
+        this.punishment = null;
+        this.outdatedPunishments = new ArrayList<>();
+    }
+
+    public void clearOutdatedPunishments() {
+        this.outdatedPunishments.clear();
+    }
+
+    public boolean wasPunishedBefore() {
+        return !this.outdatedPunishments.isEmpty();
+    }
+
+    public boolean isPunished() {
+        if (this.punishment == null) return false;
+        if (this.punishment.isOutdated()) {
+            this.outdatedPunishments.add(this.punishment);
+            this.punishment = null;
+            return false;
+        }
+        return true;
+    }
+
+    public Optional<BackendPunishment> getPunishment() {
+        if (this.punishment != null && this.punishment.isOutdated()) {
+            this.outdatedPunishments.add(this.punishment);
+            this.punishment = null;
+            return Optional.empty();
+        }
+        return Optional.ofNullable(this.punishment);
+    }
+
+    public void punish(BackendPunishment punishment) {
+        if (punishment == null) throw new NullPointerException("Punishment cannot be null");
+        this.punishment = punishment;
+    }
+
+    public void unpunish() {
+        if (this.punishment != null) {
+            this.outdatedPunishments.add(this.punishment);
+            this.punishment = null;
+        }
     }
 
     public Optional<String> getClan() {
@@ -88,8 +131,17 @@ public final class BackendPlayer extends PropertyHolder implements Serializable 
         this.crew.add(uuid);
     }
 
+    public Collection<BackendPunishment> getOutdatedPunishments() {
+        return outdatedPunishments;
+    }
+
     public void removeCrewMember(UUID uuid) {
         this.crew.remove(uuid);
+    }
+
+    @Override
+    public String toString() {
+        return this.uuid + "-" + this.currentName;
     }
 
     @Override

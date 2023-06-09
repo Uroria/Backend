@@ -27,9 +27,6 @@ public final class BackendStatsManager implements StatsManager {
     private final MongoCollection<Document> stats;
     private final RedisCommands<String, String> cachedStats;
     private final BackendEventManager eventManager;
-    private BackendStatRequest requestReceiver;
-    private BackendStatResponse responseSender;
-    private BackendStatUpdate update;
 
     public BackendStatsManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> cache) {
         this.logger = logger;
@@ -41,9 +38,7 @@ public final class BackendStatsManager implements StatsManager {
 
     public void start() {
         try {
-            this.requestReceiver = new BackendStatRequest(this.pulsarClient, this, this.logger);
-            this.responseSender = new BackendStatResponse(this.pulsarClient);
-            this.update = new BackendStatUpdate(this.logger, this, this.pulsarClient);
+            this.logger.debug("Running non active stat system");
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
@@ -51,9 +46,7 @@ public final class BackendStatsManager implements StatsManager {
 
     public void shutdown() {
         try {
-            if (this.requestReceiver != null) this.requestReceiver.close();
-            if (this.responseSender != null) this.responseSender.close();
-            if (this.update != null) this.update.close();
+            this.logger.debug("Stopping non active stat system");
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
         }
@@ -114,9 +107,5 @@ public final class BackendStatsManager implements StatsManager {
         String cachedObject = this.cachedStats.get("stats:" + holder);
         if (cachedObject == null) return null;
         return Uroria.getGson().fromJson(cachedObject, BackendStat.class);
-    }
-
-    BackendStatResponse getResponseSender() {
-        return responseSender;
     }
 }

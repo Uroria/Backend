@@ -8,16 +8,14 @@ import com.mongodb.client.MongoDatabase;
 import com.uroria.backend.api.BackendRegistry;
 import com.uroria.backend.api.Server;
 import com.uroria.backend.api.events.EventManager;
-import com.uroria.backend.api.modules.PartyManager;
-import com.uroria.backend.api.modules.PermissionManager;
-import com.uroria.backend.api.modules.PlayerManager;
-import com.uroria.backend.api.modules.StatsManager;
+import com.uroria.backend.api.modules.*;
 import com.uroria.backend.api.plugins.PluginManager;
 import com.uroria.backend.api.scheduler.Scheduler;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.party.BackendPartyManager;
 import com.uroria.backend.server.modules.permission.BackendPermissionManager;
 import com.uroria.backend.server.modules.player.BackendPlayerManager;
+import com.uroria.backend.server.modules.server.BackendServerManager;
 import com.uroria.backend.server.modules.stats.BackendStatsManager;
 import com.uroria.backend.server.plugins.BackendPluginManager;
 import com.uroria.backend.server.scheduler.BackendScheduler;
@@ -30,6 +28,8 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 public final class Uroria implements Server {
     private static final Gson GSON;
@@ -53,6 +53,7 @@ public final class Uroria implements Server {
     private final MongoDatabase database;
     private final RedisClient redisClient;
     private final StatefulRedisConnection<String, String> redisConnection;
+    private final CloudAPI cloudAPI;
     private final BackendScheduler scheduler;
     private final BackendEventManager eventManager;
     private final BackendPluginManager pluginManager;
@@ -61,6 +62,7 @@ public final class Uroria implements Server {
     private final BackendStatsManager statsManager;
     private final BackendPermissionManager permissionManager;
     private final BackendPartyManager partyManager;
+    private final BackendServerManager serverManager;
 
     private Uroria() {
         BackendRegistry.register(this);
@@ -91,6 +93,8 @@ public final class Uroria implements Server {
         this.redisClient = RedisClient.create(CONFIG.getString("redis.url"));
         this.redisConnection = this.redisClient.connect();
 
+        this.cloudAPI = new CloudAPI(CONFIG.getOrSetDefault("cloud.uuid", UUID.randomUUID().toString()), CONFIG.getString("cloud.token"));
+
         this.scheduler = new BackendScheduler();
         this.pluginManager = new BackendPluginManager(this);
 
@@ -98,12 +102,14 @@ public final class Uroria implements Server {
         this.statsManager = new BackendStatsManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.permissionManager = new BackendPermissionManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.partyManager = new BackendPartyManager(LOGGER, this.pulsarClient, this.redisConnection);
+        this.serverManager = new BackendServerManager(LOGGER, this.pulsarClient, this.cloudAPI);
     }
 
     private void start() {
         this.playerManager.start();
         this.statsManager.start();
         this.permissionManager.start();
+        this.serverManager.start();
 
         LOGGER.info("Starting plugins");
         this.pluginManager.startPlugins();
@@ -116,6 +122,7 @@ public final class Uroria implements Server {
         this.playerManager.shutdown();
         this.statsManager.shutdown();
         this.permissionManager.shutdown();
+        this.serverManager.shutdown();
 
         try {
             if (this.pulsarClient != null && !this.pulsarClient.isClosed()) {
@@ -175,6 +182,11 @@ public final class Uroria implements Server {
         return this.scheduler;
     }
 
+    @Override
+    public ServerManager getServerManager() {
+        return this.serverManager;
+    }
+
     public PulsarClient getPulsarClient() {
         return pulsarClient;
     }
@@ -193,6 +205,10 @@ public final class Uroria implements Server {
 
     public StatefulRedisConnection<String, String> getRedisConnection() {
         return redisConnection;
+    }
+
+    public CloudAPI getCloudAPI() {
+        return cloudAPI;
     }
 
     public boolean isSentry() {

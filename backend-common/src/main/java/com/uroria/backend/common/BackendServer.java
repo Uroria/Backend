@@ -6,120 +6,104 @@ import com.uroria.backend.common.helpers.ServerType;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class BackendServer extends PropertyHolder implements Serializable {
     @Serial private static final long serialVersionUID = 1;
+
     private final String name;
-    private int serverId;
-    private int hostId;
-    private final int ram;
-    private final byte serverType;
-    private final byte serverVersion;
-    private final byte gameModeId;
-    private final byte mapId;
-    private final byte mapVariation;
+    private final int templateId;
+    private final int type;
     private final int maxPlayerCount;
-    private final Map<String, Object> properties;
+    private final Collection<UUID> onlinePlayers;
     private int status;
-    public BackendServer(String name, int serverId, int hostId, int ram, ServerType serverType, int serverVersion, int gameModeId, int mapId, int mapVariation, int maxPlayerCount) {
+    private int id;
+
+    public BackendServer(String name, int templateId, ServerType type, ServerStatus status, int maxPlayerCount) {
+        this.id = -1;
         this.name = name;
-        this.serverId = serverId;
-        this.hostId = hostId;
-        this.ram = ram;
-        this.serverType = (byte) serverType.getId();
-        this.serverVersion = (byte) serverVersion;
-        this.gameModeId = (byte) gameModeId;
-        this.mapId = (byte) mapId;
-        this.mapVariation = (byte) mapVariation;
+        this.templateId = templateId;
+        this.type = type.getId();
+        this.status = status.getId();
         this.maxPlayerCount = maxPlayerCount;
-        this.properties = new HashMap<>();
-        this.status = ServerStatus.EMPTY.getId();
+        this.onlinePlayers = new ArrayList<>();
     }
 
-    public BackendServer(String name, int ram, ServerType serverType, int serverVersion, int gameModeId, int mapId, int mapVariation, int maxPlayerCount) {
-        this(name, 0, 0, ram, serverType, serverVersion, gameModeId, mapId, mapVariation, maxPlayerCount);
+    public BackendServer(String name, int templateId, ServerType type, ServerStatus status) {
+        this(name, templateId, type, status, 50);
     }
 
-    public BackendServer createNewWithSameConfiguration() {
-        return new BackendServer(this.name, this.ram, getServerType(), getServerVersion(), this.gameModeId, this.mapId, this.mapVariation, this.maxPlayerCount);
-    }
-
-    public void setServerId(int serverId) {
-        this.serverId = serverId;
-    }
-
-    public void setHostId(int hostId) {
-        this.hostId = hostId;
+    void setId(int id) {
+        this.id = id;
     }
 
     public ServerStatus getStatus() {
-        return ServerStatus.getById(status);
+        return ServerStatus.getById(this.status);
     }
 
-    public void setStatus(ServerStatus status) {
-        this.status = status.getId();
+    public ServerType getType() {
+        return ServerType.getById(this.type);
     }
 
-    public void setProperty(String key, Serializable object) {
-        this.properties.put(key, object);
+    public boolean isServerFull() {
+        return getPlayerCount() > this.maxPlayerCount;
     }
 
-    public void unsetProperty(String key) {
-        this.properties.remove(key);
+    public void addPlayer(UUID uuid) {
+        this.onlinePlayers.add(uuid);
     }
 
-    public Optional<Object> getProperty(String key) {
-        return Optional.ofNullable(this.properties.get(key));
+    public void removePlayer(UUID uuid) {
+        this.onlinePlayers.remove(uuid);
     }
 
-    public int getGameModeId() {
-        return gameModeId;
+    public boolean containsPlayer(UUID uuid) {
+        return this.onlinePlayers.contains(uuid);
     }
 
-    public int getMapId() {
-        return mapId;
-    }
-
-    public int getMapVariation() {
-        return mapVariation;
-    }
-
-    public ServerType getServerType() {
-        return ServerType.getById(this.serverType);
-    }
-
-    public int getServerVersion() {
-        return this.serverVersion;
+    public int getTemplateId() {
+        return this.templateId;
     }
 
     public String getDisplayName() {
-        return name + "-" + serverId;
+        return name + "=" + id;
     }
 
     public String getName() {
         return name;
     }
 
-    public int getServerId() {
-        return serverId;
+    public void setStatus(ServerStatus serverStatus) {
+        this.status = serverStatus.getId();
     }
 
-    public int getHostId() {
-        return hostId;
-    }
-
-    public int getRam() {
-        return ram;
+    public Optional<Integer> getId() throws IllegalStateException {
+        if (id == -1) return Optional.empty();
+        return Optional.of(id);
     }
 
     public int getMaxPlayerCount() {
         return maxPlayerCount;
     }
 
-    public Map<String, Object> getProperties() {
-        return new HashMap<>(this.properties);
+    public int getPlayerCount() {
+        return this.onlinePlayers.size();
+    }
+
+    public void setProperty(String key, Serializable value) {
+        this.properties.put(key, value);
+    }
+
+    public Optional<Serializable> getPropertyObject(String key) {
+        Object o = this.properties.get(key);
+        if (o == null) return Optional.empty();
+        return Optional.of((Serializable) o);
+    }
+
+    public Collection<UUID> getOnlinePlayers() {
+        return onlinePlayers;
     }
 }

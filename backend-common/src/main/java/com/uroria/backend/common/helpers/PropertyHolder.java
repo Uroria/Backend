@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public abstract class PropertyHolder implements Serializable {
     @Serial private static final long serialVersionUID = 1;
-    private final Map<String, Object> properties;
+    protected final Map<String, Object> properties;
     public PropertyHolder() {
         this.properties = new HashMap<>();
     }

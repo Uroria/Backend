@@ -1,10 +1,12 @@
 package com.uroria.backend.common.helpers;
 
 public enum ServerType {
-    LOBBY(0),
+    EMPTY(0),
     EVENT(1),
-    GAME(2),
-    OTHER(3);
+    LOBBY(2),
+    GAME(3),
+    CUSTOM_EVENT(4),
+    OTHER(5);
     private final int id;
 
     ServerType(int id) {
@@ -19,6 +21,6 @@ public enum ServerType {
         for (ServerType serverType : values()) {
             if (serverType.getId() == id) return serverType;
         }
-        return null;
+        return OTHER;
     }
 }
