@@ -3,6 +3,7 @@ package com.uroria.backend.bukkit;
 import com.uroria.backend.bukkit.events.ServerStartEvent;
 import com.uroria.backend.bukkit.events.ServerUpdateEvent;
 import com.uroria.backend.common.BackendServer;
+import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.server.BackendAllServersRequest;
 import com.uroria.backend.server.BackendServerRequest;
 import com.uroria.backend.server.BackendServerStart;
@@ -13,9 +14,11 @@ import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Random;
 
 public final class ServerManagerImpl extends BukkitServerManager {
+    private final int localServerId;
     private BackendServerRequest request;
     private BackendServerUpdate update;
     private BackendServerStart start;
@@ -23,6 +26,13 @@ public final class ServerManagerImpl extends BukkitServerManager {
 
     public ServerManagerImpl(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
+        Properties properties = System.getProperties();
+        String stringId = properties.getProperty("server.id");
+        if (stringId == null) {
+            this.localServerId = -1;
+            return;
+        }
+        this.localServerId = Integer.parseInt(stringId);
     }
 
     @Override
@@ -53,11 +63,24 @@ public final class ServerManagerImpl extends BukkitServerManager {
 
     @Override
     public BackendServer getThisServer() {
-        return null;
+        return getServer(this.localServerId, 5000).orElseThrow(() -> new RuntimeException("Own server not initialized yet"));
     }
 
     @Override
     protected void checkServer(BackendServer server) {
+        if (server.getId().isPresent() && server.getId().get().equals(this.localServerId) && server.getStatus() == ServerStatus.CLOSED) {
+            server.setStatus(ServerStatus.STOPPED);
+            updateServer(server);
+            this.logger.info("Shutting down on remote command");
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                player.kickPlayer("");
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ignored) {}
+            });
+            Bukkit.shutdown();
+            return;
+        }
         this.servers.removeIf(server1 -> server1.getId() == server.getId());
         this.servers.add(server);
         Bukkit.getPluginManager().callEvent(new ServerUpdateEvent(server));

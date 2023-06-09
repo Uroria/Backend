@@ -5,8 +5,9 @@ public enum ServerStatus {
     STARTING(1),
     READY(2),
     INGAME(3),
-    CLOSED(4),
-    STOPPED(5);
+    ENDING(4),
+    CLOSED(5),
+    STOPPED(6);
     private final int id;
 
     ServerStatus(int id) {
