@@ -1,6 +1,6 @@
-rootProject.name = "Backend"
+rootProject.name = "backend"
 
-include(
+val projects = listOf(
         "backend-plugin-api",
         "backend-api",
         "backend-common",
@@ -9,12 +9,8 @@ include(
         "backend-bukkit-api"
 )
 
-findProject(":backend-plugin-api")?.name = "backend-plugin-api"
-findProject(":backend-common")?.name = "backend-common"
-findProject(":backend-server")?.name = "backend-server"
-findProject(":backend-api")?.name = "backend-api"
-findProject(":backend-velocity-api")?.name = "backend-velocity-api"
-findProject(":backend-bukkit-api")?.name = "backend-bukkit-api"
+include(projects)
+projects.forEach { project -> findProject(":$project")?.name = project }
 
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version("0.4.0")

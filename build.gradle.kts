@@ -3,12 +3,12 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 
 plugins {
     `java-library`
-    id("com.github.johnrengelman.shadow") version "7.1.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 allprojects {
-    group = "com.uroria"
-    version = "0.0.1"
+    group = "com.uroria.backend"
+    version = project.properties["projectVersion"].toString()
 }
 
 val junitVersion: String by project.extra

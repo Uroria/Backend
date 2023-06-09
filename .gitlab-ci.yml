@@ -1,0 +1,7 @@
+include:
+  - project: uroria/operations/pipeline
+    ref: master
+    file: default-gradle-build.gitlab-ci.yml
+  - project: uroria/operations/pipeline
+    ref: master
+    file: gradle-publish.gitlab-ci.yml
