@@ -6,14 +6,6 @@ java {
     withJavadocJar()
 }
 
-tasks {
-    jar {
-        manifest {
-            attributes["Automatic-Module-Name"] = "com.uroria.backend.velocity"
-        }
-    }
-}
-
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
 }
