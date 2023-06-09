@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public final class BackendPlayerManager implements PlayerManager {
     private final Logger logger;
@@ -71,10 +70,8 @@ public final class BackendPlayerManager implements PlayerManager {
                 String json = Uroria.getGson().toJson(player);
                 Document document = Document.parse(json);
                 if (this.players.insertOne(document).wasAcknowledged()) {
-                    CompletableFuture.runAsync(() -> {
-                        PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
-                        this.eventManager.callEvent(playerRegisterEvent);
-                    });
+                    PlayerRegisterEvent playerRegisterEvent = new PlayerRegisterEvent(player);
+                    this.eventManager.callEventAsync(playerRegisterEvent);
                     this.logger.info("Registered new player " + player.getUUID());
                     return Optional.of(player);
                 }
@@ -122,7 +119,7 @@ public final class BackendPlayerManager implements PlayerManager {
             Document document = Document.parse(json);
             if (this.players.replaceOne(Filters.eq("uuid", player.getUUID().toString()), document).wasAcknowledged()) {
                 PlayerUpdateEvent playerUpdateEvent = new PlayerUpdateEvent(player);
-                this.eventManager.callEvent(playerUpdateEvent);
+                this.eventManager.callEventAsync(playerUpdateEvent);
                 this.logger.debug("Updated player " + player.getCurrentName().orElse(player.getUUID().toString()));
                 return;
             }

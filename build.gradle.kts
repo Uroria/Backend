@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 
 plugins {
     `java-library`
+    `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -20,6 +21,7 @@ val pulsarVersion: String by project.extra
 subprojects {
     apply<JavaLibraryPlugin>()
     apply<ShadowPlugin>()
+    apply<MavenPublishPlugin>()
 
     java {
         toolchain {
@@ -74,6 +76,30 @@ subprojects {
         shadowJar {
             transform(Log4j2PluginsCacheFileTransformer::class.java)
             relocate("de.leonhard.storage", "com.uroria.storage")
+        }
+    }
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                from(components["java"])
+            }
+        }
+
+        repositories {
+            maven {
+                url = uri("${System.getenv("CI_API_V4_URL")}/projects/${System.getenv("CI_PROJECT_ID")}/packages/maven")
+                name = "GitLab"
+                if (System.getenv("CI") == "true") {
+                    credentials(HttpHeaderCredentials::class) {
+                        name = "Job-Token"
+                        value = System.getenv("CI_JOB_TOKEN")
+                    }
+                }
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
+                }
+            }
         }
     }
 }

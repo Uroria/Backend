@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,6 +35,11 @@ public final class BackendEventManager implements EventManager {
         } catch (Exception exception) {
             Uroria.getLogger().error("Cannot call event " + event.getClass().getSimpleName(), exception);
         }
+    }
+
+    @Override
+    public <T extends Event> CompletableFuture<Void> callEventAsync(T event) {
+        return CompletableFuture.runAsync(() -> callEvent(event));
     }
 
     @Override

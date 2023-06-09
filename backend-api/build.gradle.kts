@@ -1,7 +1,3 @@
-plugins {
-    `maven-publish`
-}
-
 java {
     withJavadocJar()
 }

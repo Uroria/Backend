@@ -1,6 +1,9 @@
 package com.uroria.backend.server.modules.server;
 
 import com.uroria.backend.pluginapi.BackendRegistry;
+import com.uroria.backend.pluginapi.events.server.ServerStartEvent;
+import com.uroria.backend.pluginapi.events.server.ServerStopEvent;
+import com.uroria.backend.pluginapi.events.server.ServerUpdateEvent;
 import com.uroria.backend.pluginapi.modules.ServerManager;
 import com.uroria.backend.common.BackendServer;
 import com.uroria.backend.common.Unsafe;
@@ -14,6 +17,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class BackendServerManager implements ServerManager {
     private final Logger logger;
@@ -30,7 +34,7 @@ public final class BackendServerManager implements ServerManager {
         this.pulsarClient = pulsarClient;
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
         this.api = api;
-        this.servers = new ArrayList<>();
+        this.servers = new CopyOnWriteArrayList<>();
     }
 
     public void start() {
@@ -81,8 +85,21 @@ public final class BackendServerManager implements ServerManager {
 
     void updateLocal(BackendServer server) {
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not started yet");
-        this.servers.removeIf(server1 -> server1.getId().isPresent() && server1.getId().get().equals(server.getId().get()));
+
+        for (BackendServer backendServer : this.servers) {
+            if (backendServer.getId().isEmpty()) continue;
+            if (!backendServer.getId().get().equals(server.getId().get())) continue;
+            if (server.getStatus() == backendServer.getStatus()) break;
+            ServerStatus currentStatus = backendServer.getStatus();
+            ServerStatus nextStatus = server.getStatus();
+            if (nextStatus == ServerStatus.STARTING && currentStatus == ServerStatus.EMPTY) this.eventManager.callEventAsync(new ServerStartEvent(server));
+            if (nextStatus == ServerStatus.STOPPED && currentStatus == ServerStatus.CLOSED) this.eventManager.callEventAsync(new ServerStopEvent(server));
+
+            this.servers.remove(backendServer);
+            break;
+        }
         this.servers.add(server);
+        this.eventManager.callEventAsync(new ServerUpdateEvent(server));
     }
 
     @Override
