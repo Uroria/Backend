@@ -13,7 +13,7 @@ public final class BackendClan extends PropertyHolder implements Serializable {
     private final Collection<UUID> moderators;
     private final Collection<UUID> members;
     private final long foundingDate;
-    private String name;
+    private final String name;
     private String tag;
     private UUID operator;
 
@@ -25,11 +25,6 @@ public final class BackendClan extends PropertyHolder implements Serializable {
         this.members = new ArrayList<>();
         this.foundingDate = foundingDate;
         this.members.add(operator);
-    }
-
-    public void setName(String name) {
-        if (name == null) throw new NullPointerException("Name cannot be null");
-        this.name = name;
     }
 
     public void addModerator(UUID uuid) {
