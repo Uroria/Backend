@@ -103,7 +103,7 @@ public final class Uroria implements Server {
         this.pluginManager = new BackendPluginManager(this);
 
         this.playerManager = new BackendPlayerManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
-        this.statsManager = new BackendStatsManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
+        this.statsManager = new BackendStatsManager(LOGGER, this.pulsarClient, this.database);
         this.permissionManager = new BackendPermissionManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.partyManager = new BackendPartyManager(LOGGER, this.pulsarClient, this.redisConnection);
         this.serverManager = new BackendServerManager(LOGGER, this.pulsarClient, this.cloudAPI);
