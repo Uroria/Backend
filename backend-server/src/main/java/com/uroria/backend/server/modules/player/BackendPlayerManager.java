@@ -75,7 +75,7 @@ public final class BackendPlayerManager implements PlayerManager {
                     this.logger.info("Registered new player " + player.getUUID());
                     return Optional.of(player);
                 }
-                else return Optional.empty();
+                return Optional.empty();
             }
             return Optional.of(fromJson(savedDocument.toJson()));
         } catch (Exception exception) {

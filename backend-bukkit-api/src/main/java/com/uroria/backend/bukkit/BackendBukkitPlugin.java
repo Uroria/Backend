@@ -1,12 +1,12 @@
 package com.uroria.backend.bukkit;
 
+import com.uroria.backend.bukkit.listeners.PlayerJoin;
 import com.uroria.backend.bukkit.listeners.PlayerPreLogin;
-import com.uroria.backend.common.BackendServer;
-import com.uroria.backend.common.helpers.ServerStatus;
+import com.uroria.backend.bukkit.listeners.PlayerQuit;
 import de.leonhard.storage.Json;
 import de.leonhard.storage.internal.settings.ReloadSettings;
-import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +32,11 @@ public final class BackendBukkitPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         this.backendAPI.start();
-        Bukkit.getPluginManager().registerEvents(new PlayerPreLogin(this.backendAPI), this);
-
-        try {
-            BackendServer server = this.backendAPI.getServerManager().getThisServer();
-            server.setStatus(ServerStatus.READY);
-            this.backendAPI.getServerManager().updateServer(server);
-        } catch (Exception exception) {
-            this.logger.error("SERVER NOT AVAILABLE! SHUTTING DOWN", exception);
-        }
+        
+        PluginManager pluginManager = getServer().getPluginManager();
+        pluginManager.registerEvents(new PlayerPreLogin(this.backendAPI), this);
+        pluginManager.registerEvents(new PlayerJoin(), this);
+        pluginManager.registerEvents(new PlayerQuit(), this);
     }
 
     @Override

@@ -124,7 +124,9 @@ public final class BackendPermissionManager implements PermissionManager {
                 PermissionGroupCreateEvent permissionGroupCreateEvent = new PermissionGroupCreateEvent(group);
                 this.eventManager.callEvent(permissionGroupCreateEvent);
                 this.logger.debug("Registered group " + group.getName());
-            } else this.logger.warn("Could not register group " + group.getName());
+                return;
+            }
+            this.logger.warn("Could not register group " + group.getName());
             return;
         }
         if (this.groups.replaceOne(Filters.eq("name", group.getName()), newDocument).wasAcknowledged()) {
