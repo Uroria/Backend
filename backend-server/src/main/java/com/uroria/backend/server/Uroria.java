@@ -1,10 +1,13 @@
 package com.uroria.backend.server;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.uroria.backend.common.utils.TransientField;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.Server;
 import com.uroria.backend.pluginapi.events.EventManager;
@@ -40,7 +43,18 @@ public final class Uroria implements Server {
     private static boolean sentry;
 
     static {
-        GSON = new GsonBuilder().disableHtmlEscaping().create();
+        final ExclusionStrategy strategy = new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes f) {
+                return f.getAnnotation(TransientField.class) != null;
+            }
+
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+                return false;
+            }
+        };
+        GSON = new GsonBuilder().disableHtmlEscaping().addDeserializationExclusionStrategy(strategy).addSerializationExclusionStrategy(strategy).create();
         CONFIG = new Json("config.json", "./", Uroria.class.getClassLoader().getResourceAsStream("config.json"), ReloadSettings.MANUALLY);
     }
 
