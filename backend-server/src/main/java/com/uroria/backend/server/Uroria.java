@@ -12,6 +12,8 @@ import com.uroria.backend.pluginapi.modules.*;
 import com.uroria.backend.pluginapi.plugins.PluginManager;
 import com.uroria.backend.pluginapi.scheduler.Scheduler;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.clan.BackendClanManager;
+import com.uroria.backend.server.modules.friend.BackendFriendManager;
 import com.uroria.backend.server.modules.party.BackendPartyManager;
 import com.uroria.backend.server.modules.permission.BackendPermissionManager;
 import com.uroria.backend.server.modules.player.BackendPlayerManager;
@@ -63,6 +65,8 @@ public final class Uroria implements Server {
     private final BackendPermissionManager permissionManager;
     private final BackendPartyManager partyManager;
     private final BackendServerManager serverManager;
+    private final BackendClanManager clanManager;
+    private final BackendFriendManager friendManager;
 
     private Uroria() {
         BackendRegistry.register(this);
@@ -103,6 +107,8 @@ public final class Uroria implements Server {
         this.permissionManager = new BackendPermissionManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.partyManager = new BackendPartyManager(LOGGER, this.pulsarClient, this.redisConnection);
         this.serverManager = new BackendServerManager(LOGGER, this.pulsarClient, this.cloudAPI);
+        this.clanManager = new BackendClanManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
+        this.friendManager = new BackendFriendManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
     }
 
     private void start() {
@@ -111,6 +117,8 @@ public final class Uroria implements Server {
         this.permissionManager.start();
         this.serverManager.start();
         this.partyManager.start();
+        this.clanManager.start();
+        this.friendManager.start();
 
         LOGGER.info("Starting plugins");
         this.pluginManager.startPlugins();
@@ -125,6 +133,8 @@ public final class Uroria implements Server {
         this.permissionManager.shutdown();
         this.serverManager.shutdown();
         this.partyManager.shutdown();
+        this.clanManager.shutdown();
+        this.friendManager.shutdown();
 
         try {
             if (this.pulsarClient != null && !this.pulsarClient.isClosed()) {
@@ -187,6 +197,16 @@ public final class Uroria implements Server {
     @Override
     public ServerManager getServerManager() {
         return this.serverManager;
+    }
+
+    @Override
+    public ClanManger getClanManager() {
+        return this.clanManager;
+    }
+
+    @Override
+    public FriendManager getFriendManager() {
+        return this.friendManager;
     }
 
     public PulsarClient getPulsarClient() {
