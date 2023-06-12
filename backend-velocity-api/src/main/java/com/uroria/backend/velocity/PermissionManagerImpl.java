@@ -82,8 +82,9 @@ public final class PermissionManagerImpl extends PermissionManager {
         for (PermissionHolder holder : this.holders) {
             if (holder.getUUID().equals(uuid)) return Optional.of(holder);
         }
-
-        return holderRequest.request(uuid);
+        Optional<PermissionHolder> request = holderRequest.request(uuid);
+        request.ifPresent(holders::add);
+        return request;
     }
 
     @Override
@@ -93,8 +94,9 @@ public final class PermissionManagerImpl extends PermissionManager {
         for (PermissionGroup group : this.groups) {
             if (group.getName().equals(name)) return Optional.of(group);
         }
-
-        return groupRequest.request(name);
+        Optional<PermissionGroup> request = groupRequest.request(name);
+        request.ifPresent(groups::add);
+        return request;
     }
 
     @Override

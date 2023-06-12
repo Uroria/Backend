@@ -17,6 +17,7 @@ public final class BackendPlayerUUIDResponse extends PulsarResponse<UUID, Backen
 
     @Override
     protected BackendPlayer response(UUID key) {
+        LOGGER.debug("Requesting player by uuid " + key);
         return this.playerManager.getPlayer(key).orElse(null);
     }
 }

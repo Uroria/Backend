@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class PulsarResponse<K, O> extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PulsarRequest.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger("PulsarResponse");
 
     private final PulsarClient pulsarClient;
     private final Producer<byte[]> producer;
@@ -28,12 +28,20 @@ public abstract class PulsarResponse<K, O> extends Thread {
                 .subscriptionName(bridgeName)
                 .subscribe();
         this.bridgeName = bridgeName;
+        try {
+            start();
+        } catch (Exception exception) {
+            LOGGER.error("Cannot start thread for request topic " + requestTopic);
+        }
     }
 
     protected abstract O response(K key);
 
     @Override
     public final void run() {
+        String threadName = this.producer.getTopic();
+        Thread.currentThread().setName(threadName);
+        LOGGER.info("Starting response thread for response topic " + threadName);
         try {
             while (!this.pulsarClient.isClosed()) {
                 Message<byte[]> message = this.consumer.receive();
@@ -52,6 +60,7 @@ public abstract class PulsarResponse<K, O> extends Thread {
                              output.writeObject(obj);
                          }
                          output.close();
+                         this.producer.send(output.toByteArray());
                      } catch (Exception exception) {
                          LOGGER.error("Cannot receive request of object", exception);
                      }

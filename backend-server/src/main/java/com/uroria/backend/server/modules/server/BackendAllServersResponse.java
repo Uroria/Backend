@@ -16,6 +16,7 @@ public final class BackendAllServersResponse extends PulsarResponse<Integer, Lis
 
     @Override
     protected List<Integer> response(Integer key) {
+        LOGGER.debug("Requesting all servers by id " + key);
         return this.serverManager.getAllServerIds();
     }
 }

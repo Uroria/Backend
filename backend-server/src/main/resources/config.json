@@ -1,3 +1,17 @@
 {
-
+  "sentry": {
+    "enabled": false,
+    "dsn": ""
+  },
+  "pulsar": {
+    "url": ""
+  },
+  "mongo": {
+    "url": ""
+  },
+  "redis": {
+    "cloud": {
+      "uuid": null
+    }
+  }
 }

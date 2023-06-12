@@ -5,8 +5,13 @@ import com.uroria.backend.common.pulsar.PulsarRequest;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-public class BackendPermissionGroupRequest extends PulsarRequest<PermissionGroup, String> {
+public final class BackendPermissionGroupRequest extends PulsarRequest<PermissionGroup, String> {
     public BackendPermissionGroupRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "permission:group:request", "permission:group:response", bridgeName, 10000, 10);
+    }
+
+    @Override
+    protected void onRequest(String key) {
+        LOGGER.info("Requesting permission-group with name " + key);
     }
 }

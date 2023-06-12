@@ -11,6 +11,7 @@ import com.uroria.backend.pluginapi.events.clan.ClanUpdateEvent;
 import com.uroria.backend.pluginapi.modules.ClanManger;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -22,8 +23,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendClanManager implements ClanManger {
-    private final Logger logger;
+public final class BackendClanManager extends AbstractManager implements ClanManger {
     private final PulsarClient pulsarClient;
     private final MongoCollection<Document> clans;
     private final RedisCommands<String, String> cachedClans;
@@ -33,14 +33,15 @@ public final class BackendClanManager implements ClanManger {
     private BackendClanUpdate clanUpdate;
 
     public BackendClanManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> cache) {
-        this.logger = logger;
+        super(logger, "ClanModule");
         this.pulsarClient = pulsarClient;
         this.clans = database.getCollection("clans", Document.class);
         this.cachedClans = cache.sync();
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
     }
 
-    public void start() {
+    @Override
+    public void enable() {
         try {
             this.tagResponse = new BackendClanTagResponse(this.pulsarClient, this);
             this.operatorResponse = new BackendClanOperatorResponse(this.pulsarClient, this);
@@ -50,7 +51,8 @@ public final class BackendClanManager implements ClanManger {
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void disable() {
         try {
             if (this.tagResponse != null) this.tagResponse.close();
             if (this.operatorResponse != null) this.operatorResponse.close();

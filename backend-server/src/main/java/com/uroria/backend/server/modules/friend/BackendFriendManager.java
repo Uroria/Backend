@@ -10,6 +10,7 @@ import com.uroria.backend.pluginapi.events.friend.FriendUpdateEvent;
 import com.uroria.backend.pluginapi.modules.FriendManager;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -21,8 +22,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendFriendManager implements FriendManager {
-    private final Logger logger;
+public final class BackendFriendManager extends AbstractManager implements FriendManager {
     private final PulsarClient pulsarClient;
     private final MongoCollection<Document> friends;
     private final RedisCommands<String, String> cachedFriends;
@@ -31,14 +31,15 @@ public final class BackendFriendManager implements FriendManager {
     private BackendFriendUpdate friendUpdate;
 
     public BackendFriendManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> cache) {
-        this.logger = logger;
+        super(logger, "FriendModule");
         this.pulsarClient = pulsarClient;
         this.friends = database.getCollection("friends", Document.class);
         this.cachedFriends = cache.sync();
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
     }
 
-    public void start() {
+    @Override
+    public void enable() {
         try {
             this.friendResponse = new BackendFriendResponse(this.pulsarClient, this);
             this.friendUpdate = new BackendFriendUpdate(this.pulsarClient, this);
@@ -47,7 +48,8 @@ public final class BackendFriendManager implements FriendManager {
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void disable() {
         try {
             if (this.friendResponse != null) this.friendResponse.close();
             if (this.friendUpdate != null) this.friendUpdate.close();

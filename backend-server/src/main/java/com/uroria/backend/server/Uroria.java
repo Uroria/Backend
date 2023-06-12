@@ -83,12 +83,13 @@ public final class Uroria implements Server {
     private final BackendFriendManager friendManager;
 
     private Uroria() {
+        long start = System.currentTimeMillis();
         BackendRegistry.register(this);
 
         sentry = CONFIG.getOrSetDefault("sentry.enabled", false);
 
         if (sentry) {
-            LOGGER.info("Initializing sentry");
+            LOGGER.info("Initializing sentry...");
             Sentry.init(options -> {
                 options.setDsn(CONFIG.getString("sentry.dsn"));
                 options.setTracesSampleRate(1.0);
@@ -100,22 +101,25 @@ public final class Uroria implements Server {
 
         this.eventManager = new BackendEventManager();
 
-        LOGGER.info("Connecting to pulsar instance");
+        LOGGER.info("Connecting to pulsar instance...");
         this.pulsarClient = buildPulsarClient(CONFIG.getOrSetDefault("pulsar.url", "pulsar://pls.api.uroria.net:6650"));
 
-        LOGGER.info("Connecting to mongo instance");
+        LOGGER.info("Connecting to mongo instance...");
         this.mongoClient = MongoClients.create(CONFIG.getString("mongo.url"));
         this.database = this.mongoClient.getDatabase("backend");
 
-        LOGGER.info("Connecting to redis instance");
+        LOGGER.info("Connecting to redis instance...");
         this.redisClient = RedisClient.create(CONFIG.getString("redis.url"));
         this.redisConnection = this.redisClient.connect();
 
+        LOGGER.info("Connecting to cloud api...");
         this.cloudAPI = new CloudAPI(CONFIG.getOrSetDefault("cloud.uuid", UUID.randomUUID().toString()), CONFIG.getString("cloud.token"));
 
         this.scheduler = new BackendScheduler();
+        LOGGER.info("Initializing plugins...");
         this.pluginManager = new BackendPluginManager(this);
 
+        LOGGER.info("Initializing modules...");
         this.playerManager = new BackendPlayerManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.statsManager = new BackendStatsManager(LOGGER, this.pulsarClient, this.database);
         this.permissionManager = new BackendPermissionManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
@@ -123,9 +127,12 @@ public final class Uroria implements Server {
         this.serverManager = new BackendServerManager(LOGGER, this.pulsarClient, this.cloudAPI);
         this.clanManager = new BackendClanManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.friendManager = new BackendFriendManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
+        LOGGER.info("Finished initializing in " + (System.currentTimeMillis() - start) + "ms");
     }
 
     private void start() {
+        long start = System.currentTimeMillis();
+        LOGGER.info("Starting modules...");
         this.playerManager.start();
         this.statsManager.start();
         this.permissionManager.start();
@@ -134,11 +141,14 @@ public final class Uroria implements Server {
         this.clanManager.start();
         this.friendManager.start();
 
-        LOGGER.info("Starting plugins");
+        LOGGER.info("Starting plugins...");
         this.pluginManager.startPlugins();
+
+        LOGGER.info("Started in " + (System.currentTimeMillis() - start) + "ms");
     }
 
     private void terminate() {
+        long start = System.currentTimeMillis();
         LOGGER.info("Stopping plugins...");
         this.pluginManager.stopPlugins();
 
@@ -170,7 +180,7 @@ public final class Uroria implements Server {
             LOGGER.info("Closing mongo connection...");
             this.mongoClient.close();
         }
-        LOGGER.info("Finished shutting down. Goodbye!");
+        LOGGER.info("Finished shutting down in " + (System.currentTimeMillis() - start) +  "ms. Goodbye!");
     }
 
     @Override

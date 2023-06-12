@@ -7,6 +7,7 @@ import com.uroria.backend.pluginapi.modules.PartyManager;
 import com.uroria.backend.common.BackendParty;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -17,20 +18,20 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendPartyManager implements PartyManager {
-    private final Logger logger;
+public final class BackendPartyManager extends AbstractManager implements PartyManager {
     private final PulsarClient pulsarClient;
     private final RedisCommands<String, String> cachedParties;
     private final BackendEventManager eventManager;
 
     public BackendPartyManager(Logger logger, PulsarClient pulsarClient, StatefulRedisConnection<String, String> cache) {
-        this.logger = logger;
+        super(logger, "PartyModule");
         this.pulsarClient = pulsarClient;
         this.cachedParties = cache.sync();
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
     }
 
-    public void start() {
+    @Override
+    public void enable() {
         try {
 
         } catch (Exception exception) {
@@ -38,7 +39,8 @@ public final class BackendPartyManager implements PartyManager {
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void disable() {
         try {
 
         } catch (Exception exception) {

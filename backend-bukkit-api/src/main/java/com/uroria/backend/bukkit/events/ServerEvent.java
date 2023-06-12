@@ -9,6 +9,7 @@ public abstract class ServerEvent extends Event {
     private final BackendServer server;
 
     public ServerEvent(BackendServer server) {
+        super(true);
         this.server = server;
     }
 

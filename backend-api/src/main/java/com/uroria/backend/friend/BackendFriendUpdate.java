@@ -17,6 +17,7 @@ public final class BackendFriendUpdate extends PulsarUpdate<BackendFriend> {
 
     @Override
     protected void onUpdate(BackendFriend object) {
+        LOGGER.info("Updating friend with uuid " + object.getHolder());
         this.friendConsumer.accept(object);
     }
 }

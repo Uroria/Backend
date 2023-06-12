@@ -11,4 +11,9 @@ public final class BackendPermissionHolderRequest extends PulsarRequest<Permissi
     public BackendPermissionHolderRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "permission:holder:request", "permission:holder:response", bridgeName, 5000, 10);
     }
+
+    @Override
+    protected void onRequest(UUID key) {
+        LOGGER.info("Requesting permission-holder with uuid " + key);
+    }
 }

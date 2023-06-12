@@ -11,6 +11,7 @@ public final class PermissionGroupUpdateEvent extends Event {
     private final PermissionGroup group;
 
     public PermissionGroupUpdateEvent(PermissionGroup group) {
+        super(true);
         this.group = group;
     }
 

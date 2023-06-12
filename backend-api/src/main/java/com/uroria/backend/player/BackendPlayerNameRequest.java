@@ -9,4 +9,9 @@ public final class BackendPlayerNameRequest extends PulsarRequest<BackendPlayer,
     public BackendPlayerNameRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "player:request:name", "player:response:name", bridgeName, 10000, 10);
     }
+
+    @Override
+    protected void onRequest(String key) {
+        LOGGER.info("Requesting player with name " + key);
+    }
 }

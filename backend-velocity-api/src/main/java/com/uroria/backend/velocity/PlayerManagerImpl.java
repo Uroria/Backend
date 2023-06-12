@@ -68,8 +68,9 @@ public final class PlayerManagerImpl extends PlayerManager {
         for (BackendPlayer player : this.players) {
             if (player.getUUID().equals(uuid)) return Optional.of(player);
         }
-
-        return uuidRequest.request(uuid);
+        Optional<BackendPlayer> request = uuidRequest.request(uuid);
+        request.ifPresent(this.players::add);
+        return request;
     }
 
     @Override
@@ -80,7 +81,9 @@ public final class PlayerManagerImpl extends PlayerManager {
             if (player.getCurrentName().isPresent() && player.getCurrentName().get().equals(name)) return Optional.of(player);
         }
 
-        return nameRequest.request(name);
+        Optional<BackendPlayer> request = nameRequest.request(name);
+        request.ifPresent(this.players::add);
+        return request;
     }
 
     @Override

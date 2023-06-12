@@ -22,13 +22,6 @@ public abstract class PermissionManager extends AbstractManager {
         this.groups = new CopyOnWriteArrayList<>();
     }
 
-
-    @Override
-    abstract protected void start(String identifier);
-
-    @Override
-    abstract protected void shutdown();
-
     abstract protected void checkPermissionHolder(PermissionHolder holder);
 
     abstract protected void checkPermissionGroup(PermissionGroup group);

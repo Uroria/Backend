@@ -16,10 +16,4 @@ public abstract class StatsManager extends AbstractManager {
         this.logger = logger;
         this.stats = new CopyOnWriteArrayList<>();
     }
-
-    @Override
-    abstract protected void start(String identifier);
-
-    @Override
-    abstract protected void shutdown();
 }

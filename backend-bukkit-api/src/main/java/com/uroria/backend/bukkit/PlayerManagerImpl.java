@@ -1,6 +1,6 @@
 package com.uroria.backend.bukkit;
 
-import com.uroria.backend.bukkit.events.PlayerUpdatEvent;
+import com.uroria.backend.bukkit.events.PlayerUpdateEvent;
 import com.uroria.backend.common.BackendPlayer;
 import com.uroria.backend.player.BackendPlayerNameRequest;
 import com.uroria.backend.player.BackendPlayerUUIDRequest;
@@ -57,7 +57,7 @@ public final class PlayerManagerImpl extends PlayerManager {
         if (this.players.stream().noneMatch(player1 -> player1.getUUID().equals(player.getUUID()))) return;
         this.players.removeIf(player1 -> player1.getUUID().equals(player.getUUID()));
         this.players.add(player);
-        Bukkit.getPluginManager().callEvent(new PlayerUpdatEvent(player));
+        Bukkit.getPluginManager().callEvent(new PlayerUpdateEvent(player));
     }
 
     @Override
@@ -66,8 +66,9 @@ public final class PlayerManagerImpl extends PlayerManager {
         for (BackendPlayer player : this.players) {
             if (player.getUUID().equals(uuid)) return Optional.of(player);
         }
-
-        return uuidRequest.request(uuid);
+        Optional<BackendPlayer> request = uuidRequest.request(uuid);
+        request.ifPresent(players::add);
+        return request;
     }
 
     @Override
@@ -77,8 +78,9 @@ public final class PlayerManagerImpl extends PlayerManager {
         for (BackendPlayer player : this.players) {
             if (player.getCurrentName().isPresent() && player.getCurrentName().get().equals(name)) return Optional.of(player);
         }
-
-        return nameRequest.request(name);
+        Optional<BackendPlayer> request = nameRequest.request(name);
+        request.ifPresent(players::add);
+        return request;
     }
 
     @Override
@@ -104,6 +106,8 @@ public final class PlayerManagerImpl extends PlayerManager {
             for (UUID uuid : markedForRemoval) {
                 this.players.removeIf(player -> player.getUUID().equals(uuid));
             }
+            int size = markedForRemoval.size();
+            if (size > 0) this.logger.info(size + " players removed from cache");
             runCacheChecker();
         }, throwable -> {
             this.logger.error("Unhandled exception", throwable);

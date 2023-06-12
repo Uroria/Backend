@@ -5,12 +5,13 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public final class PlayerUpdatEvent extends Event {
+public final class PlayerUpdateEvent extends Event {
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
     private final BackendPlayer player;
 
-    public PlayerUpdatEvent(BackendPlayer player) {
+    public PlayerUpdateEvent(BackendPlayer player) {
+        super(true);
         this.player = player;
     }
 

@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public abstract class PulsarRequest<O, K> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PulsarRequest.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger("PulsarRequest");
 
     private final Producer<byte[]> producer;
     private final Consumer<byte[]> consumer;
@@ -36,17 +36,23 @@ public abstract class PulsarRequest<O, K> {
         this.timeout = timeout;
     }
 
+    protected abstract void onRequest(K key);
+
     public final Optional<O> request(K requestKey) {
         if (requestKey == null) throw new NullPointerException("Key cannot be null");
+        onRequest(requestKey);
+
         try (BackendOutputStream output = new BackendOutputStream()) {
             output.writeObject(requestKey);
+            output.close();
+            this.producer.send(output.toByteArray());
         } catch (Exception exception) {
             throw new RuntimeException("Unhandled exception in producing", exception);
         }
+
         long startTime = System.currentTimeMillis();
         try {
             O obj = null;
-
             while (true) {
                 if ((System.currentTimeMillis() - startTime) > timeout) break;
                 Message<byte[]> message = this.consumer.receive(timeout, TimeUnit.MILLISECONDS);

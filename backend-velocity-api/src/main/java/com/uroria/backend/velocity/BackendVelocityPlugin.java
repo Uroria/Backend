@@ -35,19 +35,24 @@ public final class BackendVelocityPlugin {
             return;
         }
         this.backendAPI = backendAPI;
+        try {
+            this.backendAPI.start();
+        } catch (Exception exception) {
+            this.logger.error("Cannot start backend", exception);
+            BackendAPI.captureException(exception);
+        }
     }
 
     @Subscribe
     public void onProxyInitializeEvent(ProxyInitializeEvent proxyInitializeEvent) {
-        this.backendAPI.start();
         EventManager eventManager = this.proxyServer.getEventManager();
         eventManager.register(this, new PlayerLogin(this.backendAPI.getPlayerManager()));
     }
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent proxyShutdownEvent) {
-        this.backendAPI.shutdown();
         this.proxyServer.getEventManager().unregisterListeners(this);
+        this.backendAPI.shutdown();
     }
 
     static Json getConfig() {

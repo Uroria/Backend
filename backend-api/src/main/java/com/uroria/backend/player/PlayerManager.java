@@ -19,12 +19,6 @@ public abstract class PlayerManager extends AbstractManager {
         this.players = new CopyOnWriteArrayList<>();
     }
 
-    @Override
-    abstract protected void start(String identifier);
-
-    @Override
-    abstract protected void shutdown();
-
     abstract protected void checkPlayer(BackendPlayer player);
 
     /**

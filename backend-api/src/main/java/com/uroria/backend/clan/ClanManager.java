@@ -20,12 +20,6 @@ public abstract class ClanManager extends AbstractManager {
         this.clans = new CopyOnWriteArrayList<>();
     }
 
-    @Override
-    abstract protected void start(String identifier);
-
-    @Override
-    abstract protected void shutdown();
-
     abstract protected void checkClan(BackendClan clan);
 
     abstract public Optional<BackendClan> getClan(String tag, int timout);

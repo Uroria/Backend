@@ -16,11 +16,6 @@ public final class CloudAPI {
     private final UUID uuid;
     private final OkHttpClient client;
     private final String token;
-    public CloudAPI(UUID uuid, String token) {
-        this.uuid = uuid;
-        this.client = new OkHttpClient.Builder().build();
-        this.token = token;
-    }
 
     public CloudAPI(String stringUUID, String token) {
         UUID uuid;
@@ -30,8 +25,8 @@ public final class CloudAPI {
             uuid = UUID.randomUUID();
         }
         this.uuid = UUID.randomUUID();
-        this.client = new OkHttpClient.Builder().build();
         this.token = token;
+        this.client = new OkHttpClient();
     }
 
     public int startServer(int templateId, String url) {

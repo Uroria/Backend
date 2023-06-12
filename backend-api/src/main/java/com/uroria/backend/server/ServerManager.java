@@ -20,12 +20,6 @@ public abstract class ServerManager extends AbstractManager {
         this.servers = new ArrayList<>();
     }
 
-    @Override
-    abstract protected void start(String identifier);
-
-    @Override
-    abstract protected void shutdown();
-
     abstract protected void checkServer(BackendServer server);
 
     abstract public Optional<BackendServer> getServer(int id, int timeout);

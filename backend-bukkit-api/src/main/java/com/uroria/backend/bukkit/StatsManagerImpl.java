@@ -40,6 +40,8 @@ public final class StatsManagerImpl extends StatsManager {
             for (UUID uuid : markedForRemoval) {
                 this.stats.removeIf(stat -> stat.getUUID().equals(uuid));
             }
+            int size = markedForRemoval.size();
+            if (size > 0) this.logger.info(size + " stats removed from cache");
             runCacheChecker();
         }, throwable -> {
             this.logger.error("Unhandled exception", throwable);

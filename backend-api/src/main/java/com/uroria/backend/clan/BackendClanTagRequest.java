@@ -9,4 +9,9 @@ public final class BackendClanTagRequest extends PulsarRequest<BackendClan, Stri
     public BackendClanTagRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "clan:request:tag", "clan:response:tag", bridgeName, 20000, 50);
     }
+
+    @Override
+    protected void onRequest(String key) {
+        LOGGER.info("Requesting clan with tag " + key);
+    }
 }

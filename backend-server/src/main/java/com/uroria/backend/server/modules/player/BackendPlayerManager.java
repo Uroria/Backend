@@ -10,6 +10,7 @@ import com.uroria.backend.common.BackendPlayer;
 import com.uroria.backend.pluginapi.modules.PlayerManager;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -21,8 +22,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendPlayerManager implements PlayerManager {
-    private final Logger logger;
+public final class BackendPlayerManager extends AbstractManager implements PlayerManager {
     private final PulsarClient pulsarClient;
     private final MongoCollection<Document> players;
     private final RedisCommands<String, String> cachedPlayers;
@@ -32,14 +32,15 @@ public final class BackendPlayerManager implements PlayerManager {
     private BackendPlayerUpdate playerUpdate;
 
     public BackendPlayerManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> cache) {
-        this.logger = logger;
+        super(logger, "PlayerModule");
         this.pulsarClient = pulsarClient;
         this.players = database.getCollection("players", Document.class);
         this.cachedPlayers = cache.sync();
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
     }
 
-    public void start() {
+    @Override
+    public void enable() {
         try {
             this.uuidResponse = new BackendPlayerUUIDResponse(this.pulsarClient, this);
             this.nameResponse = new BackendPlayerNameResponse(this.pulsarClient, this);
@@ -49,7 +50,8 @@ public final class BackendPlayerManager implements PlayerManager {
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void disable() {
         try {
             if (this.uuidResponse != null) this.uuidResponse.close();
             if (this.nameResponse != null) this.nameResponse.close();

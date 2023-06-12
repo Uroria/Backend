@@ -20,12 +20,6 @@ public abstract class FriendManager extends AbstractManager {
         this.friends = new CopyOnWriteArrayList<>();
     }
 
-    @Override
-    abstract protected void start(String identifier);
-
-    @Override
-    abstract protected void shutdown();
-
     abstract protected void checkFriend(BackendFriend friend);
 
     abstract public Optional<BackendFriend> getFriend(UUID uuid, int timeout);

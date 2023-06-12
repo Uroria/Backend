@@ -7,7 +7,7 @@ import org.apache.pulsar.client.api.PulsarClientException;
 
 import java.util.function.Consumer;
 
-public class BackendPermissionGroupUpdate extends PulsarUpdate<PermissionGroup> {
+public final class BackendPermissionGroupUpdate extends PulsarUpdate<PermissionGroup> {
     private final Consumer<PermissionGroup> groupConsumer;
     public BackendPermissionGroupUpdate(PulsarClient pulsarClient, String bridgeName, Consumer<PermissionGroup> groupConsumer) throws PulsarClientException {
         super(pulsarClient, "permission:group:update", bridgeName);
@@ -16,6 +16,7 @@ public class BackendPermissionGroupUpdate extends PulsarUpdate<PermissionGroup> 
 
     @Override
     protected void onUpdate(PermissionGroup object) {
+        LOGGER.info("Updating permission-group with name " + object.getName());
         groupConsumer.accept(object);
     }
 }

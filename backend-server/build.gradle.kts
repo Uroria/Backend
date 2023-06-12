@@ -27,3 +27,9 @@ dependencies {
 
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
 }
+
+tasks {
+    shadowJar {
+        archiveFileName.set("Backend.jar")
+    }
+}

@@ -11,6 +11,7 @@ import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.server.CloudAPI;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.AbstractManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
@@ -18,35 +19,38 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public final class BackendServerManager implements ServerManager {
-    private final Logger logger;
+public final class BackendServerManager extends AbstractManager implements ServerManager {
     private final PulsarClient pulsarClient;
     private final BackendEventManager eventManager;
     private final CloudAPI api;
     private final List<BackendServer> servers;
     private BackendServerResponse serverResponse;
     private BackendServerUpdate serverUpdate;
+    private BackendAllServersResponse allServersResponse;
     private BackendServerStartAcknowledge startAcknowledge;
 
     public BackendServerManager(Logger logger, PulsarClient pulsarClient, CloudAPI api) {
-        this.logger = logger;
+        super(logger, "ServerModule");
         this.pulsarClient = pulsarClient;
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
         this.api = api;
         this.servers = new CopyOnWriteArrayList<>();
     }
 
-    public void start() {
+    @Override
+    public void enable() {
         try {
             this.serverResponse = new BackendServerResponse(this.pulsarClient, this);
             this.serverUpdate = new BackendServerUpdate(this.pulsarClient, this);
             this.startAcknowledge = new BackendServerStartAcknowledge(this.pulsarClient, this);
+            this.allServersResponse = new BackendAllServersResponse(this.pulsarClient, this);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void disable() {
         for (BackendServer server : this.servers) {
             try {
                 server.setStatus(ServerStatus.STOPPED);
@@ -61,6 +65,7 @@ public final class BackendServerManager implements ServerManager {
             if (this.serverResponse != null) this.serverResponse.close();
             if (this.serverUpdate != null) this.serverUpdate.close();
             if (this.startAcknowledge != null) this.startAcknowledge.close();
+            if (this.allServersResponse != null) this.allServersResponse.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
             Uroria.captureException(exception);

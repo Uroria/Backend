@@ -88,6 +88,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
 
     @Override
     public Optional<BackendServer> getServer(int id, int timeout) {
+        if (id == -1) return Optional.empty();
         for (BackendServer server : this.servers) {
             if (server.getId().isEmpty()) continue;
             if (server.getId().get().equals(id)) return Optional.of(server);

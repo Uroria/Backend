@@ -9,6 +9,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import io.sentry.Sentry;
 import org.slf4j.Logger;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public final class BackendAPI extends AbstractBackendAPI {
@@ -35,15 +36,27 @@ public final class BackendAPI extends AbstractBackendAPI {
 
     @Override
     protected void start() {
+        String identifier = UUID.randomUUID().toString();
         this.logger.info("Starting connections...");
-
+        try {
+            this.playerManager.start(identifier);
+            this.permissionManager.start(identifier);
+            this.statsManager.start(identifier);
+            this.serverManager.start(identifier);
+        } catch (Exception exception) {
+            this.logger.error("Cannot start modules", exception);
+            captureException(exception);
+        }
     }
 
     @Override
     protected void shutdown() {
         this.logger.info("Shutting down connections...");
         try {
-
+            this.playerManager.shutdown();
+            this.permissionManager.shutdown();
+            this.serverManager.shutdown();
+            this.statsManager.shutdown();
             super.shutdown();
         } catch (Exception exception) {
             this.logger.error("Cannot shutdown pulsar instances", exception);

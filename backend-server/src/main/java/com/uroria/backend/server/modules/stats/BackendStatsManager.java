@@ -11,6 +11,7 @@ import com.uroria.backend.pluginapi.modules.StatsManager;
 import com.uroria.backend.common.BackendStat;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.AbstractManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -20,30 +21,31 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-public final class BackendStatsManager implements StatsManager {
-    private final Logger logger;
+public final class BackendStatsManager extends AbstractManager implements StatsManager {
     private final PulsarClient pulsarClient;
     private final MongoCollection<Document> stats;
     private final BackendEventManager eventManager;
 
     public BackendStatsManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database) {
-        this.logger = logger;
+        super(logger, "StatsModule");
         this.pulsarClient = pulsarClient;
         this.stats = database.getCollection("stats", Document.class);
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
     }
 
-    public void start() {
+    @Override
+    public void enable() {
         try {
-            this.logger.debug("Running non active stat system");
+            this.logger.debug("StatsModule inactive mode");
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void disable() {
         try {
-            this.logger.debug("Stopping non active stat system");
+
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
         }

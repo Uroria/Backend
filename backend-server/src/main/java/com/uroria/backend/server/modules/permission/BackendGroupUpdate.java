@@ -13,7 +13,8 @@ public final class BackendGroupUpdate extends PulsarUpdate<PermissionGroup> {
     }
 
     @Override
-    protected void onUpdate(PermissionGroup object) {
-        this.permissionManager.updateLocal(object);
+    protected void onUpdate(PermissionGroup group) {
+        LOGGER.debug("Updating permission-group with name " + group.getName());
+        this.permissionManager.updateLocal(group);
     }
 }

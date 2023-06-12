@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public abstract class PulsarUpdate<O> extends Thread {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PulsarUpdate.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger("PulsarUpdate");
 
     private final PulsarClient pulsarClient;
     private final Producer<byte[]> producer;
@@ -34,7 +34,11 @@ public abstract class PulsarUpdate<O> extends Thread {
                 .negativeAckRedeliveryDelay(10, TimeUnit.MILLISECONDS)
                 .subscribe();
         this.bridgeName = bridgeName;
-        start();
+        try {
+            start();
+        } catch (Exception exception) {
+            LOGGER.error("Cannot start thread for update topic " + topic);
+        }
     }
 
     protected abstract void onUpdate(O object);
@@ -43,6 +47,8 @@ public abstract class PulsarUpdate<O> extends Thread {
         if (object == null) throw new NullPointerException("Object cannot be null");
         try (BackendOutputStream output = new BackendOutputStream()) {
             output.writeObject(object);
+            output.close();
+            this.producer.send(output.toByteArray());
         } catch (Exception exception) {
             throw new RuntimeException("Cannot update object", exception);
         }
@@ -50,6 +56,9 @@ public abstract class PulsarUpdate<O> extends Thread {
 
     @Override
     public final void run() {
+        String threadName = this.consumer.getTopic();
+        Thread.currentThread().setName(threadName);
+        LOGGER.info("Starting update thread for update topic " + threadName);
         try {
             while (!pulsarClient.isClosed()) {
                 Message<byte[]> message = this.consumer.receive();

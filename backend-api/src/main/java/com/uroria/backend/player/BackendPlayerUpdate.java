@@ -17,6 +17,7 @@ public final class BackendPlayerUpdate extends PulsarUpdate<BackendPlayer> {
 
     @Override
     public void onUpdate(BackendPlayer object) {
+        LOGGER.info("Updating player with uuid " + object.getUUID() + " and name " + object.getCurrentName().orElse(null));
         playerConsumer.accept(object);
     }
 }

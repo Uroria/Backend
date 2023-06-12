@@ -17,6 +17,7 @@ public final class BackendClanUpdate extends PulsarUpdate<BackendClan> {
 
     @Override
     protected void onUpdate(BackendClan object) {
+        LOGGER.info("Updating clan with tag " + object.getTag() + " and name " + object.getName());
         this.clanConsumer.accept(object);
     }
 }

@@ -11,6 +11,7 @@ public final class PermissionHolderUpdateEvent extends Event {
     private final PermissionHolder holder;
 
     public PermissionHolderUpdateEvent(PermissionHolder holder) {
+        super(true);
         this.holder = holder;
     }
 

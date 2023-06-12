@@ -14,7 +14,8 @@ public final class BackendServerUpdate extends PulsarUpdate<BackendServer> {
     }
 
     @Override
-    protected void onUpdate(BackendServer object) {
-        this.serverManager.updateLocal(object);
+    protected void onUpdate(BackendServer server) {
+        LOGGER.debug("Updating server with id " + server.getId().orElse(null));
+        this.serverManager.updateLocal(server);
     }
 }

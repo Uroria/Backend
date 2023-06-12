@@ -11,4 +11,9 @@ public final class BackendPlayerUUIDRequest extends PulsarRequest<BackendPlayer,
     public BackendPlayerUUIDRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "player:request:uuid", "player:response:uuid", bridgeName, 10000, 10);
     }
+
+    @Override
+    protected void onRequest(UUID key) {
+        LOGGER.info("Requesting player with uuid " + key);
+    }
 }

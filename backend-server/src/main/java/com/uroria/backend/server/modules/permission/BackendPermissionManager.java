@@ -13,6 +13,7 @@ import com.uroria.backend.common.PermissionGroup;
 import com.uroria.backend.common.PermissionHolder;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
+import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -24,8 +25,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendPermissionManager implements PermissionManager {
-    private final Logger logger;
+public final class BackendPermissionManager extends AbstractManager implements PermissionManager {
     private final PulsarClient pulsarClient;
     private final MongoCollection<Document> groups;
     private final MongoCollection<Document> holders;
@@ -37,7 +37,7 @@ public final class BackendPermissionManager implements PermissionManager {
     private BackendGroupUpdate groupUpdate;
 
     public BackendPermissionManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> cache) {
-        this.logger = logger;
+        super(logger, "PermissionModule");
         this.pulsarClient = pulsarClient;
         this.groups = database.getCollection("permission_groups", Document.class);
         this.holders = database.getCollection("permission_holders", Document.class);
@@ -45,7 +45,8 @@ public final class BackendPermissionManager implements PermissionManager {
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
     }
 
-    public void start() {
+    @Override
+    public void enable() {
         try {
             this.holderResponse = new BackendHolderResponse(this.pulsarClient, this);
             this.groupResponse = new BackendGroupResponse(this.pulsarClient, this);
@@ -56,7 +57,8 @@ public final class BackendPermissionManager implements PermissionManager {
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void disable() {
         try {
             if (this.holderResponse != null) this.holderResponse.close();
             if (this.groupResponse != null) this.groupResponse.close();

@@ -14,7 +14,8 @@ public final class BackendHolderUpdate extends PulsarUpdate<PermissionHolder> {
     }
 
     @Override
-    protected void onUpdate(PermissionHolder object) {
-        this.permissionManager.updateLocal(object);
+    protected void onUpdate(PermissionHolder holder) {
+        LOGGER.debug("Updating permission-holder with uuid " + holder.getUUID());
+        this.permissionManager.updateLocal(holder);
     }
 }
