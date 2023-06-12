@@ -22,18 +22,18 @@ public final class BackendServer extends PropertyHolder implements Serializable 
     private int status;
     private int id;
 
-    public BackendServer(String name, int templateId, ServerType type, ServerStatus status, int maxPlayerCount) {
+    public BackendServer(String name, int templateId, ServerType type, int maxPlayerCount) {
         this.id = -1;
         this.name = name;
         this.templateId = templateId;
         this.type = type.getId();
-        this.status = status.getId();
+        this.status = ServerStatus.EMPTY.getId();
         this.maxPlayerCount = maxPlayerCount;
         this.onlinePlayers = new ArrayList<>();
     }
 
-    public BackendServer(String name, int templateId, ServerType type, ServerStatus status) {
-        this(name, templateId, type, status, 50);
+    public BackendServer(String name, int templateId, ServerType type) {
+        this(name, templateId, type, 50);
     }
 
     void setId(int id) {
@@ -69,7 +69,7 @@ public final class BackendServer extends PropertyHolder implements Serializable 
     }
 
     public String getDisplayName() {
-        return name + "=" + id;
+        return name + "=" + id + "-" + templateId;
     }
 
     public String getName() {
@@ -105,5 +105,15 @@ public final class BackendServer extends PropertyHolder implements Serializable 
 
     public Collection<UUID> getOnlinePlayers() {
         return onlinePlayers;
+    }
+
+    public BackendServer copy() {
+        BackendServer server = new BackendServer(this.name, this.templateId, getType(), this.maxPlayerCount);
+        server.setProperties(this.properties);
+        return server;
+    }
+
+    public static BackendServer createLobby() {
+        return new BackendServer("Lobby", 1, ServerType.LOBBY, 100);
     }
 }

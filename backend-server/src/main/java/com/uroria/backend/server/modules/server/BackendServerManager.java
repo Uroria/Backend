@@ -1,5 +1,6 @@
 package com.uroria.backend.server.modules.server;
 
+import com.uroria.backend.common.helpers.ServerType;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.server.ServerStartEvent;
 import com.uroria.backend.pluginapi.events.server.ServerStopEvent;
@@ -47,6 +48,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
+        prepareLobby();
     }
 
     @Override
@@ -70,6 +72,12 @@ public final class BackendServerManager extends AbstractManager implements Serve
             this.logger.error("Cannot close handlers", exception);
             Uroria.captureException(exception);
         }
+    }
+
+    private void prepareLobby() {
+        if (this.servers.stream().anyMatch(server -> server.getType() == ServerType.LOBBY)) return;
+        this.logger.info("Preparing a default lobby");
+        startServer(BackendServer.createLobby());
     }
 
     @Override
@@ -110,7 +118,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
     public BackendServer startServer(BackendServer server) {
         if (server.getStatus() != ServerStatus.EMPTY) return null;
         try {
-            int id = this.api.startServer(server.getTemplateId(), "http://rpr.api.uroria.com:8004/api/v1");
+            int id = this.api.startServer(server.getTemplateId());
             Unsafe.setIdOfServer(server, id);
             server.setStatus(ServerStatus.STARTING);
             this.servers.removeIf(server1 -> server1.getId().isPresent() && server1.getId().get().equals(id));

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 public final class CloudAPI {
+    public static final String URL = "http://rpr.api.uroria.com:8004/api/v1/cloud";
     private final UUID uuid;
     private final OkHttpClient client;
     private final String token;
@@ -29,7 +30,7 @@ public final class CloudAPI {
         this.client = new OkHttpClient();
     }
 
-    public int startServer(int templateId, String url) {
+    public int startServer(int templateId) {
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("template_id", String.valueOf(templateId))
@@ -38,7 +39,7 @@ public final class CloudAPI {
                 .build();
 
         Request request = new Request.Builder()
-                .url(url + "/server/create")
+                .url(URL + "/server/create")
                 .method("POST", requestBody)
                 .addHeader("Authorization", "Bearer " + token)
                 .build();

@@ -88,4 +88,8 @@ public abstract class PropertyHolder implements Serializable {
     public Map<String, Object> getProperties() {
         return new HashMap<>(this.properties);
     }
+
+    protected void setProperties(Map<String, Object> properties) {
+        this.properties.putAll(properties);
+    }
 }

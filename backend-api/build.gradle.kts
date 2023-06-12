@@ -1,5 +1,6 @@
 java {
     withJavadocJar()
+    withSourcesJar()
 }
 
 dependencies {
