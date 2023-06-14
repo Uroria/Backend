@@ -154,7 +154,7 @@ public final class BackendPermissionManager extends AbstractManager implements P
             String json = Uroria.getGson().toJson(holder);
             fromJson(json);
             Document document = Document.parse(json);
-            if (this.holders.replaceOne(Filters.eq("uuid", holder.getUUID()), document).wasAcknowledged()) {
+            if (this.holders.replaceOne(Filters.eq("uuid", holder.getUUID().toString()), document).wasAcknowledged()) {
                 PermissionHolderUpdateEvent permissionHolderUpdateEvent = new PermissionHolderUpdateEvent(holder);
                 this.eventManager.callEvent(permissionHolderUpdateEvent);
                 this.logger.debug("Updated holder " + holder.getUUID());

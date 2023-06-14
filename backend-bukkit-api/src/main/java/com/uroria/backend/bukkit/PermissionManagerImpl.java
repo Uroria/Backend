@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public final class PermissionManagerImpl extends PermissionManager {
@@ -63,7 +64,7 @@ public final class PermissionManagerImpl extends PermissionManager {
         if (this.holders.stream().noneMatch(holder1 -> holder1.getUUID().equals(holder.getUUID()))) return;
         this.holders.removeIf(holder1 ->  holder1.getUUID().equals(holder.getUUID()));
         this.holders.add(holder);
-        Bukkit.getPluginManager().callEvent(new PermissionHolderUpdateEvent(holder));
+        CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PermissionHolderUpdateEvent(holder)));
     }
 
     @Override
@@ -71,7 +72,7 @@ public final class PermissionManagerImpl extends PermissionManager {
         if (this.groups.stream().noneMatch(group1 -> group1.getName().equals(group.getName()))) return;
         this.groups.removeIf(group1 -> group1.getName().equals(group.getName()));
         this.groups.add(group);
-        Bukkit.getPluginManager().callEvent(new PermissionGroupUpdateEvent(group));
+        CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PermissionGroupUpdateEvent(group)));
     }
 
     @Override

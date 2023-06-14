@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public final class PlayerManagerImpl extends PlayerManager {
@@ -57,7 +58,7 @@ public final class PlayerManagerImpl extends PlayerManager {
         if (this.players.stream().noneMatch(player1 -> player1.getUUID().equals(player.getUUID()))) return;
         this.players.removeIf(player1 -> player1.getUUID().equals(player.getUUID()));
         this.players.add(player);
-        Bukkit.getPluginManager().callEvent(new PlayerUpdateEvent(player));
+        CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PlayerUpdateEvent(player)));
     }
 
     @Override

@@ -1,10 +1,12 @@
 package com.uroria.backend.bukkit;
 
+import com.uroria.backend.bukkit.commands.StopCommand;
 import com.uroria.backend.bukkit.listeners.PlayerJoin;
 import com.uroria.backend.bukkit.listeners.PlayerPreLogin;
 import com.uroria.backend.bukkit.listeners.PlayerQuit;
 import de.leonhard.storage.Json;
 import de.leonhard.storage.internal.settings.ReloadSettings;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -37,6 +39,10 @@ public final class BackendBukkitPlugin extends JavaPlugin {
         pluginManager.registerEvents(new PlayerPreLogin(this.backendAPI), this);
         pluginManager.registerEvents(new PlayerJoin(), this);
         pluginManager.registerEvents(new PlayerQuit(), this);
+
+        PluginCommand stop = getCommand("stop");
+        if (stop == null) return;
+        stop.setExecutor(new StopCommand());
     }
 
     @Override

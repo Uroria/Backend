@@ -6,14 +6,12 @@ import com.uroria.backend.common.helpers.ServerType;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public final class BackendServer extends PropertyHolder implements Serializable {
     @Serial private static final long serialVersionUID = 1;
 
+    private final long identifier;
     private final String name;
     private final int templateId;
     private final int type;
@@ -23,6 +21,7 @@ public final class BackendServer extends PropertyHolder implements Serializable 
     private int id;
 
     public BackendServer(String name, int templateId, ServerType type, int maxPlayerCount) {
+        this.identifier = System.currentTimeMillis() - hashCode() - new Random().nextInt(10000);
         this.id = -1;
         this.name = name;
         this.templateId = templateId;
@@ -34,6 +33,10 @@ public final class BackendServer extends PropertyHolder implements Serializable 
 
     public BackendServer(String name, int templateId, ServerType type) {
         this(name, templateId, type, 50);
+    }
+
+    public long getIdentifier() {
+        return this.identifier;
     }
 
     void setId(int id) {
@@ -114,6 +117,6 @@ public final class BackendServer extends PropertyHolder implements Serializable 
     }
 
     public static BackendServer createLobby() {
-        return new BackendServer("Lobby", 1, ServerType.LOBBY, 100);
+        return new BackendServer("Lobby", 10, ServerType.LOBBY, 100);
     }
 }

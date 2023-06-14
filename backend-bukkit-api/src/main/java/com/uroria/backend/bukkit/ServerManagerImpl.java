@@ -12,10 +12,12 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 public final class ServerManagerImpl extends BukkitServerManager {
     private final int localServerId;
@@ -33,6 +35,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
             return;
         }
         this.localServerId = Integer.parseInt(stringId);
+
     }
 
     @Override
@@ -46,6 +49,10 @@ public final class ServerManagerImpl extends BukkitServerManager {
             this.logger.error("Cannot initialize handlers", exception);
             BackendAPI.captureException(exception);
         }
+        if (this.localServerId == -1) return;
+        BackendServer server = getThisServer();
+        server.setStatus(ServerStatus.READY);
+        updateServer(server);
     }
 
     @Override
@@ -81,9 +88,11 @@ public final class ServerManagerImpl extends BukkitServerManager {
             Bukkit.shutdown();
             return;
         }
-        this.servers.removeIf(server1 -> server1.getId() == server.getId());
-        this.servers.add(server);
-        Bukkit.getPluginManager().callEvent(new ServerUpdateEvent(server));
+        this.servers.removeIf(server1 -> server1.getIdentifier() == server.getIdentifier());
+        if (server.getStatus() != ServerStatus.STOPPED) this.servers.add(server);
+        CompletableFuture.runAsync(() -> {
+            Bukkit.getPluginManager().callEvent(new ServerUpdateEvent(server));
+        });
     }
 
     @Override

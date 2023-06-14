@@ -1,6 +1,7 @@
 package com.uroria.backend.velocity;
 
 import com.uroria.backend.common.BackendServer;
+import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.server.*;
 import com.uroria.backend.velocity.events.ServerStartEvent;
 import com.uroria.backend.velocity.events.ServerUpdateEvent;
@@ -8,6 +9,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -51,8 +53,9 @@ public final class ServerManagerImpl extends ServerManager {
 
     @Override
     protected void checkServer(BackendServer server) {
-        this.servers.removeIf(server1 -> server1.getId() == server.getId());
-        this.servers.add(server);
+        this.servers.removeIf(server1 -> server1.getIdentifier() == server.getIdentifier());
+        if (server.getStatus() != ServerStatus.STOPPED) this.servers.add(server);
+        this.logger.info("Remaining servers " + Arrays.toString(this.servers.stream().map(registeredServer -> registeredServer.getId().orElse(-1)).toArray()));
         this.proxyServer.getEventManager().fireAndForget(new ServerUpdateEvent(server));
     }
 

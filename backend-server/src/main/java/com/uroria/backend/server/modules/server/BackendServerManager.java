@@ -16,8 +16,10 @@ import com.uroria.backend.server.modules.AbstractManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class BackendServerManager extends AbstractManager implements ServerManager {
@@ -77,7 +79,9 @@ public final class BackendServerManager extends AbstractManager implements Serve
     private void prepareLobby() {
         if (this.servers.stream().anyMatch(server -> server.getType() == ServerType.LOBBY)) return;
         this.logger.info("Preparing a default lobby");
-        startServer(BackendServer.createLobby());
+        CompletableFuture.runAsync(() -> {
+            startServer(BackendServer.createLobby());
+        });
     }
 
     @Override
@@ -99,8 +103,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not started yet");
 
         for (BackendServer backendServer : this.servers) {
-            if (backendServer.getId().isEmpty()) continue;
-            if (!backendServer.getId().get().equals(server.getId().get())) continue;
+            if (backendServer.getIdentifier() != server.getIdentifier()) continue;
             if (server.getStatus() == backendServer.getStatus()) break;
             ServerStatus currentStatus = backendServer.getStatus();
             ServerStatus nextStatus = server.getStatus();
@@ -110,7 +113,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
             this.servers.remove(backendServer);
             break;
         }
-        this.servers.add(server);
+        if (server.getStatus() != ServerStatus.STOPPED) this.servers.add(server);
         this.eventManager.callEventAsync(new ServerUpdateEvent(server));
     }
 
@@ -121,8 +124,13 @@ public final class BackendServerManager extends AbstractManager implements Serve
             int id = this.api.startServer(server.getTemplateId());
             Unsafe.setIdOfServer(server, id);
             server.setStatus(ServerStatus.STARTING);
-            this.servers.removeIf(server1 -> server1.getId().isPresent() && server1.getId().get().equals(id));
-            this.servers.add(server);
+            updateServer(server);
+            InetSocketAddress address = this.api.getAddress(id, 100000);
+            server = getServer(id).orElse(null);
+            if (server == null) throw new RuntimeException("Server deleted before started");
+            server.setProperty("address", address);
+            updateServer(server);
+            this.logger.info("Starting server " + id + " on " + address.getHostName() + ":" + address.getPort());
             return server;
         } catch (Exception exception) {
             this.logger.error("Cannot start server", exception);

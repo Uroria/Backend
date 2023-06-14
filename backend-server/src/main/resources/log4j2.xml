@@ -27,6 +27,7 @@
         <Logger name="org.mongodb.driver" level="WARN"/>
         <Logger name="io.lettuce.core" level="WARN"/>
         <Logger name="io.netty" level="WARN"/>
+        <Logger name="com.scurrilous" level="WARN"/>
 
 
         <Root level="TRACE">
