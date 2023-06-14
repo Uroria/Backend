@@ -53,8 +53,11 @@ public final class ServerManagerImpl extends ServerManager {
 
     @Override
     protected void checkServer(BackendServer server) {
-        this.servers.removeIf(server1 -> server1.getIdentifier() == server.getIdentifier());
-        if (server.getStatus() != ServerStatus.STOPPED) this.servers.add(server);
+        if (this.servers.stream().noneMatch(server::equals)) {
+            if (server.getStatus() == ServerStatus.CLOSED || server.getStatus() == ServerStatus.STOPPED) return;
+        }
+        this.servers.removeIf(server1 -> server1.equals(server));
+        if (server.getStatus() != ServerStatus.STOPPED && server.getStatus() != ServerStatus.CLOSED) this.servers.add(server);
         this.logger.info("Remaining servers " + Arrays.toString(this.servers.stream().map(registeredServer -> registeredServer.getId().orElse(-1)).toArray()));
         this.proxyServer.getEventManager().fireAndForget(new ServerUpdateEvent(server));
     }

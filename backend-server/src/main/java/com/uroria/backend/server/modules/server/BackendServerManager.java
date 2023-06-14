@@ -17,6 +17,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -101,19 +102,23 @@ public final class BackendServerManager extends AbstractManager implements Serve
 
     void updateLocal(BackendServer server) {
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not started yet");
+        if (this.servers.stream().noneMatch(server::equals)) {
+            if (server.getStatus() == ServerStatus.CLOSED || server.getStatus() == ServerStatus.STOPPED) return;
+        }
 
         for (BackendServer backendServer : this.servers) {
-            if (backendServer.getIdentifier() != server.getIdentifier()) continue;
+            if (!server.equals(backendServer)) continue;
             if (server.getStatus() == backendServer.getStatus()) break;
             ServerStatus currentStatus = backendServer.getStatus();
             ServerStatus nextStatus = server.getStatus();
             if (nextStatus == ServerStatus.STARTING && currentStatus == ServerStatus.EMPTY) this.eventManager.callEventAsync(new ServerStartEvent(server));
             if (nextStatus == ServerStatus.STOPPED && currentStatus == ServerStatus.CLOSED) this.eventManager.callEventAsync(new ServerStopEvent(server));
-
-            this.servers.remove(backendServer);
             break;
         }
-        if (server.getStatus() != ServerStatus.STOPPED) this.servers.add(server);
+        this.servers.removeIf(server1 -> server1.equals(server));
+        if (server.getStatus() != ServerStatus.STOPPED && server.getStatus() != ServerStatus.CLOSED) this.servers.add(server);
+        else this.logger.info("Deleting server " + server.getId().get());
+        this.logger.info("Remaining servers " + Arrays.toString(this.servers.stream().map(registeredServer -> registeredServer.getId().orElse(-1)).toArray()));
         this.eventManager.callEventAsync(new ServerUpdateEvent(server));
     }
 
@@ -125,7 +130,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
             Unsafe.setIdOfServer(server, id);
             server.setStatus(ServerStatus.STARTING);
             updateServer(server);
-            InetSocketAddress address = this.api.getAddress(id, 100000);
+            InetSocketAddress address = this.api.getAddress(id, 1000000);
             server = getServer(id).orElse(null);
             if (server == null) throw new RuntimeException("Server deleted before started");
             server.setProperty("address", address);

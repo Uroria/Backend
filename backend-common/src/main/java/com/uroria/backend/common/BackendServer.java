@@ -110,6 +110,17 @@ public final class BackendServer extends PropertyHolder implements Serializable 
         return onlinePlayers;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof BackendServer server) {
+            if (server.getId().isPresent() && this.getId().isPresent()) {
+                return server.id == this.id;
+            }
+            return server.getIdentifier() == this.identifier;
+        }
+        return false;
+    }
+
     public BackendServer copy() {
         BackendServer server = new BackendServer(this.name, this.templateId, getType(), this.maxPlayerCount);
         server.setProperties(this.properties);

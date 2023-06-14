@@ -17,9 +17,13 @@ public final class StopCommand implements CommandExecutor {
             Bukkit.getOnlinePlayers().forEach(player -> {
                 player.kickPlayer("Closed");
             });
-            BackendServer server = BackendAPI.getAPI().getServerManager().getThisServer();
-            server.setStatus(ServerStatus.CLOSED);
-            BackendAPI.getAPI().getServerManager().updateServer(server);
+            try {
+                BackendServer server = BackendAPI.getAPI().getServerManager().getThisServer();
+                server.setStatus(ServerStatus.CLOSED);
+                BackendAPI.getAPI().getServerManager().updateServer(server);
+            } catch (Exception exception) {
+                Bukkit.shutdown();
+            }
         }
         return false;
     }

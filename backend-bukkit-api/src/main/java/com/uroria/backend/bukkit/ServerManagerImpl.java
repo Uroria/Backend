@@ -13,10 +13,7 @@ import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public final class ServerManagerImpl extends BukkitServerManager {
@@ -50,9 +47,14 @@ public final class ServerManagerImpl extends BukkitServerManager {
             BackendAPI.captureException(exception);
         }
         if (this.localServerId == -1) return;
-        BackendServer server = getThisServer();
-        server.setStatus(ServerStatus.READY);
-        updateServer(server);
+        try {
+            BackendServer server = getThisServer();
+            server.setStatus(ServerStatus.READY);
+            updateServer(server);
+        } catch (Exception exception) {
+            this.logger.error("Cannot start server", exception);
+            Bukkit.shutdown();
+        }
     }
 
     @Override
@@ -75,6 +77,10 @@ public final class ServerManagerImpl extends BukkitServerManager {
 
     @Override
     protected void checkServer(BackendServer server) {
+        if (this.servers.stream().noneMatch(server::equals)) {
+            if (server.getStatus() == ServerStatus.CLOSED || server.getStatus() == ServerStatus.STOPPED) return;
+        }
+        this.servers.removeIf(server1 -> server1.equals(server));
         if (server.getId().isPresent() && server.getId().get().equals(this.localServerId) && server.getStatus() == ServerStatus.CLOSED) {
             server.setStatus(ServerStatus.STOPPED);
             updateServer(server);
@@ -83,13 +89,14 @@ public final class ServerManagerImpl extends BukkitServerManager {
                 player.kickPlayer("");
                 try {
                     Thread.sleep(500);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             });
             Bukkit.shutdown();
             return;
         }
-        this.servers.removeIf(server1 -> server1.getIdentifier() == server.getIdentifier());
-        if (server.getStatus() != ServerStatus.STOPPED) this.servers.add(server);
+        if (server.getStatus() != ServerStatus.STOPPED && server.getStatus() != ServerStatus.CLOSED) this.servers.add(server);
+        this.logger.info("Remaining servers " + Arrays.toString(this.servers.stream().map(registeredServer -> registeredServer.getId().orElse(-1)).toArray()));
         CompletableFuture.runAsync(() -> {
             Bukkit.getPluginManager().callEvent(new ServerUpdateEvent(server));
         });
