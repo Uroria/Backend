@@ -63,8 +63,8 @@ public abstract class PulsarUpdate<O> extends Thread {
             while (!pulsarClient.isClosed()) {
                 Message<byte[]> message = this.consumer.receive();
                 if (message == null) continue;
-                if (message.getProducerName().equals(this.bridgeName)) continue;
                 this.consumer.acknowledge(message);
+                if (message.getProducerName().equals(this.bridgeName)) continue;
                 CompletableFuture.runAsync(() -> {
                     try (BackendInputStream input = new BackendInputStream(message.getData())) {
                         onUpdate((O) input.readObject());
