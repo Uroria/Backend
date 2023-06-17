@@ -77,6 +77,12 @@ subprojects {
             transform(Log4j2PluginsCacheFileTransformer::class.java)
             relocate("de.leonhard.storage", "com.uroria.storage")
         }
+
+        jar {
+            manifest {
+                attributes["Multi-Release"] = "true"
+            }
+        }
     }
 
     publishing {

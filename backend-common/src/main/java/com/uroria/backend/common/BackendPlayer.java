@@ -10,7 +10,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.UUID;
 
 public final class BackendPlayer extends PropertyHolder implements Serializable {
     @Serial
