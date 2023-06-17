@@ -89,7 +89,6 @@ public final class BackendPlayerManager extends AbstractManager implements Playe
 
     @Override
     public Optional<BackendPlayer> getPlayer(String currentName) {
-        currentName = currentName.toLowerCase();
         try {
             BackendPlayer cachedPlayer = getCachedPlayer(currentName);
             if (cachedPlayer != null) return Optional.of(cachedPlayer);

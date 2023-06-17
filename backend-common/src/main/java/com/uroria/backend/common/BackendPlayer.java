@@ -3,13 +3,14 @@ package com.uroria.backend.common;
 import com.uroria.backend.common.helpers.PlayerStatus;
 import com.uroria.backend.common.helpers.PropertyHolder;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.UUID;
+import java.net.URL;
+import java.util.*;
 
 public final class BackendPlayer extends PropertyHolder implements Serializable {
     @Serial
@@ -17,6 +18,8 @@ public final class BackendPlayer extends PropertyHolder implements Serializable 
     private final UUID uuid;
     private final Collection<UUID> crew;
     private final Collection<BackendPunishment> outdatedPunishments;
+    private String skinURL;
+    private String avatar;
     private String clan;
     private String currentName;
     private Locale locale;
@@ -137,6 +140,47 @@ public final class BackendPlayer extends PropertyHolder implements Serializable 
 
     public void removeCrewMember(UUID uuid) {
         this.crew.remove(uuid);
+    }
+
+    public Optional<URL> getSkinURL() {
+        if (this.skinURL == null) return Optional.empty();
+        try {
+            URL url = new URL(this.skinURL);
+            return Optional.of(url);
+        } catch (Exception exception) {
+            return Optional.empty();
+        }
+    }
+
+    public void setSkinURL(URL url) {
+        if (url == null) {
+            this.skinURL = null;
+            return;
+        }
+        this.skinURL = url.toString();
+    }
+
+    public Optional<BufferedImage> getAvatar() {
+        if (this.avatar == null) return Optional.empty();
+        try (ByteArrayInputStream input = new ByteArrayInputStream(Base64.getDecoder().decode(this.avatar))) {
+            return Optional.of(ImageIO.read(input));
+        } catch (Exception exception) {
+            return Optional.empty();
+        }
+    }
+
+    public void setAvatar(BufferedImage image) {
+        if (image == null) {
+            this.avatar = null;
+            return;
+        }
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            ImageIO.write(image, "png", output);
+            output.close();
+            this.avatar = Base64.getEncoder().encodeToString(output.toByteArray());
+        } catch (Exception exception) {
+            throw new RuntimeException("Cannot set avatar");
+        }
     }
 
     @Override
