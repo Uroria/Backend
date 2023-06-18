@@ -16,6 +16,7 @@ public final class BackendStat extends PropertyHolder implements Serializable {
     private final long time;
     private final Map<String, Long> scores;
     public BackendStat(UUID uuid, int gameId, long time) {
+        if (uuid == null) throw new NullPointerException("UUID cannot be null");
         this.uuid = uuid;
         this.gameId = gameId;
         this.time = time;

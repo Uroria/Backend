@@ -26,6 +26,9 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     private final MongoCollection<Document> stats;
     private final BackendEventManager eventManager;
 
+    private BackendStatsResponse request;
+    private BackendStatsUpdate update;
+
     public BackendStatsManager(Logger logger, PulsarClient pulsarClient, MongoDatabase database) {
         super(logger, "StatsModule");
         this.pulsarClient = pulsarClient;
@@ -36,7 +39,8 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     @Override
     public void enable() {
         try {
-            this.logger.debug("StatsModule inactive mode");
+            this.request = new BackendStatsResponse(this.pulsarClient, this);
+            this.update = new BackendStatsUpdate(this.pulsarClient, this);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
@@ -45,7 +49,8 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     @Override
     public void disable() {
         try {
-
+            if (this.request != null) this.request.close();
+            if (this.update != null) this.update.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
         }
@@ -212,6 +217,11 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
 
     @Override
     public void updateStat(BackendStat stat) {
+        updateLocal(stat);
+        this.update.update(stat);
+    }
+
+    void updateLocal(BackendStat stat) {
         try {
             String json = Uroria.getGson().toJson(stat);
             Document newDocument = Document.parse(json);
