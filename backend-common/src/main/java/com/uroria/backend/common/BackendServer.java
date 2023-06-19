@@ -128,6 +128,6 @@ public final class BackendServer extends PropertyHolder implements Serializable 
     }
 
     public static BackendServer createLobby() {
-        return new BackendServer("Lobby", 10, ServerType.LOBBY, 100);
+        return new BackendServer("Lobby", 1, ServerType.LOBBY, 100);
     }
 }

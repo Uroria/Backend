@@ -10,6 +10,8 @@ import com.uroria.backend.server.BackendServerStart;
 import com.uroria.backend.server.BackendServerUpdate;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -85,13 +87,20 @@ public final class ServerManagerImpl extends BukkitServerManager {
             server.setStatus(ServerStatus.STOPPED);
             updateServer(server);
             this.logger.info("Shutting down on remote command");
-            Bukkit.getOnlinePlayers().forEach(player -> {
-                player.kickPlayer("");
-                try {
-                    Thread.sleep(500);
-                } catch (Exception ignored) {
-                }
-            });
+            try {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        Bukkit.getOnlinePlayers().forEach(player -> {
+                            player.kickPlayer("");
+                            try {
+                                Thread.sleep(500);
+                            } catch (Exception ignored) {
+                            }
+                        });
+                    }
+                }.runTask(JavaPlugin.getPlugin(BackendBukkitPlugin.class));
+            } catch (Exception ignored) {}
             Bukkit.shutdown();
             return;
         }

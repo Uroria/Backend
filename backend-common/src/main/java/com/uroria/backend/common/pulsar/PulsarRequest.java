@@ -31,6 +31,7 @@ public abstract class PulsarRequest<O, K> {
                 .topic(responseTopic)
                 .subscriptionName(bridgeName)
                 .negativeAckRedeliveryDelay(nackRedelivery, TimeUnit.MILLISECONDS)
+                .ackTimeout(timeout, TimeUnit.MILLISECONDS)
                 .subscribe();
         this.bridgeName = bridgeName;
         this.timeout = timeout;
