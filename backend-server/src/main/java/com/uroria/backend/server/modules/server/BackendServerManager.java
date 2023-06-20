@@ -54,7 +54,6 @@ public final class BackendServerManager extends AbstractManager implements Serve
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
-        prepareLobby();
     }
 
     @Override
@@ -79,14 +78,6 @@ public final class BackendServerManager extends AbstractManager implements Serve
             this.logger.error("Cannot close handlers", exception);
             Uroria.captureException(exception);
         }
-    }
-
-    private void prepareLobby() {
-        if (this.servers.stream().anyMatch(server -> server.getType() == ServerType.LOBBY)) return;
-        this.logger.info("Preparing a default lobby");
-        CompletableFuture.runAsync(() -> {
-            startServer(BackendServer.createLobby());
-        });
     }
 
     @Override
