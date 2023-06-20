@@ -4,6 +4,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractBackendAPI {
     protected final PulsarClient pulsarClient;
@@ -13,6 +14,7 @@ public abstract class AbstractBackendAPI {
         try {
             this.pulsarClient = PulsarClient.builder()
                     .serviceUrl(pulsarURL)
+                    .statsInterval(10, TimeUnit.MINUTES)
                     .build();
         } catch (Exception exception) {
             throw new RuntimeException(exception);

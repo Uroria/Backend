@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public final class Uroria implements Server {
     private static final Gson GSON;
@@ -263,7 +264,10 @@ public final class Uroria implements Server {
 
     private PulsarClient buildPulsarClient(String url) {
         try {
-            return PulsarClient.builder().serviceUrl(url).build();
+            return PulsarClient.builder()
+                    .serviceUrl(url)
+                    .statsInterval(10, TimeUnit.MINUTES)
+                    .build();
         } catch (PulsarClientException exception) {
             LOGGER.error("Cannot connect to Pulsar instance", exception);
             return null;
