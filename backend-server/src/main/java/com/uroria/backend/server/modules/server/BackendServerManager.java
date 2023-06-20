@@ -127,7 +127,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
-    public BackendServer startServer(BackendServer server) {
+    public synchronized BackendServer startServer(BackendServer server) {
         if (server.getStatus() != ServerStatus.EMPTY) return null;
         try {
             int id = this.api.startServer(server.getTemplateId());

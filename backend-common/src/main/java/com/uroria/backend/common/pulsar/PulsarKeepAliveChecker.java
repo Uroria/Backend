@@ -52,10 +52,10 @@ public abstract class PulsarKeepAliveChecker<T> extends Thread {
         while (!this.pulsarClient.isClosed() && this.consumer.isConnected()) {
             try {
                 CompletableFuture.runAsync(this::checkKeepAlives);
-                Message<byte[]> message = this.consumer.receive();
+                Message<byte[]> message = this.consumer.receive(20, TimeUnit.MILLISECONDS);
+                if (message == null) continue;
                 consumer.acknowledge(message);
                 CompletableFuture.runAsync(() -> {
-                    if (message == null) return;
                     try (BackendInputStream input = new BackendInputStream(message.getData())) {
                         T identifier = (T) input.readObject();
                         input.close();
