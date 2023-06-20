@@ -1,6 +1,7 @@
 package com.uroria.backend.bukkit;
 
 import com.uroria.backend.AbstractBackendAPI;
+import com.uroria.backend.message.MessageManager;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;
 import com.uroria.backend.stats.StatsManager;
@@ -19,6 +20,7 @@ public final class BackendAPI extends AbstractBackendAPI {
     private final PermissionManagerImpl permissionManager;
     private final StatsManagerImpl statsManager;
     private final ServerManagerImpl serverManager;
+    private final MessageManagerImpl messageManager;
     BackendAPI(String pulsarURL, boolean sentry, Logger logger) {
         super(pulsarURL);
         instance = this;
@@ -28,6 +30,7 @@ public final class BackendAPI extends AbstractBackendAPI {
         this.permissionManager = new PermissionManagerImpl(this.pulsarClient, this.logger);
         this.statsManager = new StatsManagerImpl(this.pulsarClient, this.logger);
         this.serverManager = new ServerManagerImpl(this.pulsarClient, this.logger);
+        this.messageManager = new MessageManagerImpl(this.pulsarClient, this.logger);
     }
 
     @Override
@@ -38,6 +41,7 @@ public final class BackendAPI extends AbstractBackendAPI {
         this.permissionManager.start(identifier);
         this.statsManager.start(identifier);
         this.serverManager.start(identifier);
+        this.messageManager.start(identifier);
     }
 
     @Override
@@ -48,6 +52,7 @@ public final class BackendAPI extends AbstractBackendAPI {
             this.permissionManager.shutdown();
             this.statsManager.shutdown();
             this.serverManager.shutdown();
+            this.messageManager.shutdown();
             super.shutdown();
         } catch (Exception exception) {
             this.logger.error("Cannot shutdown pulsar instances", exception);
@@ -90,6 +95,10 @@ public final class BackendAPI extends AbstractBackendAPI {
 
     public StatsManager getStatsManager() {
         return this.statsManager;
+    }
+
+    public MessageManager getMessageManager() {
+        return this.messageManager;
     }
 
     public static BackendAPI getAPI() {

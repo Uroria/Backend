@@ -1,6 +1,7 @@
 package com.uroria.backend.velocity;
 
 import com.uroria.backend.AbstractBackendAPI;
+import com.uroria.backend.message.MessageManager;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;
 import com.uroria.backend.server.ServerManager;
@@ -21,6 +22,7 @@ public final class BackendAPI extends AbstractBackendAPI {
     private final PermissionManagerImpl permissionManager;
     private final StatsManagerImpl statsManager;
     private final ServerManagerImpl serverManager;
+    private final MessageManagerImpl messageManager;
 
     BackendAPI(String pulsarURL, boolean sentry, Logger logger, ProxyServer proxyServer) {
         super(pulsarURL);
@@ -32,6 +34,7 @@ public final class BackendAPI extends AbstractBackendAPI {
         this.permissionManager = new PermissionManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
         this.statsManager = new StatsManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
         this.serverManager = new ServerManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
+        this.messageManager = new MessageManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
     }
 
     @Override
@@ -43,6 +46,7 @@ public final class BackendAPI extends AbstractBackendAPI {
             this.permissionManager.start(identifier);
             this.statsManager.start(identifier);
             this.serverManager.start(identifier);
+            this.messageManager.start(identifier);
         } catch (Exception exception) {
             this.logger.error("Cannot start modules", exception);
             captureException(exception);
@@ -57,6 +61,7 @@ public final class BackendAPI extends AbstractBackendAPI {
             this.permissionManager.shutdown();
             this.serverManager.shutdown();
             this.statsManager.shutdown();
+            this.messageManager.shutdown();
             super.shutdown();
         } catch (Exception exception) {
             this.logger.error("Cannot shutdown pulsar instances", exception);
@@ -84,6 +89,10 @@ public final class BackendAPI extends AbstractBackendAPI {
                 scope.setContexts("Thread.Alive", thread.isAlive());
             });
         });
+    }
+
+    public MessageManager getMessageManager() {
+        return this.messageManager;
     }
 
     public PlayerManager getPlayerManager() {

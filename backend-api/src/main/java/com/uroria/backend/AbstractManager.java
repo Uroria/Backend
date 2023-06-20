@@ -10,7 +10,7 @@ public abstract class AbstractManager {
         this.pulsarClient = pulsarClient;
     }
 
-    abstract protected void start(String identifier) throws PulsarClientException;
+    abstract protected void start(String identifier);
 
-    abstract protected void shutdown() throws PulsarClientException;
+    abstract protected void shutdown();
 }
