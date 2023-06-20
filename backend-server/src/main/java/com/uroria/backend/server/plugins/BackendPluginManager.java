@@ -40,12 +40,20 @@ public final class BackendPluginManager implements PluginManager {
         if (files == null) return;
         for (File file : files) {
             if (!file.isFile() && !file.getName().endsWith(".jar")) continue;
-            loadPlugin(file.getName()).ifPresent(BackendPlugin::start);
+            loadPlugin(file.getName()).ifPresent(this::start);
         }
     }
 
+    private void start(BackendPlugin plugin) {
+        Uroria.getLogger().info("Starting plugin " + plugin.getPluginName());
+        plugin.start();
+    }
+
     public void stopPlugins() {
-        this.plugins.forEach((name, plugin) -> plugin.stop());
+        this.plugins.forEach((name, plugin) -> {
+            Uroria.getLogger().info("Stopping plugin " + plugin.getPluginName());
+            plugin.stop();
+        });
     }
 
     private synchronized Optional<BackendPlugin> loadPlugin(String pluginFileName) {
@@ -57,11 +65,12 @@ public final class BackendPluginManager implements PluginManager {
                 ZipEntry entry = zip.getNextEntry();
                 if (entry == null) break;
                 String zipName = entry.getName();
-                if (zipName.endsWith("module.yml")) {
+                if (zipName.endsWith("plugin.yml")) {
                     PluginConfiguration pluginConfiguration = new PluginConfiguration(zip);
                     String name = pluginConfiguration.getPluginName();
                     String version = pluginConfiguration.getVersion();
                     String main = pluginConfiguration.getMain();
+
                     if (name == null) {
                         Uroria.getLogger().error("Name in " + jarFile.getName() + " is null");
                         break;
@@ -84,8 +93,11 @@ public final class BackendPluginManager implements PluginManager {
                     Class<?> clazz = this.classLoader.loadClass(main);
                     Constructor<?> declaredConstructor = clazz.getDeclaredConstructor();
                     declaredConstructor.setAccessible(true);
-                    BackendPlugin plugin = (BackendPlugin) declaredConstructor.newInstance(this.uroria, pluginConfiguration);
+                    BackendPlugin plugin = (BackendPlugin) declaredConstructor.newInstance();
                     declaredConstructor.setAccessible(false);
+
+                    PluginConfiguration.setFields(plugin, uroria, pluginConfiguration);
+
                     this.plugins.put(plugin.getPluginName(), plugin);
                     return Optional.of(plugin);
                 }

@@ -1,5 +1,6 @@
 package com.uroria.backend.pluginapi.plugins;
 
+import com.uroria.backend.pluginapi.Server;
 import org.apache.pulsar.shade.org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
@@ -37,5 +38,9 @@ public final class PluginConfiguration {
 
     public String getMain() {
         return main;
+    }
+
+    public static void setFields(BackendPlugin plugin, Server server, PluginConfiguration configuration) {
+        plugin.setFields(server, configuration);
     }
 }

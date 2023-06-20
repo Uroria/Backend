@@ -32,6 +32,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
     private BackendServerUpdate serverUpdate;
     private BackendAllServersResponse allServersResponse;
     private BackendServerStartAcknowledge startAcknowledge;
+    private BackendServerKeepAlive keepAlive;
 
     public BackendServerManager(Logger logger, PulsarClient pulsarClient, CloudAPI api) {
         super(logger, "ServerModule");
@@ -48,6 +49,8 @@ public final class BackendServerManager extends AbstractManager implements Serve
             this.serverUpdate = new BackendServerUpdate(this.pulsarClient, this);
             this.startAcknowledge = new BackendServerStartAcknowledge(this.pulsarClient, this);
             this.allServersResponse = new BackendAllServersResponse(this.pulsarClient, this);
+            this.keepAlive = new BackendServerKeepAlive(this.pulsarClient, this);
+            this.keepAlive.start();
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
         }
@@ -71,6 +74,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
             if (this.serverUpdate != null) this.serverUpdate.close();
             if (this.startAcknowledge != null) this.startAcknowledge.close();
             if (this.allServersResponse != null) this.allServersResponse.close();
+            if (this.keepAlive != null) this.keepAlive.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
             Uroria.captureException(exception);
@@ -142,6 +146,10 @@ public final class BackendServerManager extends AbstractManager implements Serve
             Uroria.captureException(exception);
             return null;
         }
+    }
+
+    public BackendServer getServer(long identifier) {
+        return this.servers.stream().filter(server -> server.getIdentifier() == identifier).findFirst().orElse(null);
     }
 
     public List<Integer> getAllServerIds() {

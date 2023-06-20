@@ -5,10 +5,10 @@ import com.uroria.backend.common.BackendServer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class ServerManager extends AbstractManager {
     protected final Logger logger;
@@ -17,7 +17,7 @@ public abstract class ServerManager extends AbstractManager {
     public ServerManager(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient);
         this.logger = logger;
-        this.servers = new ArrayList<>();
+        this.servers = new CopyOnWriteArrayList<>();
     }
 
     abstract protected void checkServer(BackendServer server);

@@ -16,7 +16,7 @@ public abstract class BackendPlugin {
 
     public BackendPlugin() {}
 
-    private BackendPlugin(Server server, PluginConfiguration pluginConfiguration) {
+    void setFields(Server server, PluginConfiguration pluginConfiguration) {
         this.server = server;
         this.pluginConfiguration = pluginConfiguration;
         this.pluginManager = this.server.getPluginManager();

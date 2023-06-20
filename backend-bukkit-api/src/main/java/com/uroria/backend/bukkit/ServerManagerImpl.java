@@ -4,10 +4,7 @@ import com.uroria.backend.bukkit.events.ServerStartEvent;
 import com.uroria.backend.bukkit.events.ServerUpdateEvent;
 import com.uroria.backend.common.BackendServer;
 import com.uroria.backend.common.helpers.ServerStatus;
-import com.uroria.backend.server.BackendAllServersRequest;
-import com.uroria.backend.server.BackendServerRequest;
-import com.uroria.backend.server.BackendServerStart;
-import com.uroria.backend.server.BackendServerUpdate;
+import com.uroria.backend.server.*;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +21,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
     private BackendServerUpdate update;
     private BackendServerStart start;
     private BackendAllServersRequest requestAll;
+    private BackendServerKeepAlive keepAlive;
 
     public ServerManagerImpl(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
@@ -34,12 +32,12 @@ public final class ServerManagerImpl extends BukkitServerManager {
             return;
         }
         this.localServerId = Integer.parseInt(stringId);
-
     }
 
     @Override
     protected void start(String identifier) {
         try {
+
             this.request = new BackendServerRequest(this.pulsarClient, identifier);
             this.update = new BackendServerUpdate(this.pulsarClient, identifier, this::checkServer);
             this.start = new BackendServerStart(this.pulsarClient, identifier);
@@ -53,6 +51,8 @@ public final class ServerManagerImpl extends BukkitServerManager {
             BackendServer server = getThisServer();
             server.setStatus(ServerStatus.READY);
             updateServer(server);
+            this.keepAlive = new BackendServerKeepAlive(pulsarClient, identifier, server.getIdentifier());
+            this.keepAlive.start();
         } catch (Exception exception) {
             this.logger.error("Cannot start server", exception);
             Bukkit.shutdown();
@@ -66,6 +66,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
             if (this.update != null) this.update.close();
             if (this.start != null) this.start.close();
             if (this.requestAll != null) this.requestAll.close();
+            if (this.keepAlive != null) this.keepAlive.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
             BackendAPI.captureException(exception);
