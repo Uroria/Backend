@@ -14,7 +14,6 @@ public final class BackendGroupResponse extends PulsarResponse<String, Permissio
 
     @Override
     protected PermissionGroup response(String key) {
-        LOGGER.debug("Requesting permission-group with name " + key);
         return this.permissionManager.getGroup(key).orElse(null);
     }
 }

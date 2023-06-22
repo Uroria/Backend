@@ -15,7 +15,6 @@ public final class BackendPlayerNameResponse extends PulsarResponse<String, Back
 
     @Override
     protected BackendPlayer response(String key) {
-        LOGGER.debug("Requesting player by name " + key);
         return this.playerManager.getPlayer(key).orElse(null);
     }
 }

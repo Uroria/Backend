@@ -17,7 +17,6 @@ public final class BackendClanOperatorResponse extends PulsarResponse<UUID, Back
 
     @Override
     protected BackendClan response(UUID key) {
-        LOGGER.debug("Requesting clan by operator " + key);
         return this.clanManager.getClan(key).orElse(null);
     }
 }

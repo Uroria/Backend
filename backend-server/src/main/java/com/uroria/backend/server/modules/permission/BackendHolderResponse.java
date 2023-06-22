@@ -16,7 +16,6 @@ public final class BackendHolderResponse extends PulsarResponse<UUID, Permission
 
     @Override
     protected PermissionHolder response(UUID key) {
-        LOGGER.debug("Requesting permission-holder by uuid " + key);
         return this.permissionManager.getHolder(key).orElse(null);
     }
 }

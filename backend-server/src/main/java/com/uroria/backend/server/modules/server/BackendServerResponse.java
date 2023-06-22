@@ -15,7 +15,6 @@ public final class BackendServerResponse extends PulsarResponse<Integer, Backend
 
     @Override
     protected BackendServer response(Integer key) {
-        LOGGER.debug("Requesting server by id " + key);
         return this.serverManager.getServer(key).orElse(null);
     }
 }

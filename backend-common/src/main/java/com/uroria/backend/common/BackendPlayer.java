@@ -57,6 +57,11 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
 
         this.crew.clear();
         this.crew.addAll(player.crew);
+
+        this.properties.keySet().forEach(key -> {
+            if (!player.properties.containsKey(key)) this.properties.remove(key);
+        });
+        properties.putAll(player.properties);
     }
 
     public void clearOutdatedPunishments() {

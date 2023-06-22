@@ -15,7 +15,6 @@ public final class BackendClanTagResponse extends PulsarResponse<String, Backend
 
     @Override
     protected BackendClan response(String key) {
-        LOGGER.debug("Requesting clan by tag " + key);
         return this.clanManager.getClan(key).orElse(null);
     }
 }

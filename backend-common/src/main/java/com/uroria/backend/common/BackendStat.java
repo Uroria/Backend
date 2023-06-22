@@ -53,5 +53,10 @@ public final class BackendStat extends PropertyHolder<BackendStat> implements Se
     public synchronized void modify(BackendStat stat) {
         this.scores.clear();
         this.scores.putAll(stat.scores);
+
+        this.properties.keySet().forEach(key -> {
+            if (!stat.properties.containsKey(key)) this.properties.remove(key);
+        });
+        properties.putAll(stat.properties);
     }
 }

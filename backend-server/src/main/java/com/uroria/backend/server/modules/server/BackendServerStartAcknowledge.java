@@ -15,7 +15,6 @@ public final class BackendServerStartAcknowledge extends PulsarResponse<BackendS
 
     @Override
     protected BackendServer response(BackendServer key) {
-        LOGGER.debug("Requesting server start by id " + key.getId().orElse(null));
         return this.serverManager.startServer(key);
     }
 }

@@ -17,7 +17,6 @@ public final class BackendFriendResponse extends PulsarResponse<UUID, BackendFri
 
     @Override
     protected BackendFriend response(UUID key) {
-        LOGGER.debug("Requesting friend by uuid " + key);
         return this.friendManager.getFriend(key).orElse(null);
     }
 }

@@ -110,7 +110,10 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
         this.moderators.addAll(clan.moderators);
         this.members.clear();
         this.members.addAll(clan.members);
-        this.properties.clear();
-        this.properties.putAll(clan.properties);
+
+        this.properties.keySet().forEach(key -> {
+            if (!clan.properties.containsKey(key)) this.properties.remove(key);
+        });
+        properties.putAll(clan.properties);
     }
 }

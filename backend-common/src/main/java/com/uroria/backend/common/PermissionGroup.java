@@ -52,6 +52,11 @@ public final class PermissionGroup extends PropertyHolder<PermissionGroup> imple
         priority = group.getPriority();
         permissions.clear();
         permissions.putAll(group.permissions);
+
+        this.properties.keySet().forEach(key -> {
+            if (!group.properties.containsKey(key)) this.properties.remove(key);
+        });
+        properties.putAll(group.properties);
     }
 
     @Override

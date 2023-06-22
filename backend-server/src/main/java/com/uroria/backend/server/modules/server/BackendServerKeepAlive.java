@@ -1,5 +1,6 @@
 package com.uroria.backend.server.modules.server;
 
+import com.uroria.backend.common.BackendPing;
 import com.uroria.backend.common.BackendServer;
 import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.common.pulsar.PulsarKeepAliveChecker;
@@ -7,7 +8,7 @@ import com.uroria.backend.server.Uroria;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-public final class BackendServerKeepAlive extends PulsarKeepAliveChecker<Long> {
+public final class BackendServerKeepAlive extends PulsarKeepAliveChecker {
     private final BackendServerManager serverManager;
     public BackendServerKeepAlive(PulsarClient pulsarClient, BackendServerManager serverManager) throws PulsarClientException {
         super(pulsarClient, "server:keepalive", "ServerModule");
@@ -15,14 +16,14 @@ public final class BackendServerKeepAlive extends PulsarKeepAliveChecker<Long> {
     }
 
     @Override
-    protected void onTimeout(Long identifier) {
-        BackendServer server = this.serverManager.getServer(identifier);
+    protected void onTimeout(BackendPing ping) {
+        BackendServer server = this.serverManager.getServer(ping.getIdentifier());
         if (server == null) {
-            this.keepAlives.remove(identifier);
+            this.keepAlives.remove(ping);
             return;
         }
         server.setStatus(ServerStatus.STOPPED);
-        Uroria.getLogger().warn("Server " + identifier + " timed out!");
+        Uroria.getLogger().warn("Server " + ping.getIdentifier() + " timed out!");
         this.serverManager.updateServer(server);
     }
 }

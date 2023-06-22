@@ -134,6 +134,9 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
     public synchronized void modify(BackendServer server) {
         this.status = server.status;
         this.id = server.id;
+        this.properties.keySet().forEach(key -> {
+            if (!server.properties.containsKey(key)) this.properties.remove(key);
+        });
         this.properties.putAll(server.properties);
         this.onlinePlayers.clear();
         this.onlinePlayers.addAll(server.onlinePlayers);

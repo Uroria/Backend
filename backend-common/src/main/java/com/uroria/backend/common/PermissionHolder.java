@@ -96,5 +96,8 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
 
         groups.clear();
         groups.addAll(holder.groups);
+
+        temporaryPermissions.clear();
+        temporaryPermissions.putAll(holder.temporaryPermissions);
     }
 }
