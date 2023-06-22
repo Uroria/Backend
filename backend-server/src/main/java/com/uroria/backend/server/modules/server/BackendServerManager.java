@@ -1,6 +1,5 @@
 package com.uroria.backend.server.modules.server;
 
-import com.uroria.backend.common.helpers.ServerType;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.server.ServerStartEvent;
 import com.uroria.backend.pluginapi.events.server.ServerStopEvent;
@@ -20,7 +19,6 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class BackendServerManager extends AbstractManager implements ServerManager {
@@ -101,24 +99,33 @@ public final class BackendServerManager extends AbstractManager implements Serve
             if (server.getStatus() == ServerStatus.CLOSED || server.getStatus() == ServerStatus.STOPPED) return;
         }
 
-        for (BackendServer backendServer : this.servers) {
-            if (!server.equals(backendServer)) continue;
-            if (server.getStatus() == backendServer.getStatus()) break;
-            ServerStatus currentStatus = backendServer.getStatus();
+        for (BackendServer savedServer : this.servers) {
+            if (!savedServer.equals(server)) continue;
+            savedServer.modify(server);
+
+            logger.info("Updating server " + savedServer.getDisplayName());
+
+            this.eventManager.callEventAsync(new ServerUpdateEvent(savedServer));
+
+            ServerStatus currentStatus = savedServer.getStatus();
             ServerStatus nextStatus = server.getStatus();
             if (nextStatus == ServerStatus.STARTING && currentStatus == ServerStatus.EMPTY) this.eventManager.callEventAsync(new ServerStartEvent(server));
-            if (nextStatus == ServerStatus.STOPPED && currentStatus == ServerStatus.CLOSED) this.eventManager.callEventAsync(new ServerStopEvent(server));
-            break;
+            if (nextStatus == ServerStatus.STOPPED && currentStatus == ServerStatus.CLOSED) {
+                this.eventManager.callEventAsync(new ServerStopEvent(server));
+            }
+            if (currentStatus == ServerStatus.STOPPED) {
+                this.servers.remove(savedServer);
+                logger.info("Removing server " + savedServer.getDisplayName());
+            }
+            return;
         }
-        this.servers.removeIf(server1 -> server1.equals(server));
-        if (server.getStatus() != ServerStatus.STOPPED && server.getStatus() != ServerStatus.CLOSED) this.servers.add(server);
-        else this.logger.info("Deleting server " + server.getId().get());
-        this.logger.info("Remaining servers " + Arrays.toString(this.servers.stream().map(registeredServer -> registeredServer.getId().orElse(-1)).toArray()));
-        this.eventManager.callEventAsync(new ServerUpdateEvent(server));
+
+        logger.info("Adding server " + server.getDisplayName());
+        this.servers.add(server);
     }
 
     @Override
-    public synchronized BackendServer startServer(BackendServer server) {
+    public BackendServer startServer(BackendServer server) {
         if (server.getStatus() != ServerStatus.EMPTY) return null;
         try {
             int id = this.api.startServer(server.getTemplateId());
@@ -126,11 +133,9 @@ public final class BackendServerManager extends AbstractManager implements Serve
             server.setStatus(ServerStatus.STARTING);
             updateServer(server);
             InetSocketAddress address = this.api.getAddress(id, 1000000);
-            server = getServer(id).orElse(null);
-            if (server == null) throw new RuntimeException("Server deleted before started");
             server.setProperty("address", address);
             updateServer(server);
-            this.logger.info("Starting server " + id + " on " + address.getHostName() + ":" + address.getPort());
+            this.logger.info("Starting server " + server.getDisplayName() + " on " + address.getHostName() + ":" + address.getPort());
             return server;
         } catch (Exception exception) {
             this.logger.error("Cannot start server", exception);

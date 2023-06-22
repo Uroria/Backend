@@ -56,7 +56,18 @@ public final class PlayerManagerImpl extends PlayerManager {
     @Override
     protected void checkPlayer(BackendPlayer player) {
         if (this.players.stream().noneMatch(player1 -> player1.getUUID().equals(player.getUUID()))) return;
-        this.players.removeIf(player1 -> player1.getUUID().equals(player.getUUID()));
+
+        for (BackendPlayer savedPlayer : this.players) {
+            if (!savedPlayer.equals(player)) continue;
+            savedPlayer.modify(player);
+
+            logger.info("Updating player " + player.getUUID() + ":" + player.getCurrentName().orElse(null));
+
+            CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PlayerUpdateEvent(player)));
+            return;
+        }
+
+        logger.info("Adding player " + player.getUUID() + ":" + player.getCurrentName().orElse(null));
         this.players.add(player);
         CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PlayerUpdateEvent(player)));
     }

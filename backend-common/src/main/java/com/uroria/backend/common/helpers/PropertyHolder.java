@@ -1,12 +1,14 @@
 package com.uroria.backend.common.helpers;
 
+import com.uroria.backend.common.BackendObject;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public abstract class PropertyHolder implements Serializable {
+public abstract class PropertyHolder<T> extends BackendObject<T> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     protected final Map<String, Object> properties;
     public PropertyHolder() {

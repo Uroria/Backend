@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public final class PermissionHolder implements Serializable {
+public final class PermissionHolder extends BackendObject<PermissionHolder> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID uuid;
     private final Map<String, Boolean> permissions;
@@ -78,5 +78,23 @@ public final class PermissionHolder implements Serializable {
 
     public Collection<String> getGroups() {
         return new ArrayList<>(this.groups);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (obj instanceof PermissionHolder holder) {
+            if (holder.getUUID().equals(getUUID())) return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void modify(PermissionHolder holder) {
+        permissions.clear();
+        permissions.putAll(holder.permissions);
+
+        groups.clear();
+        groups.addAll(holder.groups);
     }
 }

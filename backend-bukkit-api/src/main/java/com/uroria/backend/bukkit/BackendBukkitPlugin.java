@@ -6,10 +6,13 @@ import com.uroria.backend.bukkit.listeners.PlayerPreLogin;
 import com.uroria.backend.bukkit.listeners.PlayerQuit;
 import de.leonhard.storage.Json;
 import de.leonhard.storage.internal.settings.ReloadSettings;
+import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +52,21 @@ public final class BackendBukkitPlugin extends JavaPlugin {
     public void onDisable() {
         this.backendAPI.shutdown();
         HandlerList.unregisterAll(this);
+    }
+
+    static void kickAll() {
+        try {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        player.kickPlayer("");
+                    }
+                }
+            }.runTask(JavaPlugin.getPlugin(BackendBukkitPlugin.class));
+        } catch (Exception exception) {
+            JavaPlugin.getPlugin(BackendBukkitPlugin.class).logger.error("Cannot kick all players", exception);
+        }
     }
 
     static Json config() {

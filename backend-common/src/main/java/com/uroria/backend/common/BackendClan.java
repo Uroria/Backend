@@ -7,8 +7,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-public final class BackendClan extends PropertyHolder implements Serializable {
+public final class BackendClan extends PropertyHolder<BackendClan> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final Collection<UUID> moderators;
     private final Collection<UUID> members;
@@ -21,8 +22,8 @@ public final class BackendClan extends PropertyHolder implements Serializable {
         this.name = name;
         this.tag = tag;
         this.operator = operator;
-        this.moderators = new ArrayList<>();
-        this.members = new ArrayList<>();
+        this.moderators = new CopyOnWriteArrayList<>();
+        this.members = new CopyOnWriteArrayList<>();
         this.foundingDate = foundingDate;
         this.members.add(operator);
     }
@@ -99,5 +100,17 @@ public final class BackendClan extends PropertyHolder implements Serializable {
 
     public Collection<UUID> getMembers() {
         return new ArrayList<>(this.members);
+    }
+
+    @Override
+    public synchronized void modify(BackendClan clan) {
+        this.tag = clan.tag;
+        this.operator = clan.operator;
+        this.moderators.clear();
+        this.moderators.addAll(clan.moderators);
+        this.members.clear();
+        this.members.addAll(clan.members);
+        this.properties.clear();
+        this.properties.putAll(clan.properties);
     }
 }

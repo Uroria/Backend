@@ -83,30 +83,45 @@ public final class ServerManagerImpl extends BukkitServerManager {
         if (this.servers.stream().noneMatch(server::equals)) {
             if (server.getStatus() == ServerStatus.CLOSED || server.getStatus() == ServerStatus.STOPPED) return;
         }
-        this.servers.removeIf(server1 -> server1.equals(server));
-        if (server.getId().isPresent() && server.getId().get().equals(this.localServerId) && server.getStatus() == ServerStatus.CLOSED) {
-            server.setStatus(ServerStatus.STOPPED);
-            updateServer(server);
-            this.logger.info("Shutting down on remote command");
-            try {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        Bukkit.getOnlinePlayers().forEach(player -> {
-                            player.kickPlayer("");
-                            try {
-                                Thread.sleep(500);
-                            } catch (Exception ignored) {
-                            }
-                        });
+
+        for (BackendServer savedServer : this.servers) {
+            if (!savedServer.equals(server)) continue;
+            savedServer.modify(server);
+
+            logger.info("Updating server " + savedServer.getDisplayName());
+
+            CompletableFuture.runAsync(() -> {
+                Bukkit.getPluginManager().callEvent(new ServerUpdateEvent(savedServer));
+            });
+
+            if (savedServer.getStatus() == ServerStatus.CLOSED || savedServer.getStatus() == ServerStatus.STOPPED) {
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        if (getThisServer().equals(savedServer)) {
+                            this.logger.info("Shutting down by remote update");
+                            BackendBukkitPlugin.kickAll();
+                            Bukkit.shutdown();
+
+                            savedServer.setStatus(ServerStatus.STOPPED);
+                            updateServer(savedServer);
+                        }
+                    } catch (Exception exception) {
+                        logger.error("Cannot specify server! Shutting down", exception);
+                        Bukkit.shutdown();
                     }
-                }.runTask(JavaPlugin.getPlugin(BackendBukkitPlugin.class));
-            } catch (Exception ignored) {}
-            Bukkit.shutdown();
+                });
+            }
+
+            if (savedServer.getStatus() == ServerStatus.STOPPED) {
+                this.servers.remove(savedServer);
+                logger.info("Removing server " + savedServer.getDisplayName());
+            }
+
             return;
         }
-        if (server.getStatus() != ServerStatus.STOPPED && server.getStatus() != ServerStatus.CLOSED) this.servers.add(server);
-        this.logger.info("Remaining servers " + Arrays.toString(this.servers.stream().map(registeredServer -> registeredServer.getId().orElse(-1)).toArray()));
+
+        logger.info("Adding server " + server.getDisplayName());
+        this.servers.add(server);
         CompletableFuture.runAsync(() -> {
             Bukkit.getPluginManager().callEvent(new ServerUpdateEvent(server));
         });
@@ -134,8 +149,8 @@ public final class ServerManagerImpl extends BukkitServerManager {
         if (server == null) throw new NullPointerException("Server cannot be null");
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not created yet");
         try {
-            checkServer(server);
             this.update.update(server);
+            checkServer(server);
         } catch (Exception exception) {
             this.logger.error("Cannot update server", exception);
             BackendAPI.captureException(exception);
@@ -155,7 +170,8 @@ public final class ServerManagerImpl extends BukkitServerManager {
             BackendAPI.captureException(exception);
         }
 
-        Bukkit.getPluginManager().callEvent(new ServerStartEvent(server));
+        BackendServer finalServer = server;
+        CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new ServerStartEvent(finalServer)));
         return server;
     }
 }

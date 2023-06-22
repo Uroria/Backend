@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendPlayer extends PropertyHolder implements Serializable {
+public final class BackendPlayer extends PropertyHolder<BackendPlayer> implements Serializable {
     @Serial
     private static final long serialVersionUID = 1;
     private final UUID uuid;
@@ -39,6 +39,23 @@ public final class BackendPlayer extends PropertyHolder implements Serializable 
         this.status = 0;
         this.punishment = null;
         this.outdatedPunishments = new ArrayList<>();
+    }
+
+    @Override
+    public synchronized void modify(BackendPlayer player) {
+        this.skinURL = player.skinURL;
+        this.avatar = player.avatar;
+        this.clan = player.clan;
+        this.currentName = player.currentName;
+        this.locale = player.locale;
+        this.status = player.status;
+        this.punishment = player.punishment;
+
+        this.outdatedPunishments.clear();
+        this.outdatedPunishments.addAll(player.outdatedPunishments);
+
+        this.crew.clear();
+        this.crew.addAll(player.crew);
     }
 
     public void clearOutdatedPunishments() {

@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendDiscordUser extends PropertyHolder implements Serializable {
+public final class BackendDiscordUser extends PropertyHolder<BackendDiscordUser> implements Serializable {
     @Serial
     private static final long serialVersionUID = 1;
     private UUID uuid;
@@ -42,5 +42,12 @@ public final class BackendDiscordUser extends PropertyHolder implements Serializ
 
     public Optional<UUID> getUUID() {
         return Optional.ofNullable(uuid);
+    }
+
+    @Override
+    public synchronized void modify(BackendDiscordUser user) {
+        this.uuid = user.uuid;
+        this.lastDiscordUserName = user.lastDiscordUserName;
+        this.discordId = user.lastDiscordUserName;
     }
 }

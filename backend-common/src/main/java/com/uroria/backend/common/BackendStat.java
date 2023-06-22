@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendStat extends PropertyHolder implements Serializable {
+public final class BackendStat extends PropertyHolder<BackendStat> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID uuid;
     private final int gameId;
@@ -47,5 +47,11 @@ public final class BackendStat extends PropertyHolder implements Serializable {
 
     public int getGameId() {
         return gameId;
+    }
+
+    @Override
+    public synchronized void modify(BackendStat stat) {
+        this.scores.clear();
+        this.scores.putAll(stat.scores);
     }
 }

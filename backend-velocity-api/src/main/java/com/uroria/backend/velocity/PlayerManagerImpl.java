@@ -57,7 +57,18 @@ public final class PlayerManagerImpl extends PlayerManager {
     @Override
     protected void checkPlayer(BackendPlayer player) {
         if (this.players.stream().noneMatch(player1 -> player1.getUUID().equals(player.getUUID()))) return;
-        this.players.removeIf(player1 -> player1.getUUID().equals(player.getUUID()));
+
+        for (BackendPlayer savedPlayer : this.players) {
+            if (!savedPlayer.equals(player)) continue;
+            savedPlayer.modify(player);
+
+            logger.info("Updating player " + player.getUUID() + ":" + player.getCurrentName().orElse(null));
+
+            this.proxyServer.getEventManager().fireAndForget(new PlayerUpdateEvent(savedPlayer));
+            return;
+        }
+
+        logger.info("Adding player " + player.getUUID() + ":" + player.getCurrentName().orElse(null));
         this.players.add(player);
         this.proxyServer.getEventManager().fireAndForget(new PlayerUpdateEvent(player));
     }
@@ -69,19 +80,20 @@ public final class PlayerManagerImpl extends PlayerManager {
             if (player.getUUID().equals(uuid)) return Optional.of(player);
         }
         Optional<BackendPlayer> request = uuidRequest.request(uuid);
-        request.ifPresent(this.players::add);
+        request.ifPresent(players::add);
         return request;
     }
 
     @Override
     public Optional<BackendPlayer> getPlayer(String name, int timeout) {
         if (name == null) throw new NullPointerException("Name cannot be null");
+        name = name.toUpperCase();
         for (BackendPlayer player : this.players) {
             if (player.getCurrentName().isPresent() && player.getCurrentName().get().equals(name)) return Optional.of(player);
         }
 
         Optional<BackendPlayer> request = nameRequest.request(name);
-        request.ifPresent(this.players::add);
+        request.ifPresent(players::add);
         return request;
     }
 

@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class PermissionGroup extends PropertyHolder implements Serializable {
+public final class PermissionGroup extends PropertyHolder<PermissionGroup> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final String name;
     private final Map<String, Boolean> permissions;
@@ -45,5 +45,22 @@ public final class PermissionGroup extends PropertyHolder implements Serializabl
 
     public Map<String, Boolean> getPermissions() {
         return new HashMap<>(this.permissions);
+    }
+
+    @Override
+    public void modify(PermissionGroup group) {
+        priority = group.getPriority();
+        permissions.clear();
+        permissions.putAll(group.permissions);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (obj instanceof PermissionGroup group) {
+            if (group.getName().equals(getName())) return true;
+        }
+
+        return false;
     }
 }

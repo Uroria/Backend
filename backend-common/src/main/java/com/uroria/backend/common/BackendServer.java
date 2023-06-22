@@ -8,7 +8,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 
-public final class BackendServer extends PropertyHolder implements Serializable {
+public final class BackendServer extends PropertyHolder<BackendServer> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
 
     private final long identifier;
@@ -125,6 +125,16 @@ public final class BackendServer extends PropertyHolder implements Serializable 
         BackendServer server = new BackendServer(this.name, this.templateId, getType(), this.maxPlayerCount);
         server.setProperties(this.properties);
         return server;
+    }
+
+    @Override
+    public synchronized void modify(BackendServer server) {
+        this.onlinePlayers.clear();
+        this.onlinePlayers.addAll(server.onlinePlayers);
+        this.status = server.status;
+        this.id = server.id;
+        this.properties.clear();
+        this.properties.putAll(server.properties);
     }
 
     public static BackendServer createLobby() {

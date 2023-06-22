@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
-public class BackendFriend implements Serializable {
+public class BackendFriend extends BackendObject<BackendFriend> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID holder;
     private final Collection<FriendPair> friends;
@@ -36,5 +36,11 @@ public class BackendFriend implements Serializable {
 
     public Collection<FriendPair> getFriends() {
         return new ArrayList<>(this.friends);
+    }
+
+    @Override
+    public synchronized void modify(BackendFriend friend) {
+        this.friends.clear();
+        this.friends.addAll(friend.friends);
     }
 }

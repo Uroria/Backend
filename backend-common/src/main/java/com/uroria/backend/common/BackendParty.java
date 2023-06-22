@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
-public final class BackendParty implements Serializable {
+public final class BackendParty extends BackendObject<BackendParty> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID operator;
     private final Collection<UUID> members;
@@ -54,5 +54,12 @@ public final class BackendParty implements Serializable {
 
     public Collection<UUID> getMembers() {
         return new ArrayList<>(this.members);
+    }
+
+    @Override
+    public synchronized void modify(BackendParty party) {
+        this.currentServer = party.currentServer;
+        this.members.clear();
+        this.members.addAll(party.members);
     }
 }

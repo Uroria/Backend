@@ -62,7 +62,17 @@ public final class PermissionManagerImpl extends PermissionManager {
     @Override
     protected void checkPermissionHolder(PermissionHolder holder) {
         if (this.holders.stream().noneMatch(holder1 -> holder1.getUUID().equals(holder.getUUID()))) return;
-        this.holders.removeIf(holder1 ->  holder1.getUUID().equals(holder.getUUID()));
+        for (PermissionHolder savedHolder : this.holders) {
+            if (!savedHolder.equals(holder)) continue;
+            savedHolder.modify(holder);
+
+            logger.info("Updating PermissionHolder " + holder.getUUID());
+
+            CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PermissionHolderUpdateEvent(holder)));
+            return;
+        }
+
+        this.logger.info("Adding PermissionHolder " + holder.getUUID());
         this.holders.add(holder);
         CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PermissionHolderUpdateEvent(holder)));
     }
@@ -70,7 +80,18 @@ public final class PermissionManagerImpl extends PermissionManager {
     @Override
     protected void checkPermissionGroup(PermissionGroup group) {
         if (this.groups.stream().noneMatch(group1 -> group1.getName().equals(group.getName()))) return;
-        this.groups.removeIf(group1 -> group1.getName().equals(group.getName()));
+
+        for (PermissionGroup savedGroup : this.groups) {
+            if (!savedGroup.equals(group)) continue;
+            savedGroup.modify(group);
+
+            this.logger.info("Updating PermissionGroup " + group.getName());
+
+            CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PermissionGroupUpdateEvent(group)));
+            return;
+        }
+
+        this.logger.info("Adding PermissionGroup " + group.getName());
         this.groups.add(group);
         CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new PermissionGroupUpdateEvent(group)));
     }
