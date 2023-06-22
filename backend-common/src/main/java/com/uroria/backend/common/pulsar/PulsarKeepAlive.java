@@ -36,7 +36,6 @@ public abstract class PulsarKeepAlive<T> extends Thread {
                 output.writeObject(obj);
                 output.close();
                 this.producer.send(output.toByteArray());
-                LOGGER.info("Send");
             } catch (Exception exception) {
                 LOGGER.warn("Cannot send keep alive", exception);
             }

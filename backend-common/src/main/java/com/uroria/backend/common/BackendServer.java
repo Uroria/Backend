@@ -3,12 +3,15 @@ package com.uroria.backend.common;
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.common.helpers.ServerType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 
 public final class BackendServer extends PropertyHolder<BackendServer> implements Serializable {
+    private static final Logger LOGGER = LoggerFactory.getLogger("BackendServer");
     @Serial private static final long serialVersionUID = 1;
 
     private final long identifier;
@@ -129,12 +132,11 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
 
     @Override
     public synchronized void modify(BackendServer server) {
-        this.onlinePlayers.clear();
-        this.onlinePlayers.addAll(server.onlinePlayers);
         this.status = server.status;
         this.id = server.id;
-        this.properties.clear();
         this.properties.putAll(server.properties);
+        this.onlinePlayers.clear();
+        this.onlinePlayers.addAll(server.onlinePlayers);
     }
 
     public static BackendServer createLobby() {

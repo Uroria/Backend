@@ -37,11 +37,8 @@ public abstract class PulsarRequest<O, K> {
         this.timeout = timeout;
     }
 
-    protected abstract void onRequest(K key);
-
     public final Optional<O> request(K requestKey) {
         if (requestKey == null) throw new NullPointerException("Key cannot be null");
-        onRequest(requestKey);
 
         try (BackendOutputStream output = new BackendOutputStream()) {
             output.writeObject(requestKey);

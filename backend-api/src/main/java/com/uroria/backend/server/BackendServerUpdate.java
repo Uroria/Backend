@@ -16,7 +16,6 @@ public final class BackendServerUpdate extends PulsarUpdate<BackendServer> {
 
     @Override
     public void onUpdate(BackendServer object) {
-        LOGGER.info("Updating server with id " + object.getId().orElse(-1));
         serverConsumer.accept(object);
     }
 }

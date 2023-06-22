@@ -63,6 +63,7 @@ public final class BackendPlayerManager extends AbstractManager implements Playe
 
     @Override
     public Optional<BackendPlayer> getPlayer(UUID uuid) {
+        if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
         try {
             BackendPlayer cachedPlayer = getCachedPlayer(uuid);
             if (cachedPlayer != null) return Optional.of(cachedPlayer);
@@ -89,6 +90,8 @@ public final class BackendPlayerManager extends AbstractManager implements Playe
 
     @Override
     public Optional<BackendPlayer> getPlayer(String currentName) {
+        if (currentName == null) throw new IllegalArgumentException("Name cannot be null");
+        currentName = currentName.toLowerCase();
         try {
             BackendPlayer cachedPlayer = getCachedPlayer(currentName);
             if (cachedPlayer != null) return Optional.of(cachedPlayer);

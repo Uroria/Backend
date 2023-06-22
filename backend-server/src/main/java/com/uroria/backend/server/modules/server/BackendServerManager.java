@@ -89,8 +89,8 @@ public final class BackendServerManager extends AbstractManager implements Serve
 
     @Override
     public void updateServer(BackendServer server) {
-        updateLocal(server);
         this.serverUpdate.update(server);
+        updateLocal(server);
     }
 
     void updateLocal(BackendServer server) {
@@ -110,9 +110,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
             ServerStatus currentStatus = savedServer.getStatus();
             ServerStatus nextStatus = server.getStatus();
             if (nextStatus == ServerStatus.STARTING && currentStatus == ServerStatus.EMPTY) this.eventManager.callEventAsync(new ServerStartEvent(server));
-            if (nextStatus == ServerStatus.STOPPED && currentStatus == ServerStatus.CLOSED) {
-                this.eventManager.callEventAsync(new ServerStopEvent(server));
-            }
+            if (nextStatus == ServerStatus.STOPPED && currentStatus == ServerStatus.CLOSED) this.eventManager.callEventAsync(new ServerStopEvent(server));
             if (currentStatus == ServerStatus.STOPPED) {
                 this.servers.remove(savedServer);
                 logger.info("Removing server " + savedServer.getDisplayName());
@@ -136,6 +134,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
             server.setProperty("address", address);
             updateServer(server);
             this.logger.info("Starting server " + server.getDisplayName() + " on " + address.getHostName() + ":" + address.getPort());
+
             return server;
         } catch (Exception exception) {
             this.logger.error("Cannot start server", exception);

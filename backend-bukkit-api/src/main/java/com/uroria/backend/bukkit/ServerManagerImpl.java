@@ -37,7 +37,6 @@ public final class ServerManagerImpl extends BukkitServerManager {
     @Override
     protected void start(String identifier) {
         try {
-
             this.request = new BackendServerRequest(this.pulsarClient, identifier);
             this.update = new BackendServerUpdate(this.pulsarClient, identifier, this::checkServer);
             this.start = new BackendServerStart(this.pulsarClient, identifier);
@@ -96,6 +95,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
 
             if (savedServer.getStatus() == ServerStatus.CLOSED || savedServer.getStatus() == ServerStatus.STOPPED) {
                 CompletableFuture.runAsync(() -> {
+                    if (this.localServerId == -1) return;
                     try {
                         if (getThisServer().equals(savedServer)) {
                             this.logger.info("Shutting down by remote update");

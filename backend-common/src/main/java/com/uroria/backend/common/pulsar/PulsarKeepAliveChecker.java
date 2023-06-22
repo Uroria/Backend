@@ -40,7 +40,6 @@ public abstract class PulsarKeepAliveChecker<T> extends Thread {
         for (Map.Entry<T, Long> entry : this.keepAlives.entrySet()) {
             if ((System.currentTimeMillis() - entry.getValue()) < 10000) continue;
             CompletableFuture.runAsync(() -> {
-                LOGGER.info(entry.getKey() + " ping");
                 onTimeout(entry.getKey());
             });
         }

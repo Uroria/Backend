@@ -55,10 +55,13 @@ public final class ServerManagerImpl extends ServerManager {
     @Override
     protected void checkServer(BackendServer server) {
         if (this.servers.stream().noneMatch(server::equals)) {
-            if (server.getStatus() == ServerStatus.CLOSED || server.getStatus() == ServerStatus.STOPPED) return;
+            if (server.getStatus() == ServerStatus.CLOSED || server.getStatus() == ServerStatus.STOPPED) {
+                this.logger.info("Server " + server.getDisplayName() + " doesn't get updated because stopped");
+                return;
+            }
         }
 
-        logger.info("Updating server " + server.getDisplayName());
+        logger.info("Updating server " + server.getDisplayName() + " " + Arrays.toString(this.servers.stream().map(BackendServer::getDisplayName).toArray()));
 
         for (BackendServer savedServer : this.servers) {
             if (!savedServer.equals(server)) continue;
@@ -70,6 +73,7 @@ public final class ServerManagerImpl extends ServerManager {
                 this.servers.remove(savedServer);
                 this.logger.info("Removing server " + savedServer.getDisplayName());
             }
+
             return;
         }
 
@@ -99,8 +103,8 @@ public final class ServerManagerImpl extends ServerManager {
         if (server == null) throw new NullPointerException("Server cannot be null");
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not created yet");
         try {
-            this.update.update(server);
             checkServer(server);
+            this.update.update(server);
         } catch (Exception exception) {
             this.logger.error("Cannot update server", exception);
             BackendAPI.captureException(exception);

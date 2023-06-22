@@ -87,7 +87,7 @@ public final class PlayerManagerImpl extends PlayerManager {
     @Override
     public Optional<BackendPlayer> getPlayer(String name, int timeout) {
         if (name == null) throw new NullPointerException("Name cannot be null");
-        name = name.toUpperCase();
+        name = name.toLowerCase();
         for (BackendPlayer player : this.players) {
             if (player.getCurrentName().isPresent() && player.getCurrentName().get().equals(name)) return Optional.of(player);
         }

@@ -16,7 +16,6 @@ public final class BackendPermissionHolderUpdate extends PulsarUpdate<Permission
 
     @Override
     protected void onUpdate(PermissionHolder object) {
-        LOGGER.info("Updating permission-holder with uuid " + object);
         holderConsumer.accept(object);
     }
 }

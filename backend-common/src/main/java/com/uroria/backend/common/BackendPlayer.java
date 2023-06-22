@@ -32,7 +32,8 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
     private BackendPunishment punishment;
     public BackendPlayer(UUID uuid, String currentName) {
         this.uuid = uuid;
-        this.currentName = currentName;
+        if (currentName == null) this.currentName = null;
+        else this.currentName = currentName.toLowerCase();
         this.crew = new ArrayList<>();
         this.locale = Locale.ENGLISH;
         this.clan = null;
@@ -129,7 +130,11 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
     }
 
     public void setCurrentName(String name) {
-        this.currentName = name;
+        if (name == null) {
+            this.currentName = null;
+            return;
+        }
+        this.currentName = name.toLowerCase();
     }
 
     public UUID getUUID() {

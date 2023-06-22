@@ -16,7 +16,6 @@ public final class BackendPermissionGroupUpdate extends PulsarUpdate<PermissionG
 
     @Override
     protected void onUpdate(PermissionGroup object) {
-        LOGGER.info("Updating permission-group with name " + object.getName());
         groupConsumer.accept(object);
     }
 }

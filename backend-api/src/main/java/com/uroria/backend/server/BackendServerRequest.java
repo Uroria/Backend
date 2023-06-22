@@ -9,9 +9,4 @@ public final class BackendServerRequest extends PulsarRequest<BackendServer, Int
     public BackendServerRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "server:request:id", "server:response:id", bridgeName, 5000, 10);
     }
-
-    @Override
-    protected void onRequest(Integer key) {
-        LOGGER.info("Requesting server with id " + key);
-    }
 }

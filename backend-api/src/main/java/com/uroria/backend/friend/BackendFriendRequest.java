@@ -12,8 +12,4 @@ public final class BackendFriendRequest extends PulsarRequest<BackendFriend, UUI
         super(pulsarClient, "friend:request", "friend:response", bridgeName, 3000, 5);
     }
 
-    @Override
-    protected void onRequest(UUID key) {
-        LOGGER.info("Requesting friend with uuid " + key);
-    }
 }

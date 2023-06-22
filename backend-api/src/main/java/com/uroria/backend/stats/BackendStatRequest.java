@@ -12,9 +12,4 @@ public final class BackendStatRequest extends PulsarRequest<Collection<BackendSt
     public BackendStatRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "stat:request", "stat:response", bridgeName, 20000, 20);
     }
-
-    @Override
-    protected void onRequest(StatsRequest key) {
-        LOGGER.info("Requesting stats with game-id " + key.getGameId());
-    }
 }

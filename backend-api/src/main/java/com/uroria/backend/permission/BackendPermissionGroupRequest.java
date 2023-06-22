@@ -9,9 +9,4 @@ public final class BackendPermissionGroupRequest extends PulsarRequest<Permissio
     public BackendPermissionGroupRequest(PulsarClient pulsarClient, String bridgeName) throws PulsarClientException {
         super(pulsarClient, "permission:group:request", "permission:group:response", bridgeName, 10000, 10);
     }
-
-    @Override
-    protected void onRequest(String key) {
-        LOGGER.info("Requesting permission-group with name " + key);
-    }
 }

@@ -12,8 +12,4 @@ public final class BackendClanOperatorRequest extends PulsarRequest<BackendClan,
         super(pulsarClient, "clan:request:operator", "clan:response:operator", bridgeName, 20000, 50);
     }
 
-    @Override
-    protected void onRequest(UUID key) {
-        LOGGER.info("Requesting clan with operator " + key);
-    }
 }
