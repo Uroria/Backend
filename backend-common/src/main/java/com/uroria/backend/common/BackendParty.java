@@ -1,15 +1,18 @@
 package com.uroria.backend.common;
 
+import com.uroria.backend.common.utils.ObjectUtils;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public final class BackendParty extends BackendObject<BackendParty> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID operator;
-    private final Collection<UUID> members;
+    private final List<UUID> members;
     private int currentServer;
     public BackendParty(UUID operator, int currentServer) {
         this.operator = operator;
@@ -59,7 +62,6 @@ public final class BackendParty extends BackendObject<BackendParty> implements S
     @Override
     public synchronized void modify(BackendParty party) {
         this.currentServer = party.currentServer;
-        this.members.clear();
-        this.members.addAll(party.members);
+        ObjectUtils.overrideCollection(members, party.members);
     }
 }

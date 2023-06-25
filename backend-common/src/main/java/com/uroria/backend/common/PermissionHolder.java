@@ -1,23 +1,19 @@
 package com.uroria.backend.common;
 
+import com.uroria.backend.common.utils.ObjectUtils;
 import com.uroria.backend.common.utils.PermissionCalculator;
 import com.uroria.backend.common.utils.TransientField;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class PermissionHolder extends BackendObject<PermissionHolder> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID uuid;
     private final Map<String, Boolean> permissions;
-    @TransientField
-    private Map<String, Boolean> temporaryPermissions;
-    private final Collection<String> groups;
+    @TransientField private Map<String, Boolean> temporaryPermissions;
+    private final List<String> groups;
     public PermissionHolder(UUID uuid) {
         this.uuid = uuid;
         this.permissions = new HashMap<>();
@@ -84,20 +80,16 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     public boolean equals(Object obj) {
         if (obj == null) return false;
         if (obj instanceof PermissionHolder holder) {
-            if (holder.getUUID().equals(getUUID())) return true;
+            return holder.getUUID().equals(getUUID());
         }
         return false;
     }
 
     @Override
     public void modify(PermissionHolder holder) {
-        permissions.clear();
-        permissions.putAll(holder.permissions);
-
-        groups.clear();
-        groups.addAll(holder.groups);
-
-        temporaryPermissions.clear();
-        temporaryPermissions.putAll(holder.temporaryPermissions);
+        ObjectUtils.overrideMap(permissions, holder.permissions);
+        ObjectUtils.overrideCollection(groups, holder.groups);
+        if (this.temporaryPermissions == null) this.temporaryPermissions = new HashMap<>();
+        ObjectUtils.overrideMap(temporaryPermissions, holder.temporaryPermissions);
     }
 }

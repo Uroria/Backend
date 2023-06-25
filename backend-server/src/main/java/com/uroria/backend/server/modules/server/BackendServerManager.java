@@ -58,7 +58,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
     public void disable() {
         for (BackendServer server : this.servers) {
             try {
-                server.setStatus(ServerStatus.CLOSED);
+                server.setStatus(ServerStatus.STOPPED);
                 this.serverUpdate.update(server);
             } catch (Exception exception) {
                 this.logger.error("Cannot shutdown server " + server.getId(), exception);

@@ -1,18 +1,20 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
+import com.uroria.backend.common.utils.ObjectUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class BackendClan extends PropertyHolder<BackendClan> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
-    private final Collection<UUID> moderators;
-    private final Collection<UUID> members;
+    private final List<UUID> moderators;
+    private final List<UUID> members;
     private final long foundingDate;
     private final String name;
     private String tag;
@@ -106,14 +108,8 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
     public synchronized void modify(BackendClan clan) {
         this.tag = clan.tag;
         this.operator = clan.operator;
-        this.moderators.clear();
-        this.moderators.addAll(clan.moderators);
-        this.members.clear();
-        this.members.addAll(clan.members);
-
-        this.properties.keySet().forEach(key -> {
-            if (!clan.properties.containsKey(key)) this.properties.remove(key);
-        });
-        properties.putAll(clan.properties);
+        ObjectUtils.overrideCollection(moderators, clan.moderators);
+        ObjectUtils.overrideCollection(members, clan.members);
+        ObjectUtils.overrideMap(properties, clan.properties);
     }
 }

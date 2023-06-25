@@ -3,6 +3,7 @@ package com.uroria.backend.common;
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.common.helpers.ServerType;
+import com.uroria.backend.common.utils.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
     private final int templateId;
     private final int type;
     private final int maxPlayerCount;
-    private final Collection<UUID> onlinePlayers;
+    private final List<UUID> onlinePlayers;
     private int status;
     private int id;
 
@@ -134,12 +135,8 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
     public synchronized void modify(BackendServer server) {
         this.status = server.status;
         this.id = server.id;
-        this.properties.keySet().forEach(key -> {
-            if (!server.properties.containsKey(key)) this.properties.remove(key);
-        });
-        this.properties.putAll(server.properties);
-        this.onlinePlayers.clear();
-        this.onlinePlayers.addAll(server.onlinePlayers);
+        ObjectUtils.overrideMap(properties, server.properties);
+        ObjectUtils.overrideCollection(onlinePlayers, server.onlinePlayers);
     }
 
     public static BackendServer createLobby() {

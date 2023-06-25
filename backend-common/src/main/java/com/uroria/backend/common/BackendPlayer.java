@@ -2,6 +2,7 @@ package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PlayerStatus;
 import com.uroria.backend.common.helpers.PropertyHolder;
+import com.uroria.backend.common.utils.ObjectUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -10,19 +11,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public final class BackendPlayer extends PropertyHolder<BackendPlayer> implements Serializable {
     @Serial
     private static final long serialVersionUID = 1;
     private final UUID uuid;
-    private final Collection<UUID> crew;
-    private final Collection<BackendPunishment> outdatedPunishments;
+    private final List<UUID> crew;
+    private final List<BackendPunishment> outdatedPunishments;
     private String skinURL;
     private String avatar;
     private String clan;
@@ -51,17 +47,9 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         this.locale = player.locale;
         this.status = player.status;
         this.punishment = player.punishment;
-
-        this.outdatedPunishments.clear();
-        this.outdatedPunishments.addAll(player.outdatedPunishments);
-
-        this.crew.clear();
-        this.crew.addAll(player.crew);
-
-        this.properties.keySet().forEach(key -> {
-            if (!player.properties.containsKey(key)) this.properties.remove(key);
-        });
-        properties.putAll(player.properties);
+        ObjectUtils.overrideCollection(outdatedPunishments, player.outdatedPunishments);
+        ObjectUtils.overrideCollection(crew, player.crew);
+        ObjectUtils.overrideMap(properties, player.properties);
     }
 
     public void clearOutdatedPunishments() {

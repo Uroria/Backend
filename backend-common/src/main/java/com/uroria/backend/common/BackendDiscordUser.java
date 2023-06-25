@@ -1,6 +1,7 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
+import com.uroria.backend.common.utils.ObjectUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -49,10 +50,6 @@ public final class BackendDiscordUser extends PropertyHolder<BackendDiscordUser>
         this.uuid = user.uuid;
         this.lastDiscordUserName = user.lastDiscordUserName;
         this.discordId = user.lastDiscordUserName;
-
-        this.properties.keySet().forEach(key -> {
-            if (!user.properties.containsKey(key)) this.properties.remove(key);
-        });
-        properties.putAll(user.properties);
+        ObjectUtils.overrideMap(properties, user.properties);
     }
 }

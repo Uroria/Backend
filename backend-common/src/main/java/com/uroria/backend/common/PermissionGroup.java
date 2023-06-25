@@ -1,6 +1,7 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
+import com.uroria.backend.common.utils.ObjectUtils;
 import com.uroria.backend.common.utils.PermissionCalculator;
 
 import java.io.Serial;
@@ -50,20 +51,15 @@ public final class PermissionGroup extends PropertyHolder<PermissionGroup> imple
     @Override
     public void modify(PermissionGroup group) {
         priority = group.getPriority();
-        permissions.clear();
-        permissions.putAll(group.permissions);
-
-        this.properties.keySet().forEach(key -> {
-            if (!group.properties.containsKey(key)) this.properties.remove(key);
-        });
-        properties.putAll(group.properties);
+        ObjectUtils.overrideMap(permissions, group.permissions);
+        ObjectUtils.overrideMap(properties, group.properties);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null) return false;
         if (obj instanceof PermissionGroup group) {
-            if (group.getName().equals(getName())) return true;
+            return group.getName().equals(getName());
         }
 
         return false;

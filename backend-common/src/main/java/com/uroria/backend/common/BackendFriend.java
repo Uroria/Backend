@@ -1,17 +1,19 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.FriendPair;
+import com.uroria.backend.common.utils.ObjectUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public class BackendFriend extends BackendObject<BackendFriend> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID holder;
-    private final Collection<FriendPair> friends;
+    private final List<FriendPair> friends;
     public BackendFriend(UUID holder) {
         this.holder = holder;
         this.friends = new ArrayList<>();
@@ -40,7 +42,6 @@ public class BackendFriend extends BackendObject<BackendFriend> implements Seria
 
     @Override
     public synchronized void modify(BackendFriend friend) {
-        this.friends.clear();
-        this.friends.addAll(friend.friends);
+        ObjectUtils.overrideCollection(friends, friend.friends);
     }
 }

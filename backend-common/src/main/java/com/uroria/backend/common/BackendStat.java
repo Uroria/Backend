@@ -1,6 +1,7 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
+import com.uroria.backend.common.utils.ObjectUtils;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -51,12 +52,7 @@ public final class BackendStat extends PropertyHolder<BackendStat> implements Se
 
     @Override
     public synchronized void modify(BackendStat stat) {
-        this.scores.clear();
-        this.scores.putAll(stat.scores);
-
-        this.properties.keySet().forEach(key -> {
-            if (!stat.properties.containsKey(key)) this.properties.remove(key);
-        });
-        properties.putAll(stat.properties);
+        ObjectUtils.overrideMap(scores, stat.scores);
+        ObjectUtils.overrideMap(properties, stat.properties);
     }
 }
