@@ -51,6 +51,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
             this.keepAlive.start();
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
+            Uroria.captureException(exception);
         }
     }
 

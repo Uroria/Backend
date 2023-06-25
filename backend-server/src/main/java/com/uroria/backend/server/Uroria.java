@@ -21,6 +21,7 @@ import com.uroria.backend.server.modules.party.BackendPartyManager;
 import com.uroria.backend.server.modules.permission.BackendPermissionManager;
 import com.uroria.backend.server.modules.player.BackendPlayerManager;
 import com.uroria.backend.server.modules.server.BackendServerManager;
+import com.uroria.backend.server.modules.settings.BackendSettingsManager;
 import com.uroria.backend.server.modules.stats.BackendStatsManager;
 import com.uroria.backend.server.plugins.BackendPluginManager;
 import com.uroria.backend.server.scheduler.BackendScheduler;
@@ -82,6 +83,7 @@ public final class Uroria implements Server {
     private final BackendServerManager serverManager;
     private final BackendClanManager clanManager;
     private final BackendFriendManager friendManager;
+    private final BackendSettingsManager settingsManager;
 
     private Uroria() {
         long start = System.currentTimeMillis();
@@ -128,6 +130,7 @@ public final class Uroria implements Server {
         this.serverManager = new BackendServerManager(LOGGER, this.pulsarClient, this.cloudAPI);
         this.clanManager = new BackendClanManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.friendManager = new BackendFriendManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
+        this.settingsManager = new BackendSettingsManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         LOGGER.info("Finished initializing in " + (System.currentTimeMillis() - start) + "ms");
     }
 
@@ -141,6 +144,7 @@ public final class Uroria implements Server {
         this.partyManager.start();
         this.clanManager.start();
         this.friendManager.start();
+        this.settingsManager.start();
 
         LOGGER.info("Starting plugins...");
         this.pluginManager.startPlugins();
@@ -160,6 +164,7 @@ public final class Uroria implements Server {
         this.partyManager.shutdown();
         this.clanManager.shutdown();
         this.friendManager.shutdown();
+        this.settingsManager.shutdown();
 
         try {
             if (this.pulsarClient != null && !this.pulsarClient.isClosed()) {
@@ -232,6 +237,11 @@ public final class Uroria implements Server {
     @Override
     public FriendManager getFriendManager() {
         return this.friendManager;
+    }
+
+    @Override
+    public SettingsManager getSettingsManager() {
+        return this.settingsManager;
     }
 
     public PulsarClient getPulsarClient() {
