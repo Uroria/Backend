@@ -4,15 +4,24 @@ import com.uroria.backend.bukkit.events.ServerStartEvent;
 import com.uroria.backend.bukkit.events.ServerUpdateEvent;
 import com.uroria.backend.common.BackendServer;
 import com.uroria.backend.common.helpers.ServerStatus;
-import com.uroria.backend.server.*;
+import com.uroria.backend.common.helpers.ServerType;
+import com.uroria.backend.server.BackendAllServersRequest;
+import com.uroria.backend.server.BackendServerKeepAlive;
+import com.uroria.backend.server.BackendServerRequest;
+import com.uroria.backend.server.BackendServerStart;
+import com.uroria.backend.server.BackendServerUpdate;
+import de.leonhard.storage.Json;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.slf4j.Logger;
 
-import java.net.InetSocketAddress;
-import java.util.*;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 public final class ServerManagerImpl extends BukkitServerManager {
@@ -46,9 +55,44 @@ public final class ServerManagerImpl extends BukkitServerManager {
             BackendAPI.captureException(exception);
         }
         if (this.localServerId == -1) return;
+        Json config = BackendBukkitPlugin.config();
+
+        Map<String, Serializable> properties = new HashMap<>();
+
+        for (String key : config.getSection("properties").singleLayerKeySet()) {
+            try {
+                String prefix = "properties." + key;
+                Serializable value = (Serializable) config.get(prefix);
+                if (key == null || value == null) continue;
+                properties.put(key, value);
+            } catch (Exception exception) {
+                logger.warn("Cannot set property " + key, exception);
+            }
+        }
+
+        HashMap<String, Boolean> creatorPermissions = new HashMap<>();
+        HashMap<String, Boolean> crewPermissions = new HashMap<>();
+
+        for (String node : config.getSection("creatorPermissions").singleLayerKeySet()) {
+            String prefix = "creatorPermissions." + node;
+            boolean value = config.getBoolean(prefix);
+            creatorPermissions.put(node, value);
+        }
+
+        for (String node : config.getSection("crewPermissions").singleLayerKeySet()) {
+            String prefix = "crewPermissions." + node;
+            boolean value = config.getBoolean(prefix);
+            crewPermissions.put(node, value);
+        }
+
         try {
             BackendServer server = getThisServer();
             server.setStatus(ServerStatus.READY);
+            properties.forEach(server::setProperty);
+            if (server.getType() == ServerType.EVENT) {
+                server.setProperty("creatorPermissions", creatorPermissions);
+                server.setProperty("crewPermissions", crewPermissions);
+            }
             updateServer(server);
             this.keepAlive = new BackendServerKeepAlive(pulsarClient, identifier, server.getIdentifier());
             this.keepAlive.start();

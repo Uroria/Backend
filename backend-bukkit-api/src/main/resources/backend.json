@@ -10,5 +10,14 @@
     "player": 20,
     "stats": 20,
     "permission_holder": 20
+  },
+  "properties": {
+
+  },
+  "creatorPermissions": {
+
+  },
+  "crewPermissions": {
+
   }
 }
