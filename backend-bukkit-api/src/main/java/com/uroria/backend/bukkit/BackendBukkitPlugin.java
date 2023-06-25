@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class BackendBukkitPlugin extends JavaPlugin {
+    private static final Json SERVER_CONFIG = new Json("server.json", "./", BackendBukkitPlugin.class.getClassLoader().getResourceAsStream("server.json"), ReloadSettings.MANUALLY);
     private static final Json CONFIG = new Json("backend.json", "./", BackendBukkitPlugin.class.getClassLoader().getResourceAsStream("backend.json"), ReloadSettings.MANUALLY);;
 
     private final Logger logger;
@@ -71,5 +72,9 @@ public final class BackendBukkitPlugin extends JavaPlugin {
 
     static Json config() {
         return CONFIG;
+    }
+
+    static Json serverConfig() {
+        return SERVER_CONFIG;
     }
 }

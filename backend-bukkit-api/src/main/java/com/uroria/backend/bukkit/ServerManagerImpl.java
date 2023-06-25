@@ -55,7 +55,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
             BackendAPI.captureException(exception);
         }
         if (this.localServerId == -1) return;
-        Json config = BackendBukkitPlugin.config();
+        Json config = BackendBukkitPlugin.serverConfig();
 
         Map<String, Serializable> properties = new HashMap<>();
 
