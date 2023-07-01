@@ -3,6 +3,7 @@ package com.uroria.backend.bukkit;
 import com.uroria.backend.bukkit.events.ServerStartEvent;
 import com.uroria.backend.bukkit.events.ServerUpdateEvent;
 import com.uroria.backend.common.BackendServer;
+import com.uroria.backend.common.Unsafe;
 import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.common.helpers.ServerType;
 import com.uroria.backend.server.BackendAllServersRequest;
@@ -119,6 +120,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
     public BackendServer getThisServer() {
         if (BackendBukkitPlugin.isOffline()) {
             BackendServer server = new BackendServer("Offline", 0, ServerType.EMPTY, 20);
+            Unsafe.setIdOfServer(server, this.localServerId);
             checkServer(server);
             return server;
         }
