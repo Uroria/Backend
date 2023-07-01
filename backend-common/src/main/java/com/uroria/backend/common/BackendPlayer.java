@@ -31,7 +31,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         if (currentName == null) this.currentName = null;
         else this.currentName = currentName.toLowerCase();
         this.crew = new ArrayList<>();
-        this.locale = Locale.ENGLISH;
+        this.locale = Locale.GERMAN;
         this.clan = null;
         this.status = 0;
         this.punishment = null;
