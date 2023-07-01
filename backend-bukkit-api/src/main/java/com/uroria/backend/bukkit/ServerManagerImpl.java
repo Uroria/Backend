@@ -16,12 +16,7 @@ import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public final class ServerManagerImpl extends BukkitServerManager {
@@ -35,6 +30,10 @@ public final class ServerManagerImpl extends BukkitServerManager {
     public ServerManagerImpl(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
         Properties properties = System.getProperties();
+        if (BackendBukkitPlugin.isOffline()) {
+            this.localServerId = -2;
+            return;
+        }
         String stringId = properties.getProperty("server.id");
         if (stringId == null) {
             this.localServerId = -1;
@@ -118,6 +117,11 @@ public final class ServerManagerImpl extends BukkitServerManager {
 
     @Override
     public BackendServer getThisServer() {
+        if (BackendBukkitPlugin.isOffline()) {
+            BackendServer server = new BackendServer("Offline", 0, ServerType.EMPTY, 20);
+            checkServer(server);
+            return server;
+        }
         return getServer(this.localServerId, 5000).orElseThrow(() -> new RuntimeException("Own server not initialized yet"));
     }
 
@@ -179,12 +183,14 @@ public final class ServerManagerImpl extends BukkitServerManager {
             if (server.getId().get().equals(id)) return Optional.of(server);
         }
 
+        if (BackendBukkitPlugin.isOffline()) return Optional.empty();
         return this.request.request(id);
     }
 
     @Override
     public List<Integer> getAllServers(int timeout) {
         int randomInt = new Random().nextInt();
+        if (BackendBukkitPlugin.isOffline()) return Collections.emptyList();
         return this.requestAll.request(randomInt).orElseThrow(() -> new RuntimeException("Cannot get list"));
     }
 
@@ -193,7 +199,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
         if (server == null) throw new NullPointerException("Server cannot be null");
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not created yet");
         try {
-            this.update.update(server);
+            if (!BackendBukkitPlugin.isOffline()) this.update.update(server);
             checkServer(server);
         } catch (Exception exception) {
             this.logger.error("Cannot update server", exception);
@@ -206,6 +212,12 @@ public final class ServerManagerImpl extends BukkitServerManager {
         if (server == null) throw new NullPointerException("Server cannot be null");
         if (server.getId().isPresent()) throw new IllegalStateException("Server already started");
         try {
+            if (BackendBukkitPlugin.isOffline()) {
+                server.setStatus(ServerStatus.READY);
+                BackendServer finalServer1 = server;
+                CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new ServerStartEvent(finalServer1)));
+                return server;
+            }
             Optional<BackendServer> request = this.start.request(server);
             if (request.isEmpty()) return null;
             server = request.get();

@@ -78,6 +78,13 @@ public final class PlayerManagerImpl extends PlayerManager {
         for (BackendPlayer player : this.players) {
             if (player.getUUID().equals(uuid)) return Optional.of(player);
         }
+
+        if (BackendBukkitPlugin.isOffline()) {
+            BackendPlayer player = new BackendPlayer(uuid, null);
+            players.add(player);
+            return Optional.of(player);
+        }
+
         Optional<BackendPlayer> request = uuidRequest.request(uuid);
         request.ifPresent(players::add);
         return request;
@@ -90,6 +97,9 @@ public final class PlayerManagerImpl extends PlayerManager {
         for (BackendPlayer player : this.players) {
             if (player.getCurrentName().isPresent() && player.getCurrentName().get().equals(name)) return Optional.of(player);
         }
+
+        if (BackendBukkitPlugin.isOffline()) return Optional.empty();
+
         Optional<BackendPlayer> request = nameRequest.request(name);
         request.ifPresent(players::add);
         return request;
@@ -100,6 +110,7 @@ public final class PlayerManagerImpl extends PlayerManager {
         if (player == null) throw new NullPointerException("Player cannot be null");
         try {
             checkPlayer(player);
+            if (BackendBukkitPlugin.isOffline()) return;
             this.update.update(player);
         } catch (Exception exception) {
             this.logger.error("Cannot update player", exception);

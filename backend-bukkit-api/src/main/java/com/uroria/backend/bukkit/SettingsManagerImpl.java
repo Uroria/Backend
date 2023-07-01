@@ -14,10 +14,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -86,6 +83,11 @@ public final class SettingsManagerImpl extends SettingsManager {
     @Override
     public Collection<BackendSettings> getSettings(UUID uuid, int gameId) {
         if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
+
+        if (BackendBukkitPlugin.isOffline()) {
+            return Collections.emptyList();
+        }
+
         SettingsRequest request = new SettingsRequest(uuid, gameId);
         Collection<BackendSettings> settingsCollection = this.gameRequest.request(request).orElse(new ArrayList<>());
         settingsCollection.removeIf(BackendSettings::isDeleted);
@@ -101,6 +103,10 @@ public final class SettingsManagerImpl extends SettingsManager {
             if (settings.getGameID() != gameId) continue;
             if (settings.getID() != id) continue;
             return Optional.of(settings);
+        }
+
+        if (BackendBukkitPlugin.isOffline()) {
+            return Optional.empty();
         }
 
         SettingsRequest request = new SettingsRequest(uuid, gameId, id);
@@ -121,6 +127,10 @@ public final class SettingsManagerImpl extends SettingsManager {
             return Optional.of(settings);
         }
 
+        if (BackendBukkitPlugin.isOffline()) {
+            return Optional.empty();
+        }
+
         Optional<BackendSettings> request = this.tagRequest.request(new SettingsRequest(tag));
         if (request.isPresent()) {
             if (request.get().isDeleted()) return Optional.empty();
@@ -134,6 +144,7 @@ public final class SettingsManagerImpl extends SettingsManager {
         if (settings == null) throw new IllegalArgumentException("Settings cannot be null");
         try {
             checkSettings(settings);
+            if (BackendBukkitPlugin.isOffline()) return;
             this.update.update(settings);
         } catch (Exception exception) {
             this.logger.error("Cannot update settings", exception);

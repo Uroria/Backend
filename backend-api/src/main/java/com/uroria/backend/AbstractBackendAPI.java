@@ -11,6 +11,11 @@ public abstract class AbstractBackendAPI {
     protected final String identifier;
 
     public AbstractBackendAPI(String pulsarURL) {
+        if (pulsarURL == null) {
+            this.pulsarClient = null;
+            this.identifier = null;
+            return;
+        }
         try {
             this.pulsarClient = PulsarClient.builder()
                     .serviceUrl(pulsarURL)

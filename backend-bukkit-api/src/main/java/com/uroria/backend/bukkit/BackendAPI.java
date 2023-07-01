@@ -38,6 +38,10 @@ public final class BackendAPI extends AbstractBackendAPI {
 
     @Override
     protected void start() {
+        if (BackendBukkitPlugin.isOffline()) {
+            logger.info("Running in offline mode!");
+            return;
+        }
         this.logger.info("Starting connections...");
         String identifier = UUID.randomUUID().toString();
         this.playerManager.start(identifier);
@@ -50,6 +54,7 @@ public final class BackendAPI extends AbstractBackendAPI {
 
     @Override
     protected void shutdown() {
+        if (BackendBukkitPlugin.isOffline()) return;
         this.logger.info("Shutting down connections...");
         try {
             this.playerManager.shutdown();
@@ -65,6 +70,7 @@ public final class BackendAPI extends AbstractBackendAPI {
     }
 
     public static void captureException(Throwable throwable) {
+        if (BackendBukkitPlugin.isOffline()) return;
         CompletableFuture.runAsync(() -> {
             if (!instance.sentry) return;
             Sentry.captureException(throwable, scope -> {

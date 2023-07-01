@@ -57,6 +57,10 @@ public final class StatsManagerImpl extends StatsManager {
         if (holder == null) throw new NullPointerException("UUID cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
 
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
+
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.RAW, null, 0, 0, 0);
 
         Optional<Collection<BackendStat>> request = this.request.request(statsRequest);
@@ -69,6 +73,10 @@ public final class StatsManagerImpl extends StatsManager {
         if (holder == null) throw new NullPointerException("UUID cannot be null");
         if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
+
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
 
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITH_SCORE_GREATER_THAN, scoreKey, value, 0, 0);
 
@@ -83,6 +91,10 @@ public final class StatsManagerImpl extends StatsManager {
         if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
 
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
+
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITH_SCORE_LOWER_THAN, scoreKey, value, 0, 0);
 
         Optional<Collection<BackendStat>> request = this.request.request(statsRequest);
@@ -96,6 +108,10 @@ public final class StatsManagerImpl extends StatsManager {
         if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
 
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
+
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITH_SCORE, scoreKey, value, 0, 0);
 
         Optional<Collection<BackendStat>> request = this.request.request(statsRequest);
@@ -108,6 +124,10 @@ public final class StatsManagerImpl extends StatsManager {
         if (holder == null) throw new NullPointerException("UUID cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
 
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
+
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITHIN_TIME_RANGE, null, 0, startMs, endMs);
 
         Optional<Collection<BackendStat>> request = this.request.request(statsRequest);
@@ -118,6 +138,10 @@ public final class StatsManagerImpl extends StatsManager {
     @Override
     public Collection<BackendStat> getStats(int gameId) {
         Collection<BackendStat> stats = new ArrayList<>();
+
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.RAW, null, 0, 0, 0);
 
@@ -131,6 +155,10 @@ public final class StatsManagerImpl extends StatsManager {
         if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
 
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
+
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITH_SCORE_GREATER_THAN, scoreKey, value, 0, 0);
 
         Optional<Collection<BackendStat>> request = this.request.request(statsRequest);
@@ -142,6 +170,10 @@ public final class StatsManagerImpl extends StatsManager {
     public Collection<BackendStat> getStatsWithScoreLowerThanValue(int gameId, String scoreKey, long value) {
         if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
+
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITH_SCORE_LOWER_THAN, scoreKey, value, 0, 0);
 
@@ -155,6 +187,10 @@ public final class StatsManagerImpl extends StatsManager {
         if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
         Collection<BackendStat> stats = new ArrayList<>();
 
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
+
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITH_SCORE, scoreKey, value, 0, 0);
 
         Optional<Collection<BackendStat>> request = this.request.request(statsRequest);
@@ -165,6 +201,10 @@ public final class StatsManagerImpl extends StatsManager {
     @Override
     public Collection<BackendStat> getStatsInTimeRangeOf(int gameId, long startMs, long endMs) {
         Collection<BackendStat> stats = new ArrayList<>();
+
+        if (BackendBukkitPlugin.isOffline()) {
+            return stats;
+        }
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITHIN_TIME_RANGE, null, 0, startMs, endMs);
 
@@ -177,6 +217,7 @@ public final class StatsManagerImpl extends StatsManager {
     public void updateStat(BackendStat stat) {
         try {
             checkStat(stat);
+            if (BackendBukkitPlugin.isOffline()) return;
             this.update.update(stat);
         } catch (Exception exception) {
             this.logger.error("Cannot update stat", exception);

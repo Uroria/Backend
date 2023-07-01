@@ -102,6 +102,13 @@ public final class PermissionManagerImpl extends PermissionManager {
         for (PermissionHolder holder : this.holders) {
             if (holder.getUUID().equals(uuid)) return Optional.of(holder);
         }
+
+        if (BackendBukkitPlugin.isOffline()) {
+            PermissionHolder holder = new PermissionHolder(uuid);
+            this.holders.add(holder);
+            return Optional.of(holder);
+        }
+
         Optional<PermissionHolder> request = holderRequest.request(uuid);
         request.ifPresent(holders::add);
         return request;
@@ -114,6 +121,11 @@ public final class PermissionManagerImpl extends PermissionManager {
         for (PermissionGroup group : this.groups) {
             if (group.getName().equals(name)) return Optional.of(group);
         }
+
+        if (BackendBukkitPlugin.isOffline()) {
+            return Optional.empty();
+        }
+
         Optional<PermissionGroup> request = groupRequest.request(name);
         request.ifPresent(groups::add);
         return request;
@@ -124,6 +136,7 @@ public final class PermissionManagerImpl extends PermissionManager {
         if (permissionHolder == null) throw new NullPointerException("PermissionHolder cannot be null");
         try {
             checkPermissionHolder(permissionHolder);
+            if (BackendBukkitPlugin.isOffline()) return;
             this.holderUpdate.update(permissionHolder);
         } catch (Exception exception) {
             this.logger.error("Cannot update permissionholder", exception);
@@ -136,6 +149,7 @@ public final class PermissionManagerImpl extends PermissionManager {
         if (permissionGroup == null) throw new NullPointerException("PermissionGroup cannot be null");
         try {
             checkPermissionGroup(permissionGroup);
+            if (BackendBukkitPlugin.isOffline()) return;
             this.groupUpdate.update(permissionGroup);
         } catch (Exception exception) {
             this.logger.error("Cannot update permissiongroup", exception);

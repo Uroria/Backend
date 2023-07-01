@@ -17,8 +17,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class BackendBukkitPlugin extends JavaPlugin {
+    private static final boolean OFFLINE_MODE;
     private static final Json SERVER_CONFIG = new Json("server.json", "./", BackendBukkitPlugin.class.getClassLoader().getResourceAsStream("server.json"), ReloadSettings.MANUALLY);
     private static final Json CONFIG = new Json("backend.json", "./", BackendBukkitPlugin.class.getClassLoader().getResourceAsStream("backend.json"), ReloadSettings.MANUALLY);;
+
+    static {
+        OFFLINE_MODE = CONFIG.getOrSetDefault("offline", false);
+    }
 
     private final Logger logger;
     private final BackendAPI backendAPI;
@@ -26,7 +31,9 @@ public final class BackendBukkitPlugin extends JavaPlugin {
         this.logger = LoggerFactory.getLogger("BukkitAPI");
         BackendAPI backendAPI;
         try {
-            backendAPI = new BackendAPI(CONFIG.getString("pulsar.url"), CONFIG.getOrSetDefault("sentry.enabled", false), logger);
+            String url = CONFIG.getString("pulsar.url");
+            if (OFFLINE_MODE) url = null;
+            backendAPI = new BackendAPI(url, CONFIG.getOrSetDefault("sentry.enabled", false), logger);
         } catch (Exception exception) {
             logger.error("Cannot connect to backend! Exiting...", exception);
             this.backendAPI = null;
@@ -76,5 +83,9 @@ public final class BackendBukkitPlugin extends JavaPlugin {
 
     static Json serverConfig() {
         return SERVER_CONFIG;
+    }
+
+    static boolean isOffline() {
+        return OFFLINE_MODE;
     }
 }

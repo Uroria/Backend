@@ -42,6 +42,7 @@ public class MessageManagerImpl extends MessageManager {
 
     @Override
     public void sendMessage(BackendMessage message) {
+        if (BackendBukkitPlugin.isOffline()) return;
         this.messageUpdate.update(message);
     }
 }
