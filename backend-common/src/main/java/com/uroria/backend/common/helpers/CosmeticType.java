@@ -7,7 +7,9 @@ public enum CosmeticType {
     HAT(0),
     BALLOON(1),
     BACKPACK(2),
-    EMOTE(3);
+    EMOTE(3),
+    SHOULDER(4),
+    AURA(5);
 
     private @Getter final int id;
 
