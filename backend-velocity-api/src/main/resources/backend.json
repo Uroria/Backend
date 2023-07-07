@@ -1,0 +1,14 @@
+{
+  "pulsar": {
+    "url": ""
+  },
+  "sentry": {
+    "enabled": false,
+    "dsn": ""
+  },
+  "cacheKeepAliveInMinutes": {
+    "player": 20,
+    "stats": 20,
+    "permission_holder": 20
+  }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" shutdownHook="disable">
+    <Appenders>
+        <!-- Console logger for debugging (prints stacktrace) -->
+        <Console name="ConsoleDebug" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="[%d{yyyy.MM.dd-HH:mm:ss]}[%style{%p}{cyan}][%style{%c{1}}{yellow}] %highlight{%m%n}{FATAL=black, ERROR=red, WARN=yellow, INFO=white, DEBUG=white, TRACE=white}"
+                    disableAnsi="false"/>
+        </Console>
+
+        <RollingFile name="RollingFile" fileName="logs/Current.log" filePattern="logs/%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="[%d{HH:mm:ss}][%p][%c{1}] %replace{%m}{\u001B\[(0|[34][0-7])m}{} %n" disableAnsi="true"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- remove too verbose library logging -->
+        <Logger name="com.zaxxer.hikari" level="WARN"/>
+        <Logger name="org.apache.pulsar" level="ERROR"/>
+        <Logger name="net.dv8tion.jda" level="WARN"/>
+        <Logger name="org.mongodb.driver" level="WARN"/>
+        <Logger name="io.lettuce.core" level="WARN"/>
+        <Logger name="io.netty" level="WARN"/>
+        <Logger name="com.scurrilous" level="WARN"/>
+
+
+        <Root level="TRACE">
+            <AppenderRef ref="ConsoleDebug" />
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

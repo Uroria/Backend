@@ -1,0 +1,7 @@
+main: "com.uroria.backend.bukkit.BackendBukkitPlugin"
+name: "Backend"
+version: "Autogen"
+load: STARTUP
+commands:
+  stop:
+    description: Simply stops the server
