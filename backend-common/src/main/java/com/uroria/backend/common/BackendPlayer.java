@@ -3,6 +3,8 @@ package com.uroria.backend.common;
 import com.uroria.backend.common.helpers.PlayerStatus;
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,7 +28,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
     private Locale locale;
     private int status;
     private BackendPunishment punishment;
-    public BackendPlayer(UUID uuid, String currentName) {
+    public BackendPlayer(@NonNull UUID uuid, String currentName) {
         this.uuid = uuid;
         if (currentName == null) this.currentName = null;
         else this.currentName = currentName.toLowerCase();
@@ -79,8 +81,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         return Optional.ofNullable(this.punishment);
     }
 
-    public void punish(BackendPunishment punishment) {
-        if (punishment == null) throw new NullPointerException("Punishment cannot be null");
+    public void punish(@NonNull BackendPunishment punishment) {
         this.punishment = punishment;
     }
 
@@ -95,14 +96,12 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         return Optional.ofNullable(this.clan);
     }
 
-    public void setClan(BackendClan clan) {
-        if (clan == null) throw new NullPointerException("Clan cannot be null");
+    public void setClan(@NonNull BackendClan clan) {
         this.clan = clan.getName();
         clan.addMember(this.uuid);
     }
 
-    public void setClan(String clan) {
-        if (clan == null) throw new NullPointerException("Clan cannot be null");
+    public void setClan(@NonNull String clan) {
         this.clan = clan;
     }
 
@@ -110,7 +109,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         this.clan = null;
     }
 
-    public void setStatus(PlayerStatus status) {
+    public void setStatus(@NonNull PlayerStatus status) {
         this.status = status.getId();
     }
 
@@ -118,11 +117,11 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         return PlayerStatus.getById(this.status);
     }
 
-    public void setLocale(Locale locale) {
+    public void setLocale(@NonNull Locale locale) {
         this.locale = locale;
     }
 
-    public void setCurrentName(String name) {
+    public void setCurrentName(@Nullable String name) {
         if (name == null) {
             this.currentName = null;
             return;
@@ -143,6 +142,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
     }
 
     public boolean isCrewMember(UUID uuid) {
+        if (uuid == null) return false;
         return this.crew.contains(uuid);
     }
 
@@ -150,7 +150,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         return new ArrayList<>(crew);
     }
 
-    public void addCrewMember(UUID uuid) {
+    public void addCrewMember(@NonNull UUID uuid) {
         this.crew.add(uuid);
     }
 
@@ -158,7 +158,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         return outdatedPunishments;
     }
 
-    public void removeCrewMember(UUID uuid) {
+    public void removeCrewMember(@NonNull UUID uuid) {
         this.crew.remove(uuid);
     }
 
@@ -189,7 +189,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         }
     }
 
-    public void setAvatar(BufferedImage image) {
+    public void setAvatar(@Nullable BufferedImage image) {
         if (image == null) {
             this.avatar = null;
             return;

@@ -2,6 +2,7 @@ package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -13,9 +14,9 @@ public final class BackendDiscordUser extends PropertyHolder<BackendDiscordUser>
     private static final long serialVersionUID = 1;
     private UUID uuid;
     private String lastDiscordUserName;
-    private String discordId;
+    private long discordId;
 
-    public BackendDiscordUser(UUID uuid, String lastDiscordUserName, String discordId) {
+    public BackendDiscordUser(@NonNull UUID uuid, String lastDiscordUserName, long discordId) {
         this.uuid = uuid;
         this.lastDiscordUserName = lastDiscordUserName;
         this.discordId = discordId;
@@ -33,12 +34,12 @@ public final class BackendDiscordUser extends PropertyHolder<BackendDiscordUser>
         this.uuid = uuid;
     }
 
-    public void setDiscordId(String discordId) {
+    public void setDiscordId(long discordId) {
         this.discordId = discordId;
     }
 
-    public Optional<String> getDiscordId() {
-        return Optional.ofNullable(this.discordId);
+    public long getDiscordId() {
+        return this.discordId;
     }
 
     public Optional<UUID> getUUID() {
@@ -49,7 +50,7 @@ public final class BackendDiscordUser extends PropertyHolder<BackendDiscordUser>
     public synchronized void modify(BackendDiscordUser user) {
         this.uuid = user.uuid;
         this.lastDiscordUserName = user.lastDiscordUserName;
-        this.discordId = user.lastDiscordUserName;
+        this.discordId = user.discordId;
         ObjectUtils.overrideMap(properties, user.properties);
     }
 }

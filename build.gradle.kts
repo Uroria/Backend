@@ -12,6 +12,8 @@ allprojects {
     version = project.properties["projectVersion"].toString()
 }
 
+val jetbrainsAnnotationsVersion: String by project.extra
+val lombokVersion: String by project.extra
 val junitVersion: String by project.extra
 val simplixStorageVersion: String by project.extra
 val slf4jVersion: String by project.extra
@@ -50,9 +52,14 @@ subprojects {
     }
 
     dependencies {
-        testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+        compileOnly("org.jetbrains:annotations:${jetbrainsAnnotationsVersion}")
+        compileOnly("org.projectlombok:lombok:${lombokVersion}")
+        annotationProcessor("org.jetbrains:annotations:${jetbrainsAnnotationsVersion}")
+        annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
 
         api("org.slf4j:slf4j-api:$slf4jVersion")
+
+        implementation("com.uroria.nutshell:nutshell-plugin:0.0.7-alpha")
 
         api("com.github.simplix-softworks:simplixstorage:${simplixStorageVersion}")
 

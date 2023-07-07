@@ -1,8 +1,11 @@
 package com.uroria.backend.common;
 
-public final class Unsafe {
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 
-    public static void setIdOfServer(BackendServer server, int id) {
+@UtilityClass
+public class Unsafe {
+    public void setIdOfServer(@NonNull BackendServer server, int id) {
         server.setId(id);
     }
 }

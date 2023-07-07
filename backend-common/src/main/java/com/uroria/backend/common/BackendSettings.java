@@ -2,6 +2,7 @@ package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -17,9 +18,7 @@ public final class BackendSettings extends PropertyHolder<BackendSettings> imple
     private String displayName;
     private boolean deleted;
 
-    public BackendSettings(UUID uuid, int gameId, int id, String displayName) {
-        if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
-        if (displayName == null) throw new IllegalArgumentException("Name cannot be null");
+    public BackendSettings(@NonNull UUID uuid, int gameId, int id, @NonNull String displayName) {
         this.uuid = uuid;
         this.gameId = gameId;
         this.id = id;
@@ -34,8 +33,7 @@ public final class BackendSettings extends PropertyHolder<BackendSettings> imple
         this.deleted = settings.deleted;
     }
 
-    public void setDisplayName(String displayName) {
-        if (displayName == null) throw new IllegalArgumentException("Name cannot be null");
+    public void setDisplayName(@NonNull String displayName) {
         this.displayName = displayName;
     }
 

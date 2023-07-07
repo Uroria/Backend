@@ -1,6 +1,7 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PunishmentType;
+import lombok.NonNull;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -17,7 +18,7 @@ public final class BackendPunishment implements Serializable {
     private final long startMs;
     private final long durationInMs;
 
-    public BackendPunishment(Component displayReason, int reasonId, PunishmentType punishmentType, Duration duration, long startMs) {
+    public BackendPunishment(@NonNull Component displayReason, int reasonId, @NonNull PunishmentType punishmentType, Duration duration, long startMs) {
         if (startMs == 0) throw new NullPointerException("Start ms cannot be null");
         this.displayReason = MiniMessage.miniMessage().serialize(displayReason);
         this.reasonId = reasonId;
@@ -26,7 +27,7 @@ public final class BackendPunishment implements Serializable {
         this.durationInMs = duration.toMillis();
     }
 
-    public BackendPunishment(int reasonId, Component displayReason, PunishmentType type, Duration duration) {
+    public BackendPunishment(int reasonId, @NonNull Component displayReason, @NonNull PunishmentType type, Duration duration) {
         this.reasonId = reasonId;
         this.displayReason = MiniMessage.miniMessage().serialize(displayReason);
         this.punishmentType = type.getId();
@@ -39,7 +40,7 @@ public final class BackendPunishment implements Serializable {
         this.startMs = System.currentTimeMillis();
     }
 
-    public BackendPunishment(int reasonId, Component displayReason, PunishmentType type) {
+    public BackendPunishment(int reasonId, @NonNull Component displayReason, @NonNull PunishmentType type) {
         if (!type.isPermanent()) throw new NullPointerException("Missing duration because PunishmentType is missing");
         this.reasonId = reasonId;
         this.displayReason = MiniMessage.miniMessage().serialize(displayReason);

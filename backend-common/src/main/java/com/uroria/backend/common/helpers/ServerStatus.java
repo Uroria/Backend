@@ -1,5 +1,9 @@
 package com.uroria.backend.common.helpers;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
 public enum ServerStatus {
     EMPTY(0),
     STARTING(1),
@@ -8,15 +12,7 @@ public enum ServerStatus {
     ENDING(4),
     CLOSED(5),
     STOPPED(6);
-    private final int id;
-
-    ServerStatus(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
-    }
+    private @Getter final int id;
 
     public static ServerStatus getById(int id) {
         for (ServerStatus serverStatus : values()) {

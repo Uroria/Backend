@@ -2,6 +2,7 @@ package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -20,7 +21,7 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
     private String tag;
     private UUID operator;
 
-    public BackendClan(String name, String tag, UUID operator, long foundingDate) {
+    public BackendClan(@NonNull String name, String tag, UUID operator, long foundingDate) {
         this.name = name;
         this.tag = tag;
         this.operator = operator;
@@ -30,19 +31,16 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
         this.members.add(operator);
     }
 
-    public void addModerator(UUID uuid) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void addModerator(@NonNull UUID uuid) {
         this.members.add(uuid);
         this.moderators.remove(uuid);
     }
 
-    public void removeModerator(UUID uuid) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void removeModerator(@NonNull UUID uuid) {
         this.moderators.remove(uuid);
     }
 
-    public void setOperator(UUID operator) {
-        if (operator == null) throw new NullPointerException("UUID cannot be null");
+    public void setOperator(@NonNull UUID operator) {
         this.members.add(operator);
         this.operator = operator;
     }
@@ -55,8 +53,7 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
         return operator;
     }
 
-    public void setTag(String tag) {
-        if (tag == null) throw new NullPointerException("Tag cannot be null");
+    public void setTag(@NonNull String tag) {
         this.tag = tag;
     }
 
@@ -68,8 +65,7 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
         return tag;
     }
 
-    public void addMember(UUID uuid) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void addMember(@NonNull UUID uuid) {
         this.members.add(uuid);
     }
 
@@ -83,8 +79,7 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
         this.members.clear();
     }
 
-    public void removeMember(UUID uuid) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void removeMember(@NonNull UUID uuid) {
         this.moderators.remove(uuid);
         this.members.remove(uuid);
         if (this.operator.equals(uuid)) {

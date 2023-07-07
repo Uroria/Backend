@@ -1,6 +1,7 @@
 package com.uroria.backend.common.helpers;
 
 import com.uroria.backend.common.BackendObject;
+import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -15,33 +16,33 @@ public abstract class PropertyHolder<T> extends BackendObject<T> implements Seri
         this.properties = new HashMap<>();
     }
 
-    public void setProperty(String key, String value) {
+    public void setProperty(@NonNull String key, @NonNull String value) {
         this.properties.put(key, value);
     }
 
-    public void setProperty(String key, boolean value) {
+    public void setProperty(@NonNull String key, boolean value) {
         this.properties.put(key, value);
     }
 
-    public void setProperty(String key, Integer value) {
+    public void setProperty(@NonNull String key, int value) {
         this.properties.put(key, value);
     }
 
-    public void setProperty(String key, long value) {
+    public void setProperty(@NonNull String key, long value) {
         this.properties.put(key, value);
     }
 
-    public void unsetProperty(String key) {
+    public void unsetProperty(@NonNull String key) {
         this.properties.remove(key);
     }
 
-    public Optional<String> getPropertyString(String key) {
+    public Optional<String> getPropertyString(@NonNull String key) {
         Object o = this.properties.get(key);
         if (o == null) return Optional.empty();
         return Optional.of((String) o);
     }
 
-    public Optional<Integer> getPropertyInt(String key) {
+    public Optional<Integer> getPropertyInt(@NonNull String key) {
         Object o = this.properties.getOrDefault(key, 0);
         if (o == null) return Optional.empty();
         if (o instanceof Integer i) {
@@ -58,11 +59,11 @@ public abstract class PropertyHolder<T> extends BackendObject<T> implements Seri
         return Optional.empty();
     }
 
-    public boolean getPropertyBoolean(String key) {
+    public boolean getPropertyBoolean(@NonNull String key) {
         return (boolean) this.properties.getOrDefault(key, false);
     }
 
-    public Optional<Long> getPropertyLong(String key) {
+    public Optional<Long> getPropertyLong(@NonNull String key) {
         Object o = this.properties.get(key);
         if (o == null) return Optional.empty();
         if (o instanceof Long l) {
@@ -91,7 +92,7 @@ public abstract class PropertyHolder<T> extends BackendObject<T> implements Seri
         return new HashMap<>(this.properties);
     }
 
-    protected void setProperties(Map<String, Object> properties) {
+    protected void setProperties(@NonNull Map<String, Object> properties) {
         this.properties.putAll(properties);
     }
 }

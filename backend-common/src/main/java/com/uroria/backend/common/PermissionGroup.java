@@ -3,6 +3,8 @@ package com.uroria.backend.common;
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.utils.ObjectUtils;
 import com.uroria.backend.common.utils.PermissionCalculator;
+import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -14,21 +16,22 @@ public final class PermissionGroup extends PropertyHolder<PermissionGroup> imple
     private final String name;
     private final Map<String, Boolean> permissions;
     private int priority;
-    public PermissionGroup(String name, int priority) {
+    public PermissionGroup(@NonNull String name, int priority) {
         this.name = name.toLowerCase();
         this.permissions = new HashMap<>();
         this.priority = priority;
     }
 
-    public boolean hasPermission(String node) {
+    public boolean hasPermission(@Nullable String node) {
+        if (node == null) return false;
         return PermissionCalculator.hasPermission(node, permissions);
     }
 
-    public void setPermission(String node, boolean value) {
+    public void setPermission(@NonNull String node, boolean value) {
         this.permissions.put(node, value);
     }
 
-    public void unsetPermission(String node) {
+    public void unsetPermission(@NonNull String node) {
         this.permissions.remove(node);
     }
 

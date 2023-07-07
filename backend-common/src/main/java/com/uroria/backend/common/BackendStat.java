@@ -2,6 +2,7 @@ package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -16,8 +17,7 @@ public final class BackendStat extends PropertyHolder<BackendStat> implements Se
     private final int gameId;
     private final long time;
     private final Map<String, Long> scores;
-    public BackendStat(UUID uuid, int gameId, long time) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public BackendStat(@NonNull UUID uuid, int gameId, long time) {
         this.uuid = uuid;
         this.gameId = gameId;
         this.time = time;
@@ -29,8 +29,7 @@ public final class BackendStat extends PropertyHolder<BackendStat> implements Se
         return Optional.ofNullable(scores.get(key));
     }
 
-    public void setScore(String key, long score) {
-        if (key == null) throw new NullPointerException("Key cannot be null");
+    public void setScore(@NonNull String key, long score) {
         this.scores.put(key, score);
     }
 

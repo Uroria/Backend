@@ -3,6 +3,8 @@ package com.uroria.backend.common;
 import com.uroria.backend.common.utils.ObjectUtils;
 import com.uroria.backend.common.utils.PermissionCalculator;
 import com.uroria.backend.common.utils.TransientField;
+import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -14,14 +16,15 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     private final Map<String, Boolean> permissions;
     @TransientField private Map<String, Boolean> temporaryPermissions;
     private final List<String> groups;
-    public PermissionHolder(UUID uuid) {
+    public PermissionHolder(@NonNull UUID uuid) {
         this.uuid = uuid;
         this.permissions = new HashMap<>();
         this.temporaryPermissions = new HashMap<>();
         this.groups = new ArrayList<>();
     }
 
-    public boolean hasPermission(String node) {
+    public boolean hasPermission(@Nullable String node) {
+        if (node == null) return false;
         if (temporaryPermissions == null) temporaryPermissions = new HashMap<>();
         boolean base = PermissionCalculator.hasPermission(node, permissions);
         boolean temp = PermissionCalculator.hasPermission(node, temporaryPermissions);
@@ -29,28 +32,28 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
         return temp;
     }
 
-    public void addGroup(String group) {
+    public void addGroup(@NonNull String group) {
         this.groups.add(group);
     }
 
-    public void removeGroup(String group) {
+    public void removeGroup(@NonNull String group) {
         this.groups.remove(group);
     }
 
-    public void setPermission(String node, boolean value) {
+    public void setPermission(@NonNull String node, boolean value) {
         this.permissions.put(node, value);
     }
 
-    public void unsetPermission(String node) {
+    public void unsetPermission(@NonNull String node) {
         this.permissions.remove(node);
     }
 
-    public void setTemporaryPermission(String node, boolean value) {
+    public void setTemporaryPermission(@NonNull String node, boolean value) {
         if (this.temporaryPermissions == null) this.temporaryPermissions = new HashMap<>();
         this.temporaryPermissions.put(node, value);
     }
 
-    public void unsetTemporaryPermission(String node) {
+    public void unsetTemporaryPermission(@NonNull String node) {
         if (this.temporaryPermissions == null) this.temporaryPermissions = new HashMap<>();
         this.temporaryPermissions.remove(node);
     }

@@ -1,6 +1,7 @@
 package com.uroria.backend.common;
 
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -14,20 +15,18 @@ public final class BackendParty extends BackendObject<BackendParty> implements S
     private final UUID operator;
     private final List<UUID> members;
     private int currentServer;
-    public BackendParty(UUID operator, int currentServer) {
+    public BackendParty(@NonNull UUID operator, int currentServer) {
         this.operator = operator;
         this.members = new ArrayList<>();
         this.currentServer = currentServer;
         this.members.add(operator);
     }
 
-    public void addMember(UUID uuid) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void addMember(@NonNull UUID uuid) {
         this.members.add(uuid);
     }
 
-    public void removeMember(UUID uuid) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void removeMember(@NonNull UUID uuid) {
         if (uuid.equals(this.operator)) {
             this.members.clear();
             return;

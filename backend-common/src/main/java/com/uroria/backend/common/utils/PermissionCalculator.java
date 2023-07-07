@@ -1,10 +1,13 @@
 package com.uroria.backend.common.utils;
 
+import lombok.experimental.UtilityClass;
+
 import java.util.Map;
 
-public final class PermissionCalculator {
+@UtilityClass
+public class PermissionCalculator {
 
-    public static boolean hasPermission(String node, Map<String, Boolean> permissions) {
+    public boolean hasPermission(String node, Map<String, Boolean> permissions) {
         final String[] nodeParts = node.split("\\.");
         String currentNode = "";
         for (int i = 0; i < nodeParts.length; i++) {

@@ -2,6 +2,7 @@ package com.uroria.backend.common;
 
 import com.uroria.backend.common.helpers.FriendPair;
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -14,21 +15,19 @@ public class BackendFriend extends BackendObject<BackendFriend> implements Seria
     @Serial private static final long serialVersionUID = 1;
     private final UUID holder;
     private final List<FriendPair> friends;
-    public BackendFriend(UUID holder) {
+    public BackendFriend(@NonNull UUID holder) {
         this.holder = holder;
         this.friends = new ArrayList<>();
     }
 
-    public void addFriend(UUID uuid, long friendshipDate) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void addFriend(@NonNull UUID uuid, long friendshipDate) {
         for (FriendPair friendPair : this.friends) {
             if (friendPair.friend().equals(uuid)) return;
         }
         this.friends.add(new FriendPair(uuid, friendshipDate));
     }
 
-    public void removeFriend(UUID uuid) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public void removeFriend(@NonNull UUID uuid) {
         this.friends.removeIf(friendPair -> friendPair.friend().equals(uuid));
     }
 

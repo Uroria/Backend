@@ -1,5 +1,9 @@
 package com.uroria.backend.common.helpers;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
 public enum ServerType {
     EMPTY(0),
     EVENT(1),
@@ -7,15 +11,7 @@ public enum ServerType {
     GAME(3),
     CUSTOM_EVENT(4),
     OTHER(5);
-    private final int id;
-
-    ServerType(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
-    }
+    private @Getter final int id;
 
     public static ServerType getById(int id) {
         for (ServerType serverType : values()) {

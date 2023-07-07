@@ -4,6 +4,8 @@ import com.uroria.backend.common.helpers.PropertyHolder;
 import com.uroria.backend.common.helpers.ServerStatus;
 import com.uroria.backend.common.helpers.ServerType;
 import com.uroria.backend.common.utils.ObjectUtils;
+import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +26,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
     private int status;
     private int id;
 
-    public BackendServer(String name, int templateId, ServerType type, int maxPlayerCount) {
+    public BackendServer(@NonNull String name, int templateId, @NonNull ServerType type, int maxPlayerCount) {
         this.identifier = System.currentTimeMillis() - hashCode() - new Random().nextInt(10000);
         this.id = -1;
         this.name = name;
@@ -35,7 +37,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
         this.onlinePlayers = new ArrayList<>();
     }
 
-    public BackendServer(String name, int templateId, ServerType type) {
+    public BackendServer(@NonNull String name, int templateId, @NonNull ServerType type) {
         this(name, templateId, type, 50);
     }
 
@@ -59,15 +61,16 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
         return getPlayerCount() > this.maxPlayerCount;
     }
 
-    public void addPlayer(UUID uuid) {
+    public void addPlayer(@NonNull UUID uuid) {
         this.onlinePlayers.add(uuid);
     }
 
-    public void removePlayer(UUID uuid) {
+    public void removePlayer(@NonNull UUID uuid) {
         this.onlinePlayers.remove(uuid);
     }
 
     public boolean containsPlayer(UUID uuid) {
+        if (uuid == null) return false;
         return this.onlinePlayers.contains(uuid);
     }
 
@@ -83,7 +86,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
         return name;
     }
 
-    public void setStatus(ServerStatus serverStatus) {
+    public void setStatus(@NonNull ServerStatus serverStatus) {
         this.status = serverStatus.getId();
     }
 
@@ -100,11 +103,12 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
         return this.onlinePlayers.size();
     }
 
-    public void setProperty(String key, Serializable value) {
+    public void setProperty(@NonNull String key, @NonNull Serializable value) {
         this.properties.put(key, value);
     }
 
-    public Optional<Serializable> getPropertyObject(String key) {
+    public Optional<Serializable> getPropertyObject(@Nullable String key) {
+        if (key == null) return Optional.empty();
         Object o = this.properties.get(key);
         if (o == null) return Optional.empty();
         return Optional.of((Serializable) o);
