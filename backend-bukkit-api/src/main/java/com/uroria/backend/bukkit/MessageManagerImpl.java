@@ -1,14 +1,14 @@
 package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.MessageReceiveEvent;
-import com.uroria.backend.common.BackendMessage;
+import com.uroria.backend.common.messenger.BackendMessage;
 import com.uroria.backend.message.BackendMessageUpdate;
-import com.uroria.backend.message.MessageManager;
+import com.uroria.backend.message.AbstractMessageManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
-public class MessageManagerImpl extends MessageManager {
+public final class MessageManagerImpl extends AbstractMessageManager {
     private BackendMessageUpdate messageUpdate;
 
     MessageManagerImpl(PulsarClient pulsarClient, Logger logger) {

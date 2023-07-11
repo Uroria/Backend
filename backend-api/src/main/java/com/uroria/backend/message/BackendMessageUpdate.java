@@ -1,6 +1,6 @@
 package com.uroria.backend.message;
 
-import com.uroria.backend.common.BackendMessage;
+import com.uroria.backend.common.messenger.BackendMessage;
 import com.uroria.backend.common.pulsar.PulsarUpdate;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;

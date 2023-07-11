@@ -1,14 +1,14 @@
 package com.uroria.backend.velocity;
 
-import com.uroria.backend.common.BackendMessage;
+import com.uroria.backend.common.messenger.BackendMessage;
 import com.uroria.backend.message.BackendMessageUpdate;
-import com.uroria.backend.message.MessageManager;
+import com.uroria.backend.message.AbstractMessageManager;
 import com.uroria.backend.velocity.events.MessageReceiveEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
-public final class MessageManagerImpl extends MessageManager {
+public final class MessageManagerImpl extends AbstractMessageManager {
     private final ProxyServer proxyServer;
     private BackendMessageUpdate messageUpdate;
 
@@ -44,6 +44,7 @@ public final class MessageManagerImpl extends MessageManager {
 
     @Override
     public void sendMessage(BackendMessage message) {
+        if (message == null) throw new IllegalStateException("Message cannot be null");
         this.messageUpdate.update(message);
     }
 }

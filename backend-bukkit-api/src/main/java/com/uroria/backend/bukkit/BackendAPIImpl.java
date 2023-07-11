@@ -6,7 +6,7 @@ import com.uroria.backend.common.permission.PermissionManager;
 import com.uroria.backend.common.player.PlayerManager;
 import com.uroria.backend.common.settings.SettingsManager;
 import com.uroria.backend.common.stats.StatsManager;
-import com.uroria.backend.message.MessageManager;
+import com.uroria.backend.message.AbstractMessageManager;
 import io.sentry.Sentry;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
@@ -112,7 +112,7 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
         return this.statsManager;
     }
 
-    public MessageManager getMessageManager() {
+    public AbstractMessageManager getMessageManager() {
         return this.messageManager;
     }
 

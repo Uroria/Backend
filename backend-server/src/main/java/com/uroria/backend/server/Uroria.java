@@ -7,11 +7,18 @@ import com.google.gson.GsonBuilder;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.uroria.backend.common.clan.ClanManager;
+import com.uroria.backend.common.friends.FriendManager;
+import com.uroria.backend.common.party.PartyManager;
+import com.uroria.backend.common.permission.PermissionManager;
+import com.uroria.backend.common.player.PlayerManager;
+import com.uroria.backend.common.server.ServerManager;
+import com.uroria.backend.common.settings.SettingsManager;
+import com.uroria.backend.common.stats.StatsManager;
 import com.uroria.backend.common.utils.TransientField;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.Server;
 import com.uroria.backend.pluginapi.events.EventManager;
-import com.uroria.backend.pluginapi.modules.*;
 import com.uroria.backend.pluginapi.plugins.PluginManager;
 import com.uroria.backend.pluginapi.scheduler.Scheduler;
 import com.uroria.backend.server.events.BackendEventManager;
@@ -230,7 +237,7 @@ public final class Uroria implements Server {
     }
 
     @Override
-    public ClanManger getClanManager() {
+    public ClanManager getClanManager() {
         return this.clanManager;
     }
 

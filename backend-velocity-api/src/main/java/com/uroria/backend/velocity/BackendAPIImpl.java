@@ -2,12 +2,12 @@ package com.uroria.backend.velocity;
 
 import com.uroria.backend.AbstractBackendAPI;
 import com.uroria.backend.common.BackendAPI;
+import com.uroria.backend.common.messenger.MessageManager;
 import com.uroria.backend.common.permission.PermissionManager;
 import com.uroria.backend.common.player.PlayerManager;
 import com.uroria.backend.common.server.ServerManager;
 import com.uroria.backend.common.settings.SettingsManager;
 import com.uroria.backend.common.stats.StatsManager;
-import com.uroria.backend.message.MessageManager;
 import com.velocitypowered.api.proxy.ProxyServer;
 import io.sentry.Sentry;
 import org.slf4j.Logger;
@@ -95,6 +95,7 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
         });
     }
 
+    @Override
     public MessageManager getMessageManager() {
         return this.messageManager;
     }

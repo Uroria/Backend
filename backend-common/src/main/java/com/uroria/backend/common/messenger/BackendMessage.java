@@ -1,4 +1,4 @@
-package com.uroria.backend.common;
+package com.uroria.backend.common.messenger;
 
 import java.io.Serial;
 import java.io.Serializable;

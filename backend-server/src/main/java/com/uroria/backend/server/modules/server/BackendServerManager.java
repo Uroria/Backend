@@ -1,21 +1,24 @@
 package com.uroria.backend.server.modules.server;
 
+import com.uroria.backend.common.server.ServerManager;
+import com.uroria.backend.common.server.Unsafe;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.server.ServerStartEvent;
 import com.uroria.backend.pluginapi.events.server.ServerStopEvent;
 import com.uroria.backend.pluginapi.events.server.ServerUpdateEvent;
-import com.uroria.backend.pluginapi.modules.ServerManager;
 import com.uroria.backend.common.server.BackendServer;
-import com.uroria.backend.common.Unsafe;
 import com.uroria.backend.common.server.ServerStatus;
 import com.uroria.backend.server.CloudAPI;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -79,6 +82,11 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
+    public Optional<BackendServer> getServer(int id, int timeout) {
+        return getServer(id);
+    }
+
+    @Override
     public Optional<BackendServer> getServer(int id) {
         for (BackendServer server : this.servers) {
             if (server.getId().isEmpty()) continue;
@@ -88,9 +96,10 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
-    public void updateServer(BackendServer server) {
+    public BackendServer updateServer(@NotNull BackendServer server) {
         this.serverUpdate.update(server);
         updateLocal(server);
+        return server;
     }
 
     void updateLocal(BackendServer server) {
@@ -123,7 +132,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
-    public BackendServer startServer(BackendServer server) {
+    public BackendServer startServer(@NonNull BackendServer server) {
         if (server.getStatus() != ServerStatus.EMPTY) return null;
         try {
             int id = this.api.startServer(server.getTemplateId());
@@ -143,16 +152,12 @@ public final class BackendServerManager extends AbstractManager implements Serve
         }
     }
 
+    @Override
+    public Collection<BackendServer> getServers() {
+        return this.servers;
+    }
+
     public BackendServer getServer(long identifier) {
         return this.servers.stream().filter(server -> server.getIdentifier() == identifier).findFirst().orElse(null);
-    }
-
-    public List<Integer> getAllServerIds() {
-        return this.servers.stream().map(BackendServer::getId).map(optionalInt -> optionalInt.orElse(null)).toList();
-    }
-
-    @Override
-    public List<BackendServer> getAllServers() {
-        return this.servers;
     }
 }

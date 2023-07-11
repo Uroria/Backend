@@ -4,16 +4,17 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.uroria.backend.common.stats.StatsManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.stats.StatRegisterEvent;
 import com.uroria.backend.pluginapi.events.stats.StatUpdateEvent;
-import com.uroria.backend.pluginapi.modules.StatsManager;
 import com.uroria.backend.common.stats.BackendStat;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStats(UUID holder, int gameId) {
+    public Collection<BackendStat> getStats(@NotNull UUID holder, int gameId) {
         try {
             return parseStats(this.stats.find(Filters.and(
                     Filters.eq("uuid", holder.toString()),
@@ -71,7 +72,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(UUID holder, int gameId, String scoreKey, long value) {
+    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
         try {
             return parseStats(this.stats.find(Filters.and(
                 Filters.eq("uuid", holder.toString()),
@@ -86,7 +87,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreLowerThanValue(UUID holder, int gameId, String scoreKey, long value) {
+    public Collection<BackendStat> getStatsWithScoreLowerThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
         try {
             return parseStats(this.stats.find(Filters.and(
                     Filters.eq("uuid", holder.toString()),
@@ -101,7 +102,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScore(UUID holder, int gameId, String scoreKey, long value) {
+    public Collection<BackendStat> getStatsWithScore(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
         try {
             return parseStats(this.stats.find(Filters.and(
                     Filters.eq("uuid", holder.toString()),
@@ -116,7 +117,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStatsInTimeRangeOf(UUID holder, int gameId, long startMs, long endMs) {
+    public Collection<BackendStat> getStatsInTimeRangeOf(@NotNull UUID holder, int gameId, long startMs, long endMs) {
         try {
             return parseStats(this.stats.find(Filters.and(
                     Filters.eq("uuid", holder.toString()),
@@ -145,7 +146,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(int gameId, String scoreKey, long value) {
+    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(int gameId, @NotNull String scoreKey, long value) {
         try {
             return parseStats(this.stats.find(Filters.and(
                     Filters.eq("gameId", gameId),
@@ -159,7 +160,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreLowerThanValue(int gameId, String scoreKey, long value) {
+    public Collection<BackendStat> getStatsWithScoreLowerThanValue(int gameId, @NotNull String scoreKey, long value) {
         try {
             return parseStats(this.stats.find(Filters.and(
                     Filters.eq("gameId", gameId),
@@ -173,7 +174,7 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScore(int gameId, String scoreKey, long value) {
+    public Collection<BackendStat> getStatsWithScore(int gameId, @NotNull String scoreKey, long value) {
         try {
             return parseStats(this.stats.find(Filters.and(
                     Filters.eq("gameId", gameId),
@@ -216,9 +217,10 @@ public final class BackendStatsManager extends AbstractManager implements StatsM
     }
 
     @Override
-    public void updateStat(BackendStat stat) {
+    public BackendStat updateStat(@NotNull BackendStat stat) {
         updateLocal(stat);
         this.update.update(stat);
+        return stat;
     }
 
     void updateLocal(BackendStat stat) {

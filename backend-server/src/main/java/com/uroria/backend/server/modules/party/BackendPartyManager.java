@@ -77,6 +77,7 @@ public final class BackendPartyManager extends AbstractManager implements PartyM
             this.logger.error("Unhandled exception", exception);
             Uroria.captureException(exception);
         }
+        return party;
     }
 
     private void save(String json) {

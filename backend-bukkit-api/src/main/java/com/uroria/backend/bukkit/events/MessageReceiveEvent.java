@@ -1,6 +1,6 @@
 package com.uroria.backend.bukkit.events;
 
-import com.uroria.backend.common.BackendMessage;
+import com.uroria.backend.common.messenger.BackendMessage;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;

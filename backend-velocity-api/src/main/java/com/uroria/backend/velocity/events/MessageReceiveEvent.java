@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity.events;
 
-import com.uroria.backend.common.BackendMessage;
+import com.uroria.backend.common.messenger.BackendMessage;
 
 public final class MessageReceiveEvent {
     private final BackendMessage message;
