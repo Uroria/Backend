@@ -1,6 +1,6 @@
 package com.uroria.backend.bukkit.events;
 
-import com.uroria.backend.common.PermissionGroup;
+import com.uroria.backend.common.permission.PermissionGroup;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;

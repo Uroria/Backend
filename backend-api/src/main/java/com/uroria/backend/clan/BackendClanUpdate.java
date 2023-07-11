@@ -1,6 +1,6 @@
 package com.uroria.backend.clan;
 
-import com.uroria.backend.common.BackendClan;
+import com.uroria.backend.common.clan.BackendClan;
 import com.uroria.backend.common.pulsar.PulsarUpdate;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;

@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity.events;
 
-import com.uroria.backend.common.BackendPlayer;
+import com.uroria.backend.common.player.BackendPlayer;
 
 public abstract class PlayerEvent {
     private final BackendPlayer player;

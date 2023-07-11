@@ -1,6 +1,6 @@
 package com.uroria.backend.stats;
 
-import com.uroria.backend.common.BackendStat;
+import com.uroria.backend.common.stats.BackendStat;
 import com.uroria.backend.common.pulsar.PulsarUpdate;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;

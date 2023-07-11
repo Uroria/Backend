@@ -1,6 +1,6 @@
 package com.uroria.backend.pluginapi.events.friend;
 
-import com.uroria.backend.common.BackendFriend;
+import com.uroria.backend.common.friends.BackendFriend;
 import com.uroria.backend.pluginapi.events.Event;
 
 public abstract class FriendEvent extends Event {

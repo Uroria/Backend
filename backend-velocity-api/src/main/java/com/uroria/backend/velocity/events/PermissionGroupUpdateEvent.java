@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity.events;
 
-import com.uroria.backend.common.PermissionGroup;
+import com.uroria.backend.common.permission.PermissionGroup;
 
 public final class PermissionGroupUpdateEvent {
     private final PermissionGroup group;

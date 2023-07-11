@@ -1,8 +1,8 @@
 package com.uroria.backend.server.modules.server;
 
 import com.uroria.backend.common.BackendPing;
-import com.uroria.backend.common.BackendServer;
-import com.uroria.backend.common.helpers.ServerStatus;
+import com.uroria.backend.common.server.BackendServer;
+import com.uroria.backend.common.server.ServerStatus;
 import com.uroria.backend.common.pulsar.PulsarKeepAliveChecker;
 import com.uroria.backend.server.Uroria;
 import org.apache.pulsar.client.api.PulsarClient;

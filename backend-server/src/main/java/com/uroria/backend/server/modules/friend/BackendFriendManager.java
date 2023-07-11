@@ -3,19 +3,21 @@ package com.uroria.backend.server.modules.friend;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.uroria.backend.common.BackendFriend;
+import com.uroria.backend.common.friends.BackendFriend;
+import com.uroria.backend.common.friends.FriendManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.friend.FriendRegisterEvent;
 import com.uroria.backend.pluginapi.events.friend.FriendUpdateEvent;
-import com.uroria.backend.pluginapi.modules.FriendManager;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -59,7 +61,12 @@ public final class BackendFriendManager extends AbstractManager implements Frien
     }
 
     @Override
-    public Optional<BackendFriend> getFriend(UUID uuid) {
+    public Optional<BackendFriend> getFriend(@NonNull UUID uuid, int timeout) {
+        return getFriend(uuid);
+    }
+
+    @Override
+    public Optional<BackendFriend> getFriend(@NotNull UUID uuid) {
         try {
             BackendFriend cachedFriend = getCachedFriend(uuid);
             if (cachedFriend != null) return Optional.of(cachedFriend);
@@ -85,9 +92,10 @@ public final class BackendFriendManager extends AbstractManager implements Frien
     }
 
     @Override
-    public void updateFriend(BackendFriend friend) {
+    public BackendFriend updateFriend(@NotNull BackendFriend friend) {
         updateDatabase(friend);
         this.friendUpdate.update(friend);
+        return friend;
     }
 
     void updateLocal(BackendFriend friend) {

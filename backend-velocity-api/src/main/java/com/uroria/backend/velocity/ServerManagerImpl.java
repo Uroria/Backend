@@ -1,21 +1,22 @@
 package com.uroria.backend.velocity;
 
-import com.uroria.backend.common.BackendServer;
-import com.uroria.backend.common.helpers.ServerStatus;
-import com.uroria.backend.server.*;
+import com.uroria.backend.common.server.BackendServer;
+import com.uroria.backend.common.server.ServerStatus;
+import com.uroria.backend.server.AbstractServerManager;
+import com.uroria.backend.server.BackendAllServersRequest;
+import com.uroria.backend.server.BackendServerRequest;
+import com.uroria.backend.server.BackendServerStart;
+import com.uroria.backend.server.BackendServerUpdate;
 import com.uroria.backend.velocity.events.ServerStartEvent;
 import com.uroria.backend.velocity.events.ServerUpdateEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
+import java.util.*;
 
-public final class ServerManagerImpl extends ServerManager {
+public final class ServerManagerImpl extends AbstractServerManager {
     private final ProxyServer proxyServer;
     private BackendServerRequest request;
     private BackendServerUpdate update;
@@ -35,7 +36,7 @@ public final class ServerManagerImpl extends ServerManager {
             this.requestAll = new BackendAllServersRequest(this.pulsarClient, identifier);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -48,7 +49,7 @@ public final class ServerManagerImpl extends ServerManager {
             if (this.requestAll != null) this.requestAll.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -89,39 +90,39 @@ public final class ServerManagerImpl extends ServerManager {
             if (server.getId().get().equals(id)) return Optional.of(server);
         }
 
-        return this.request.request(id);
+        return this.request.request(id, timeout);
     }
 
     @Override
-    public List<Integer> getAllServers(int timeout) {
+    public Collection<BackendServer> getServers() {
         int randomInteger = new Random().nextInt();
-        return this.requestAll.request(randomInteger).orElseThrow(() -> new RuntimeException("Cannot get server list"));
+        List<Integer> serverIds = this.requestAll.request(randomInteger, 3000).orElseThrow(() -> new RuntimeException("Cannot get server list"));
+        return serverIds.stream().map(id -> getServer(id).orElse(null)).filter(Objects::nonNull).toList();
     }
 
     @Override
-    public void updateServer(BackendServer server) {
-        if (server == null) throw new NullPointerException("Server cannot be null");
+    public BackendServer updateServer(@NonNull BackendServer server) {
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not created yet");
         try {
             checkServer(server);
             this.update.update(server);
         } catch (Exception exception) {
             this.logger.error("Cannot update server", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
+        return server;
     }
 
     @Override
-    public BackendServer startServer(BackendServer server) {
-        if (server == null) throw new NullPointerException("Server cannot be null");
+    public BackendServer startServer(@NonNull BackendServer server) {
         if (server.getId().isPresent()) throw new IllegalStateException("Server already started");
         try {
-            Optional<BackendServer> request = this.start.request(server);
+            Optional<BackendServer> request = this.start.request(server, 3000);
             if (request.isEmpty()) return null;
             server = request.get();
         } catch (Exception exception) {
             this.logger.error("Cannot start server", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
 
         this.proxyServer.getEventManager().fireAndForget(new ServerStartEvent(server));

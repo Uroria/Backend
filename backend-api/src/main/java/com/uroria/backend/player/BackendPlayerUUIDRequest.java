@@ -1,6 +1,6 @@
 package com.uroria.backend.player;
 
-import com.uroria.backend.common.BackendPlayer;
+import com.uroria.backend.common.player.BackendPlayer;
 import com.uroria.backend.common.pulsar.PulsarRequest;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;

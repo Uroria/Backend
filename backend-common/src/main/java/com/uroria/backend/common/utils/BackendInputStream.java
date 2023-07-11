@@ -1,6 +1,6 @@
 package com.uroria.backend.common.utils;
 
-import com.uroria.backend.common.BackendPlayer;
+import com.uroria.backend.common.player.BackendPlayer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -3,11 +3,11 @@ package com.uroria.backend.server.modules.player;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.uroria.backend.common.player.PlayerManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.player.PlayerRegisterEvent;
 import com.uroria.backend.pluginapi.events.player.PlayerUpdateEvent;
-import com.uroria.backend.common.BackendPlayer;
-import com.uroria.backend.pluginapi.modules.PlayerManager;
+import com.uroria.backend.common.player.BackendPlayer;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
@@ -62,7 +62,7 @@ public final class BackendPlayerManager extends AbstractManager implements Playe
     }
 
     @Override
-    public Optional<BackendPlayer> getPlayer(UUID uuid) {
+    public Optional<BackendPlayer> getPlayer(UUID uuid, int timeout) {
         if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
         try {
             BackendPlayer cachedPlayer = getCachedPlayer(uuid);
@@ -89,7 +89,7 @@ public final class BackendPlayerManager extends AbstractManager implements Playe
     }
 
     @Override
-    public Optional<BackendPlayer> getPlayer(String currentName) {
+    public Optional<BackendPlayer> getPlayer(String currentName, int timeout) {
         if (currentName == null) throw new IllegalArgumentException("Name cannot be null");
         currentName = currentName.toLowerCase();
         try {
@@ -106,9 +106,20 @@ public final class BackendPlayerManager extends AbstractManager implements Playe
     }
 
     @Override
-    public void updatePlayer(BackendPlayer player) {
+    public Optional<BackendPlayer> getPlayer(UUID uuid) {
+        return getPlayer(uuid, 0);
+    }
+
+    @Override
+    public Optional<BackendPlayer> getPlayer(String name) {
+        return getPlayer(name, 0);
+    }
+
+    @Override
+    public BackendPlayer updatePlayer(BackendPlayer player) {
         updateDatabase(player);
         this.playerUpdate.update(player);
+        return player;
     }
 
     void updateLocal(BackendPlayer player) {

@@ -4,11 +4,11 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.uroria.backend.common.BackendSettings;
+import com.uroria.backend.common.settings.BackendSettings;
+import com.uroria.backend.common.settings.SettingsManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.settings.SettingsDeleteEvent;
 import com.uroria.backend.pluginapi.events.settings.SettingsUpdateEvent;
-import com.uroria.backend.pluginapi.modules.SettingsManager;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
@@ -17,6 +17,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -71,8 +72,7 @@ public final class BackendSettingsManager extends AbstractManager implements Set
     }
 
     @Override
-    public Collection<BackendSettings> getSettings(UUID uuid, int gameId) {
-        if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
+    public Collection<BackendSettings> getSettings(@NotNull UUID uuid, int gameId) {
         try {
             return parseSettings(this.settings.find(Filters.and(
                     Filters.eq("uuid", uuid.toString()),
@@ -86,8 +86,7 @@ public final class BackendSettingsManager extends AbstractManager implements Set
     }
 
     @Override
-    public Optional<BackendSettings> getSettings(UUID uuid, int gameId, int id) {
-        if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
+    public Optional<BackendSettings> getSettings(@NotNull UUID uuid, int gameId, int id) {
         try {
             BackendSettings cachedSettings = getCachedSettings(uuid, gameId, id);
             if (cachedSettings != null) return Optional.of(cachedSettings);
@@ -106,8 +105,7 @@ public final class BackendSettingsManager extends AbstractManager implements Set
     }
 
     @Override
-    public Optional<BackendSettings> getSettings(String tag) {
-        if (tag == null) throw new IllegalArgumentException("Tag cannot be null");
+    public Optional<BackendSettings> getSettings(@NotNull String tag) {
         try {
             BackendSettings cachedSettings = getCachedSettings(tag);
             if (cachedSettings != null) return Optional.of(cachedSettings);
@@ -122,9 +120,10 @@ public final class BackendSettingsManager extends AbstractManager implements Set
     }
 
     @Override
-    public void updateSettings(BackendSettings settings) {
+    public BackendSettings updateSettings(@NotNull BackendSettings settings) {
         updateDatabase(settings);
         this.update.update(settings);
+        return settings;
     }
 
     void updateLocal(BackendSettings settings) {

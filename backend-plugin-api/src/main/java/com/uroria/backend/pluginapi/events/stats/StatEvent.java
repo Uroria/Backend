@@ -1,7 +1,7 @@
 package com.uroria.backend.pluginapi.events.stats;
 
 import com.uroria.backend.pluginapi.events.Event;
-import com.uroria.backend.common.BackendStat;
+import com.uroria.backend.common.stats.BackendStat;
 
 public abstract class StatEvent extends Event {
     private final BackendStat stat;

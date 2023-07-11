@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity.events;
 
-import com.uroria.backend.common.BackendSettings;
+import com.uroria.backend.common.settings.BackendSettings;
 
 public final class SettingsDeleteEvent extends SettingsEvent {
     public SettingsDeleteEvent(BackendSettings settings) {

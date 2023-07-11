@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity.events;
 
-import com.uroria.backend.common.BackendStat;
+import com.uroria.backend.common.stats.BackendStat;
 
 public final class StatUpdateEvent {
     private final BackendStat stat;

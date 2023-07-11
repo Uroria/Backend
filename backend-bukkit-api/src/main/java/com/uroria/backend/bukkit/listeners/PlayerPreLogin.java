@@ -1,13 +1,14 @@
 package com.uroria.backend.bukkit.listeners;
 
-import com.uroria.backend.bukkit.BackendAPI;
+import com.uroria.backend.bukkit.BackendAPIImpl;
+import com.uroria.backend.common.permission.PermissionHolder;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
 import java.util.UUID;
 
-public record PlayerPreLogin(BackendAPI backendAPI) implements Listener {
+public record PlayerPreLogin(BackendAPIImpl backendAPI) implements Listener {
 
     @EventHandler
     public void onPlayerPreLoginEvent(AsyncPlayerPreLoginEvent preLoginEvent) {
@@ -19,10 +20,6 @@ public record PlayerPreLogin(BackendAPI backendAPI) implements Listener {
                 this.backendAPI.getPlayerManager().updatePlayer(player);
             }
         });
-        this.backendAPI.getPermissionManager().getPermissionHolder(uuid, 10000).ifPresent(holder -> {
-            holder.getGroups().forEach(group -> {
-                this.backendAPI.getPermissionManager().getPermissionGroup(group, 2000);
-            });
-        });
+        this.backendAPI.getPermissionManager().getHolder(uuid, 10000).ifPresent(PermissionHolder::getGroups);
     }
 }

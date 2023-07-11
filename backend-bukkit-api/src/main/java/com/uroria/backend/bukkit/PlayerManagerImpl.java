@@ -1,12 +1,14 @@
 package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.PlayerUpdateEvent;
-import com.uroria.backend.common.BackendPlayer;
+import com.uroria.backend.common.player.BackendPlayer;
+import com.uroria.backend.common.utils.ValidUtils;
 import com.uroria.backend.player.BackendPlayerNameRequest;
 import com.uroria.backend.player.BackendPlayerUUIDRequest;
 import com.uroria.backend.player.BackendPlayerUpdate;
-import com.uroria.backend.player.PlayerManager;
+import com.uroria.backend.player.AbstractPlayerManager;
 import com.uroria.backend.scheduler.BackendScheduler;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
@@ -18,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public final class PlayerManagerImpl extends PlayerManager {
+public final class PlayerManagerImpl extends AbstractPlayerManager {
     private final int keepAlive = BackendBukkitPlugin.config().getOrSetDefault("cacheKeepAliveInMinutes.player", 20);
     private BackendPlayerUUIDRequest uuidRequest;
     private BackendPlayerNameRequest nameRequest;
@@ -37,7 +39,7 @@ public final class PlayerManagerImpl extends PlayerManager {
             this.update = new BackendPlayerUpdate(this.pulsarClient, identifier, this::checkPlayer);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -49,7 +51,7 @@ public final class PlayerManagerImpl extends PlayerManager {
             if (this.update != null) this.update.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -73,8 +75,7 @@ public final class PlayerManagerImpl extends PlayerManager {
     }
 
     @Override
-    public Optional<BackendPlayer> getPlayer(UUID uuid, int timeout) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public Optional<BackendPlayer> getPlayer(@NonNull UUID uuid, int timeout) {
         for (BackendPlayer player : this.players) {
             if (player.getUUID().equals(uuid)) return Optional.of(player);
         }
@@ -85,14 +86,13 @@ public final class PlayerManagerImpl extends PlayerManager {
             return Optional.of(player);
         }
 
-        Optional<BackendPlayer> request = uuidRequest.request(uuid);
+        Optional<BackendPlayer> request = uuidRequest.request(uuid, timeout);
         request.ifPresent(players::add);
         return request;
     }
 
     @Override
-    public Optional<BackendPlayer> getPlayer(String name, int timeout) {
-        if (name == null) throw new NullPointerException("Name cannot be null");
+    public Optional<BackendPlayer> getPlayer(@NonNull String name, int timeout) {
         name = name.toLowerCase();
         for (BackendPlayer player : this.players) {
             if (player.getCurrentName().isPresent() && player.getCurrentName().get().equals(name)) return Optional.of(player);
@@ -100,22 +100,22 @@ public final class PlayerManagerImpl extends PlayerManager {
 
         if (BackendBukkitPlugin.isOffline()) return Optional.empty();
 
-        Optional<BackendPlayer> request = nameRequest.request(name);
+        Optional<BackendPlayer> request = nameRequest.request(name, timeout);
         request.ifPresent(players::add);
         return request;
     }
 
     @Override
-    public void updatePlayer(BackendPlayer player) {
-        if (player == null) throw new NullPointerException("Player cannot be null");
+    public BackendPlayer updatePlayer(@NonNull BackendPlayer player) {
         try {
             checkPlayer(player);
-            if (BackendBukkitPlugin.isOffline()) return;
+            if (BackendBukkitPlugin.isOffline()) return player;
             this.update.update(player);
         } catch (Exception exception) {
             this.logger.error("Cannot update player", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
+        return player;
     }
 
     private void runCacheChecker() {
@@ -134,7 +134,7 @@ public final class PlayerManagerImpl extends PlayerManager {
             runCacheChecker();
         }, throwable -> {
             this.logger.error("Unhandled exception", throwable);
-            BackendAPI.captureException(throwable);
+            BackendAPIImpl.captureException(throwable);
             runCacheChecker();
         });
     }

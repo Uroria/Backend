@@ -8,7 +8,7 @@ import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.stats.StatRegisterEvent;
 import com.uroria.backend.pluginapi.events.stats.StatUpdateEvent;
 import com.uroria.backend.pluginapi.modules.StatsManager;
-import com.uroria.backend.common.BackendStat;
+import com.uroria.backend.common.stats.BackendStat;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;

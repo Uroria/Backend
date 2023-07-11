@@ -3,27 +3,29 @@ package com.uroria.backend.server.modules.clan;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.uroria.backend.common.BackendClan;
+import com.uroria.backend.common.clan.BackendClan;
+import com.uroria.backend.common.clan.ClanManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.clan.ClanCreateEvent;
 import com.uroria.backend.pluginapi.events.clan.ClanDeleteEvent;
 import com.uroria.backend.pluginapi.events.clan.ClanUpdateEvent;
-import com.uroria.backend.pluginapi.modules.ClanManger;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class BackendClanManager extends AbstractManager implements ClanManger {
+public final class BackendClanManager extends AbstractManager implements ClanManager {
     private final PulsarClient pulsarClient;
     private final MongoCollection<Document> clans;
     private final RedisCommands<String, String> cachedClans;
@@ -63,7 +65,17 @@ public final class BackendClanManager extends AbstractManager implements ClanMan
     }
 
     @Override
-    public Optional<BackendClan> getClan(String tag) {
+    public Optional<BackendClan> getClan(@NonNull String tag, int timeout) {
+        return getClan(tag);
+    }
+
+    @Override
+    public Optional<BackendClan> getClan(@NonNull UUID operator, int timeout) {
+        return getClan(operator);
+    }
+
+    @Override
+    public Optional<BackendClan> getClan(@NotNull String tag) {
         try {
             BackendClan cachedClan = getCachedClan(tag);
             if (cachedClan != null) return Optional.of(cachedClan);
@@ -80,7 +92,7 @@ public final class BackendClanManager extends AbstractManager implements ClanMan
     }
 
     @Override
-    public Optional<BackendClan> getClan(UUID operator) {
+    public Optional<BackendClan> getClan(@NotNull UUID operator) {
         try {
             BackendClan cachedClan = getCachedClan(operator);
             if (cachedClan != null) return Optional.of(cachedClan);
@@ -97,9 +109,10 @@ public final class BackendClanManager extends AbstractManager implements ClanMan
     }
 
     @Override
-    public void updateClan(BackendClan clan) {
+    public BackendClan updateClan(@NotNull BackendClan clan) {
         updateDatabase(clan);
         this.clanUpdate.update(clan);
+        return clan;
     }
 
     void updateLocal(BackendClan clan) {

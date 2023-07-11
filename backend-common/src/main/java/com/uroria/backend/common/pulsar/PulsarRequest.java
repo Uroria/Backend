@@ -38,6 +38,10 @@ public abstract class PulsarRequest<O, K> {
     }
 
     public final Optional<O> request(K requestKey) {
+        return request(requestKey, this.timeout);
+    }
+
+    public final Optional<O> request(K requestKey, int timeout) {
         if (requestKey == null) throw new NullPointerException("Key cannot be null");
 
         try (BackendOutputStream output = new BackendOutputStream()) {

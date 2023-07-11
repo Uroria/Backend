@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity.events;
 
-import com.uroria.backend.common.PermissionHolder;
+import com.uroria.backend.common.permission.PermissionHolder;
 
 public final class PermissionHolderUpdateEvent {
     private final PermissionHolder permissionHolder;

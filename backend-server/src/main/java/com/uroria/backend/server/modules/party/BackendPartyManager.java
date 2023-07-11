@@ -1,17 +1,19 @@
 package com.uroria.backend.server.modules.party;
 
+import com.uroria.backend.common.party.PartyManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.party.PartyDeleteEvent;
 import com.uroria.backend.pluginapi.events.party.PartyUpdateEvent;
-import com.uroria.backend.pluginapi.modules.PartyManager;
-import com.uroria.backend.common.BackendParty;
+import com.uroria.backend.common.party.BackendParty;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -49,7 +51,7 @@ public final class BackendPartyManager extends AbstractManager implements PartyM
     }
 
     @Override
-    public Optional<BackendParty> getParty(UUID operator) {
+    public Optional<BackendParty> getParty(@NotNull UUID operator) {
         try {
             BackendParty cachedPlayer = getCachedParty(operator);
             return Optional.ofNullable(cachedPlayer);
@@ -61,7 +63,12 @@ public final class BackendPartyManager extends AbstractManager implements PartyM
     }
 
     @Override
-    public void updateParty(BackendParty party) {
+    public Optional<BackendParty> getParty(@NonNull UUID operator, int timeout) {
+        return getParty(operator);
+    }
+
+    @Override
+    public BackendParty updateParty(@NotNull BackendParty party) {
         try {
             this.cachedParties.del("party:" + party.getOperator());
             String json = Uroria.getGson().toJson(party);

@@ -1,6 +1,6 @@
 package com.uroria.backend.friend;
 
-import com.uroria.backend.common.BackendFriend;
+import com.uroria.backend.common.friends.BackendFriend;
 import com.uroria.backend.common.pulsar.PulsarUpdate;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;

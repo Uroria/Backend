@@ -2,23 +2,28 @@ package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.SettingsDeleteEvent;
 import com.uroria.backend.bukkit.events.SettingsUpdateEvent;
-import com.uroria.backend.common.BackendSettings;
-import com.uroria.backend.common.helpers.SettingsRequest;
+import com.uroria.backend.common.settings.BackendSettings;
+import com.uroria.backend.common.settings.SettingsRequest;
 import com.uroria.backend.scheduler.BackendScheduler;
 import com.uroria.backend.settings.BackendSettingsGameRequest;
 import com.uroria.backend.settings.BackendSettingsIDRequest;
 import com.uroria.backend.settings.BackendSettingsTagRequest;
 import com.uroria.backend.settings.BackendSettingsUpdate;
-import com.uroria.backend.settings.SettingsManager;
+import com.uroria.backend.settings.AbstractSettingsManager;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public final class SettingsManagerImpl extends SettingsManager {
+public final class SettingsManagerImpl extends AbstractSettingsManager {
     private final int keepAlive = BackendBukkitPlugin.config().getOrSetDefault("cacheKeepAliveInMinutes.settings", 20);
     private BackendSettingsTagRequest tagRequest;
     private BackendSettingsIDRequest idRequest;
@@ -39,7 +44,7 @@ public final class SettingsManagerImpl extends SettingsManager {
             this.update = new BackendSettingsUpdate(this.pulsarClient, identifier, this::checkSettings);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -52,7 +57,7 @@ public final class SettingsManagerImpl extends SettingsManager {
             if (this.update != null) this.update.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -81,23 +86,19 @@ public final class SettingsManagerImpl extends SettingsManager {
     }
 
     @Override
-    public Collection<BackendSettings> getSettings(UUID uuid, int gameId) {
-        if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
-
+    public Collection<BackendSettings> getSettings(@NonNull UUID uuid, int gameId) {
         if (BackendBukkitPlugin.isOffline()) {
             return Collections.emptyList();
         }
 
         SettingsRequest request = new SettingsRequest(uuid, gameId);
-        Collection<BackendSettings> settingsCollection = this.gameRequest.request(request).orElse(new ArrayList<>());
+        Collection<BackendSettings> settingsCollection = this.gameRequest.request(request, 3000).orElse(new ArrayList<>());
         settingsCollection.removeIf(BackendSettings::isDeleted);
         return settingsCollection;
     }
 
     @Override
-    public Optional<BackendSettings> getSettings(UUID uuid, int gameId, int id) {
-        if (uuid == null) throw new IllegalArgumentException("UUID cannot be null");
-
+    public Optional<BackendSettings> getSettings(@NonNull UUID uuid, int gameId, int id) {
         for (BackendSettings settings : this.settings) {
             if (!settings.getUUID().equals(uuid)) continue;
             if (settings.getGameID() != gameId) continue;
@@ -110,7 +111,7 @@ public final class SettingsManagerImpl extends SettingsManager {
         }
 
         SettingsRequest request = new SettingsRequest(uuid, gameId, id);
-        Optional<BackendSettings> response = this.idRequest.request(request);
+        Optional<BackendSettings> response = this.idRequest.request(request, 3000);
         if (response.isPresent()) {
             if (response.get().isDeleted()) return Optional.empty();
             settings.add(response.get());
@@ -119,9 +120,7 @@ public final class SettingsManagerImpl extends SettingsManager {
     }
 
     @Override
-    public Optional<BackendSettings> getSettings(String tag) {
-        if (tag == null) throw new IllegalArgumentException("Tag cannot be null");
-
+    public Optional<BackendSettings> getSettings(@NonNull String tag) {
         for (BackendSettings settings : this.settings) {
             if (!settings.getTag().equals(tag)) continue;
             return Optional.of(settings);
@@ -131,7 +130,7 @@ public final class SettingsManagerImpl extends SettingsManager {
             return Optional.empty();
         }
 
-        Optional<BackendSettings> request = this.tagRequest.request(new SettingsRequest(tag));
+        Optional<BackendSettings> request = this.tagRequest.request(new SettingsRequest(tag), 3000);
         if (request.isPresent()) {
             if (request.get().isDeleted()) return Optional.empty();
             settings.add(request.get());
@@ -140,16 +139,16 @@ public final class SettingsManagerImpl extends SettingsManager {
     }
 
     @Override
-    public void updateSettings(BackendSettings settings) {
-        if (settings == null) throw new IllegalArgumentException("Settings cannot be null");
+    public BackendSettings updateSettings(@NonNull BackendSettings settings) {
         try {
             checkSettings(settings);
-            if (BackendBukkitPlugin.isOffline()) return;
+            if (BackendBukkitPlugin.isOffline()) return settings;
             this.update.update(settings);
         } catch (Exception exception) {
             this.logger.error("Cannot update settings", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
+        return settings;
     }
 
     private void runCacheChecker() {
@@ -168,7 +167,7 @@ public final class SettingsManagerImpl extends SettingsManager {
             runCacheChecker();
         }, throwable -> {
             this.logger.error("Unhandled exception", throwable);
-            BackendAPI.captureException(throwable);
+            BackendAPIImpl.captureException(throwable);
             runCacheChecker();
         });
     }

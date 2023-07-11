@@ -1,6 +1,6 @@
 package com.uroria.backend.velocity.listeners;
 
-import com.uroria.backend.player.PlayerManager;
+import com.uroria.backend.common.player.PlayerManager;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
@@ -14,7 +14,7 @@ public record PlayerLogin(PlayerManager playerManager) {
     public EventTask onPlayerPreLoginEvent(LoginEvent loginEvent) {
         return EventTask.async(() -> {
             UUID uuid = loginEvent.getPlayer().getUniqueId();
-            this.playerManager.getPlayer(uuid, 10000);
+            this.playerManager.getPlayer(uuid);
         });
     }
 }

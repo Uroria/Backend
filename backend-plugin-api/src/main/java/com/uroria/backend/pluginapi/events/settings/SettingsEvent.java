@@ -1,6 +1,6 @@
 package com.uroria.backend.pluginapi.events.settings;
 
-import com.uroria.backend.common.BackendSettings;
+import com.uroria.backend.common.settings.BackendSettings;
 import com.uroria.backend.pluginapi.events.Event;
 
 public abstract class SettingsEvent extends Event {

@@ -23,7 +23,7 @@ public final class MessageManagerImpl extends MessageManager {
             this.messageUpdate = new BackendMessageUpdate(this.pulsarClient, identifier, this::onMessage);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -33,7 +33,7 @@ public final class MessageManagerImpl extends MessageManager {
             if (this.messageUpdate != null) this.messageUpdate.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 

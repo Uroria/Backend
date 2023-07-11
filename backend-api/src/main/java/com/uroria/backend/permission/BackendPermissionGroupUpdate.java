@@ -1,6 +1,6 @@
 package com.uroria.backend.permission;
 
-import com.uroria.backend.common.PermissionGroup;
+import com.uroria.backend.common.permission.PermissionGroup;
 import com.uroria.backend.common.pulsar.PulsarUpdate;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;

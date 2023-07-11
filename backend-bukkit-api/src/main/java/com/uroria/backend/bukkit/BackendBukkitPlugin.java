@@ -26,14 +26,14 @@ public final class BackendBukkitPlugin extends JavaPlugin {
     }
 
     private final Logger logger;
-    private final BackendAPI backendAPI;
+    private final BackendAPIImpl backendAPI;
     public BackendBukkitPlugin() {
         this.logger = LoggerFactory.getLogger("BukkitAPI");
-        BackendAPI backendAPI;
+        BackendAPIImpl backendAPI;
         try {
             String url = CONFIG.getString("pulsar.url");
             if (OFFLINE_MODE) url = null;
-            backendAPI = new BackendAPI(url, CONFIG.getOrSetDefault("sentry.enabled", false), logger);
+            backendAPI = new BackendAPIImpl(url, CONFIG.getOrSetDefault("sentry.enabled", false), logger);
         } catch (Exception exception) {
             logger.error("Cannot connect to backend! Exiting...", exception);
             this.backendAPI = null;

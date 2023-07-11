@@ -2,18 +2,20 @@ package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.ServerStartEvent;
 import com.uroria.backend.bukkit.events.ServerUpdateEvent;
-import com.uroria.backend.common.BackendServer;
-import com.uroria.backend.common.Unsafe;
-import com.uroria.backend.common.helpers.ServerStatus;
-import com.uroria.backend.common.helpers.ServerType;
+import com.uroria.backend.common.server.BackendServer;
+import com.uroria.backend.common.server.ServerStatus;
+import com.uroria.backend.common.server.ServerType;
+import com.uroria.backend.common.server.Unsafe;
 import com.uroria.backend.server.BackendAllServersRequest;
 import com.uroria.backend.server.BackendServerKeepAlive;
 import com.uroria.backend.server.BackendServerRequest;
 import com.uroria.backend.server.BackendServerStart;
 import com.uroria.backend.server.BackendServerUpdate;
 import de.leonhard.storage.Json;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.io.Serializable;
@@ -52,7 +54,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
             this.requestAll = new BackendAllServersRequest(this.pulsarClient, identifier);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
         if (this.localServerId == -1) return;
         Json config = BackendBukkitPlugin.serverConfig();
@@ -112,7 +114,7 @@ public final class ServerManagerImpl extends BukkitServerManager {
             if (this.keepAlive != null) this.keepAlive.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -186,32 +188,26 @@ public final class ServerManagerImpl extends BukkitServerManager {
         }
 
         if (BackendBukkitPlugin.isOffline()) return Optional.empty();
-        return this.request.request(id);
+        return this.request.request(id, timeout);
     }
 
-    @Override
-    public List<Integer> getAllServers(int timeout) {
-        int randomInt = new Random().nextInt();
-        if (BackendBukkitPlugin.isOffline()) return Collections.emptyList();
-        return this.requestAll.request(randomInt).orElseThrow(() -> new RuntimeException("Cannot get list"));
-    }
+
 
     @Override
-    public void updateServer(BackendServer server) {
-        if (server == null) throw new NullPointerException("Server cannot be null");
+    public BackendServer updateServer(@NonNull BackendServer server) {
         if (server.getId().isEmpty()) throw new IllegalStateException("Server not created yet");
         try {
             if (!BackendBukkitPlugin.isOffline()) this.update.update(server);
             checkServer(server);
         } catch (Exception exception) {
             this.logger.error("Cannot update server", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
+        return server;
     }
 
     @Override
-    public BackendServer startServer(BackendServer server) {
-        if (server == null) throw new NullPointerException("Server cannot be null");
+    public BackendServer startServer(@NotNull BackendServer server) {
         if (server.getId().isPresent()) throw new IllegalStateException("Server already started");
         try {
             if (BackendBukkitPlugin.isOffline()) {
@@ -220,16 +216,23 @@ public final class ServerManagerImpl extends BukkitServerManager {
                 CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new ServerStartEvent(finalServer1)));
                 return server;
             }
-            Optional<BackendServer> request = this.start.request(server);
+            Optional<BackendServer> request = this.start.request(server, 1000000);
             if (request.isEmpty()) return null;
             server = request.get();
         } catch (Exception exception) {
             this.logger.error("Cannot start server", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
 
         BackendServer finalServer = server;
         CompletableFuture.runAsync(() -> Bukkit.getPluginManager().callEvent(new ServerStartEvent(finalServer)));
         return server;
+    }
+
+    @Override
+    public Collection<BackendServer> getServers() {
+        int randomInteger = new Random().nextInt();
+        List<Integer> serverIds = this.requestAll.request(randomInteger, 3000).orElseThrow(() -> new RuntimeException("Cannot get server list"));
+        return serverIds.stream().map(id -> getServer(id).orElse(null)).filter(Objects::nonNull).toList();
     }
 }

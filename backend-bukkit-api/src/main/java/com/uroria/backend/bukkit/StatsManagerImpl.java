@@ -1,13 +1,14 @@
 package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.StatUpdateEvent;
-import com.uroria.backend.common.BackendStat;
+import com.uroria.backend.common.stats.BackendStat;
 import com.uroria.backend.common.helpers.StatsRequest;
 import com.uroria.backend.stats.BackendStatRequest;
 import com.uroria.backend.stats.BackendStatUpdate;
-import com.uroria.backend.stats.StatsManager;
+import com.uroria.backend.stats.AbstractStatsManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public final class StatsManagerImpl extends StatsManager {
+public final class StatsManagerImpl extends AbstractStatsManager {
 
     private BackendStatRequest request;
     private BackendStatUpdate update;
@@ -32,7 +33,7 @@ public final class StatsManagerImpl extends StatsManager {
             this.update = new BackendStatUpdate(this.pulsarClient, identifier, this::checkStat);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -48,13 +49,12 @@ public final class StatsManagerImpl extends StatsManager {
             if (this.update != null) this.update.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
     @Override
-    public Collection<BackendStat> getStats(UUID holder, int gameId) {
-        if (holder == null) throw new NullPointerException("UUID cannot be null");
+    public Collection<BackendStat> getStats(@NotNull UUID holder, int gameId) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -69,9 +69,7 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(UUID holder, int gameId, String scoreKey, long value) {
-        if (holder == null) throw new NullPointerException("UUID cannot be null");
-        if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
+    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -86,9 +84,7 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreLowerThanValue(UUID holder, int gameId, String scoreKey, long value) {
-        if (holder == null) throw new NullPointerException("UUID cannot be null");
-        if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
+    public Collection<BackendStat> getStatsWithScoreLowerThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -103,9 +99,7 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScore(UUID holder, int gameId, String scoreKey, long value) {
-        if (holder == null) throw new NullPointerException("UUID cannot be null");
-        if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
+    public Collection<BackendStat> getStatsWithScore(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -120,8 +114,7 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public Collection<BackendStat> getStatsInTimeRangeOf(UUID holder, int gameId, long startMs, long endMs) {
-        if (holder == null) throw new NullPointerException("UUID cannot be null");
+    public Collection<BackendStat> getStatsInTimeRangeOf(@NotNull UUID holder, int gameId, long startMs, long endMs) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -151,8 +144,7 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(int gameId, String scoreKey, long value) {
-        if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
+    public Collection<BackendStat> getStatsWithScoreGreaterThanValue(int gameId, @NotNull String scoreKey, long value) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -167,8 +159,7 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScoreLowerThanValue(int gameId, String scoreKey, long value) {
-        if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
+    public Collection<BackendStat> getStatsWithScoreLowerThanValue(int gameId, @NotNull String scoreKey, long value) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -183,8 +174,7 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public Collection<BackendStat> getStatsWithScore(int gameId, String scoreKey, long value) {
-        if (scoreKey == null) throw new NullPointerException("ScoreKey cannot be null");
+    public Collection<BackendStat> getStatsWithScore(int gameId, @NotNull String scoreKey, long value) {
         Collection<BackendStat> stats = new ArrayList<>();
 
         if (BackendBukkitPlugin.isOffline()) {
@@ -214,14 +204,15 @@ public final class StatsManagerImpl extends StatsManager {
     }
 
     @Override
-    public void updateStat(BackendStat stat) {
+    public BackendStat updateStat(@NotNull BackendStat stat) {
         try {
             checkStat(stat);
-            if (BackendBukkitPlugin.isOffline()) return;
+            if (BackendBukkitPlugin.isOffline()) return stat;
             this.update.update(stat);
         } catch (Exception exception) {
             this.logger.error("Cannot update stat", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
+        return stat;
     }
 }

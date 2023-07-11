@@ -3,22 +3,24 @@ package com.uroria.backend.server.modules.permission;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.uroria.backend.common.permission.PermissionManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.permission.PermissionGroupCreateEvent;
 import com.uroria.backend.pluginapi.events.permission.PermissionGroupUpdateEvent;
 import com.uroria.backend.pluginapi.events.permission.PermissionHolderRegisterEvent;
 import com.uroria.backend.pluginapi.events.permission.PermissionHolderUpdateEvent;
-import com.uroria.backend.pluginapi.modules.PermissionManager;
-import com.uroria.backend.common.PermissionGroup;
-import com.uroria.backend.common.PermissionHolder;
+import com.uroria.backend.common.permission.PermissionGroup;
+import com.uroria.backend.common.permission.PermissionHolder;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -70,7 +72,7 @@ public final class BackendPermissionManager extends AbstractManager implements P
     }
 
     @Override
-    public Optional<PermissionGroup> getGroup(String name) {
+    public Optional<PermissionGroup> getGroup(@NotNull String name, int timeout) {
         try {
             Document document = this.groups.find(Filters.eq("name", name)).first();
             if (document == null) return Optional.empty();
@@ -83,7 +85,17 @@ public final class BackendPermissionManager extends AbstractManager implements P
     }
 
     @Override
-    public Optional<PermissionHolder> getHolder(UUID uuid) {
+    public Optional<PermissionHolder> getHolder(@NonNull UUID uuid) {
+        return getHolder(uuid, 3000);
+    }
+
+    @Override
+    public Optional<PermissionGroup> getGroup(@NonNull String name) {
+        return getGroup(name, 3000);
+    }
+
+    @Override
+    public Optional<PermissionHolder> getHolder(@NotNull UUID uuid, int timeout) {
         try {
             PermissionHolder cachedHolder = getCachedHolder(uuid);
             if (cachedHolder != null) return Optional.of(cachedHolder);
@@ -109,9 +121,10 @@ public final class BackendPermissionManager extends AbstractManager implements P
     }
 
     @Override
-    public void updateGroup(PermissionGroup group) {
+    public PermissionGroup updateGroup(@NotNull PermissionGroup group) {
         updateDatabase(group);
         this.groupUpdate.update(group);
+        return group;
     }
 
     void updateLocal(PermissionGroup group) {
@@ -139,9 +152,10 @@ public final class BackendPermissionManager extends AbstractManager implements P
     }
 
     @Override
-    public void updateHolder(PermissionHolder holder) {
+    public PermissionHolder updateHolder(@NotNull PermissionHolder holder) {
         updateDatabase(holder);
         this.holderUpdate.update(holder);
+        return holder;
     }
 
     void updateLocal(PermissionHolder holder) {

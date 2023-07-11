@@ -2,14 +2,15 @@ package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.PermissionGroupUpdateEvent;
 import com.uroria.backend.bukkit.events.PermissionHolderUpdateEvent;
-import com.uroria.backend.common.PermissionGroup;
-import com.uroria.backend.common.PermissionHolder;
+import com.uroria.backend.common.permission.PermissionGroup;
+import com.uroria.backend.common.permission.PermissionHolder;
 import com.uroria.backend.permission.BackendPermissionGroupRequest;
 import com.uroria.backend.permission.BackendPermissionGroupUpdate;
 import com.uroria.backend.permission.BackendPermissionHolderRequest;
 import com.uroria.backend.permission.BackendPermissionHolderUpdate;
-import com.uroria.backend.permission.PermissionManager;
+import com.uroria.backend.permission.AbstractPermissionManager;
 import com.uroria.backend.scheduler.BackendScheduler;
+import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
@@ -21,7 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public final class PermissionManagerImpl extends PermissionManager {
+public final class PermissionManagerImpl extends AbstractPermissionManager {
     private final int keepAlive = BackendBukkitPlugin.config().getOrSetDefault("cacheKeepAliveInMinutes.permission_holder", 30);
     private BackendPermissionGroupRequest groupRequest;
     private BackendPermissionHolderRequest holderRequest;
@@ -42,7 +43,7 @@ public final class PermissionManagerImpl extends PermissionManager {
             this.holderUpdate = new BackendPermissionHolderUpdate(this.pulsarClient, identifier, this::checkPermissionHolder);
         } catch (Exception exception) {
             this.logger.error("Cannot initialize handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -55,7 +56,7 @@ public final class PermissionManagerImpl extends PermissionManager {
             if (this.holderUpdate != null) this.holderUpdate.close();
         } catch (Exception exception) {
             this.logger.error("Cannot close handlers", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
     }
 
@@ -97,8 +98,7 @@ public final class PermissionManagerImpl extends PermissionManager {
     }
 
     @Override
-    public Optional<PermissionHolder> getPermissionHolder(UUID uuid, int timeout) {
-        if (uuid == null) throw new NullPointerException("UUID cannot be null");
+    public Optional<PermissionHolder> getHolder(@NonNull UUID uuid, int timeout) {
         for (PermissionHolder holder : this.holders) {
             if (holder.getUUID().equals(uuid)) return Optional.of(holder);
         }
@@ -115,8 +115,7 @@ public final class PermissionManagerImpl extends PermissionManager {
     }
 
     @Override
-    public Optional<PermissionGroup> getPermissionGroup(String name, int timeout) {
-        if (name == null) throw new NullPointerException("Name cannot be null");
+    public Optional<PermissionGroup> getGroup(@NonNull String name, int timeout) {
         name = name.toLowerCase();
         for (PermissionGroup group : this.groups) {
             if (group.getName().equals(name)) return Optional.of(group);
@@ -132,29 +131,29 @@ public final class PermissionManagerImpl extends PermissionManager {
     }
 
     @Override
-    public void updatePermissionHolder(PermissionHolder permissionHolder) {
-        if (permissionHolder == null) throw new NullPointerException("PermissionHolder cannot be null");
+    public PermissionHolder updateHolder(@NonNull PermissionHolder permissionHolder) {
         try {
             checkPermissionHolder(permissionHolder);
-            if (BackendBukkitPlugin.isOffline()) return;
+            if (BackendBukkitPlugin.isOffline()) return permissionHolder;
             this.holderUpdate.update(permissionHolder);
         } catch (Exception exception) {
             this.logger.error("Cannot update permissionholder", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
+        return permissionHolder;
     }
 
     @Override
-    public void updatePermissionGroup(PermissionGroup permissionGroup) {
-        if (permissionGroup == null) throw new NullPointerException("PermissionGroup cannot be null");
+    public PermissionGroup updateGroup(@NonNull PermissionGroup permissionGroup) {
         try {
             checkPermissionGroup(permissionGroup);
-            if (BackendBukkitPlugin.isOffline()) return;
+            if (BackendBukkitPlugin.isOffline()) return permissionGroup;
             this.groupUpdate.update(permissionGroup);
         } catch (Exception exception) {
             this.logger.error("Cannot update permissiongroup", exception);
-            BackendAPI.captureException(exception);
+            BackendAPIImpl.captureException(exception);
         }
+        return permissionGroup;
     }
 
     private void runCacheChecker() {
@@ -173,7 +172,7 @@ public final class PermissionManagerImpl extends PermissionManager {
             runCacheChecker();
         }, throwable -> {
             this.logger.error("Unhandled exception", throwable);
-            BackendAPI.captureException(throwable);
+            BackendAPIImpl.captureException(throwable);
             runCacheChecker();
         });
     }
