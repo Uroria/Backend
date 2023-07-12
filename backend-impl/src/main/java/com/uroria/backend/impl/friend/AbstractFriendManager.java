@@ -13,12 +13,10 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractFriendManager extends AbstractManager implements FriendManager {
-    protected final Logger logger;
     protected final Collection<BackendFriend> friends;
 
     public AbstractFriendManager(PulsarClient pulsarClient, Logger logger) {
-        super(pulsarClient);
-        this.logger = logger;
+        super(pulsarClient, logger);
         this.friends = new CopyOnWriteArrayList<>();
     }
 

@@ -11,12 +11,10 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractServerManager extends AbstractManager implements ServerManager {
-    protected final Logger logger;
     protected final Collection<BackendServer> servers;
 
     public AbstractServerManager(PulsarClient pulsarClient, Logger logger) {
-        super(pulsarClient);
-        this.logger = logger;
+        super(pulsarClient, logger);
         this.servers = new CopyOnWriteArrayList<>();
     }
 

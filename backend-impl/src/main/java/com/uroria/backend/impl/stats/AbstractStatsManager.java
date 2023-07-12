@@ -7,11 +7,8 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
 public abstract class AbstractStatsManager extends AbstractManager implements StatsManager {
-    protected final Logger logger;
-
     public AbstractStatsManager(PulsarClient pulsarClient, Logger logger) {
-        super(pulsarClient);
-        this.logger = logger;
+        super(pulsarClient, logger);
     }
 
     protected abstract void checkStat(BackendStat stat);

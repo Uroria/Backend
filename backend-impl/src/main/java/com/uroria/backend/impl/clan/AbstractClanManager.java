@@ -13,12 +13,10 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractClanManager extends AbstractManager implements ClanManager {
-    protected final Logger logger;
     protected final Collection<BackendClan> clans;
 
     public AbstractClanManager(PulsarClient pulsarClient, Logger logger) {
-        super(pulsarClient);
-        this.logger = logger;
+        super(pulsarClient, logger);
         this.clans = new CopyOnWriteArrayList<>();
     }
 

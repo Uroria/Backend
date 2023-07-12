@@ -7,10 +7,8 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
 public abstract class AbstractMessageManager extends AbstractManager implements MessageManager {
-    protected final Logger logger;
     public AbstractMessageManager(PulsarClient pulsarClient, Logger logger) {
-        super(pulsarClient);
-        this.logger = logger;
+        super(pulsarClient, logger);
     }
 
     abstract protected void onMessage(BackendMessage message);

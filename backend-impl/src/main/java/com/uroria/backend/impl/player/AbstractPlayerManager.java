@@ -13,11 +13,9 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractPlayerManager extends AbstractManager implements PlayerManager {
-    protected final Logger logger;
     protected final Collection<BackendPlayer> players;
     public AbstractPlayerManager(PulsarClient pulsarClient, Logger logger) {
-        super(pulsarClient);
-        this.logger = logger;
+        super(pulsarClient, logger);
         this.players = new CopyOnWriteArrayList<>();
     }
 
