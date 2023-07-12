@@ -2,14 +2,10 @@ package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.SettingsDeleteEvent;
 import com.uroria.backend.bukkit.events.SettingsUpdateEvent;
+import com.uroria.backend.impl.scheduler.BackendScheduler;
+import com.uroria.backend.impl.settings.*;
 import com.uroria.backend.settings.BackendSettings;
 import com.uroria.backend.settings.SettingsRequest;
-import com.uroria.backend.scheduler.BackendScheduler;
-import com.uroria.backend.settings.BackendSettingsGameRequest;
-import com.uroria.backend.settings.BackendSettingsIDRequest;
-import com.uroria.backend.settings.BackendSettingsTagRequest;
-import com.uroria.backend.settings.BackendSettingsUpdate;
-import com.uroria.backend.settings.AbstractSettingsManager;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;

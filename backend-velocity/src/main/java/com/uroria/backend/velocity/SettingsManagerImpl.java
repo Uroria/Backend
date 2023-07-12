@@ -1,13 +1,9 @@
 package com.uroria.backend.velocity;
 
+import com.uroria.backend.impl.scheduler.BackendScheduler;
+import com.uroria.backend.impl.settings.*;
 import com.uroria.backend.settings.BackendSettings;
 import com.uroria.backend.settings.SettingsRequest;
-import com.uroria.backend.scheduler.BackendScheduler;
-import com.uroria.backend.settings.BackendSettingsGameRequest;
-import com.uroria.backend.settings.BackendSettingsIDRequest;
-import com.uroria.backend.settings.BackendSettingsTagRequest;
-import com.uroria.backend.settings.BackendSettingsUpdate;
-import com.uroria.backend.settings.AbstractSettingsManager;
 import com.uroria.backend.velocity.events.SettingsDeleteEvent;
 import com.uroria.backend.velocity.events.SettingsUpdateEvent;
 import com.velocitypowered.api.proxy.ProxyServer;

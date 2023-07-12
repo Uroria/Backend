@@ -26,6 +26,8 @@ dependencies {
     implementation("io.lettuce:lettuce-core:${lettuceVersion}")
 
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    implementation("org.hotswapagent:hotswap-agent-core:1.4.1")
 }
 
 tasks {

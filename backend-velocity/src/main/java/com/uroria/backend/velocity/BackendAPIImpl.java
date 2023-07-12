@@ -1,7 +1,7 @@
 package com.uroria.backend.velocity;
 
-import com.uroria.backend.AbstractBackendAPI;
 import com.uroria.backend.BackendAPI;
+import com.uroria.backend.impl.AbstractBackendAPI;
 import com.uroria.backend.messenger.MessageManager;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;

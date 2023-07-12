@@ -1,9 +1,9 @@
 package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.MessageReceiveEvent;
+import com.uroria.backend.impl.message.AbstractMessageManager;
+import com.uroria.backend.impl.message.BackendMessageUpdate;
 import com.uroria.backend.messenger.BackendMessage;
-import com.uroria.backend.message.BackendMessageUpdate;
-import com.uroria.backend.message.AbstractMessageManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;

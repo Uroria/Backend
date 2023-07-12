@@ -1,7 +1,3 @@
-java {
-    withJavadocJar()
-}
-
 repositories {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://oss.sonatype.org/content/repositories/snapshots")
@@ -12,7 +8,7 @@ repositories {
 val sentryVersion: String by project.extra
 
 dependencies {
-    api(project(":backend-api"))
+    api(project(":backend-impl"))
 
     implementation("io.sentry:sentry:${sentryVersion}")
 

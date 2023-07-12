@@ -1,12 +1,12 @@
 package com.uroria.backend.bukkit;
 
 import com.uroria.backend.bukkit.events.PlayerUpdateEvent;
+import com.uroria.backend.impl.player.AbstractPlayerManager;
+import com.uroria.backend.impl.player.BackendPlayerNameRequest;
+import com.uroria.backend.impl.player.BackendPlayerUUIDRequest;
+import com.uroria.backend.impl.player.BackendPlayerUpdate;
+import com.uroria.backend.impl.scheduler.BackendScheduler;
 import com.uroria.backend.player.BackendPlayer;
-import com.uroria.backend.player.BackendPlayerNameRequest;
-import com.uroria.backend.player.BackendPlayerUUIDRequest;
-import com.uroria.backend.player.BackendPlayerUpdate;
-import com.uroria.backend.player.AbstractPlayerManager;
-import com.uroria.backend.scheduler.BackendScheduler;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.bukkit.Bukkit;

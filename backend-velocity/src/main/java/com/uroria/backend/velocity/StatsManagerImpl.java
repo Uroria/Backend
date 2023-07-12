@@ -1,9 +1,9 @@
 package com.uroria.backend.velocity;
 
 import com.uroria.backend.helpers.StatsRequest;
-import com.uroria.backend.stats.BackendStatRequest;
-import com.uroria.backend.stats.BackendStatUpdate;
-import com.uroria.backend.stats.AbstractStatsManager;
+import com.uroria.backend.impl.stats.AbstractStatsManager;
+import com.uroria.backend.impl.stats.BackendStatRequest;
+import com.uroria.backend.impl.stats.BackendStatUpdate;
 import com.uroria.backend.stats.BackendStat;
 import com.uroria.backend.velocity.events.StatUpdateEvent;
 import com.velocitypowered.api.proxy.ProxyServer;

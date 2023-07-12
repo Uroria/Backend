@@ -1,8 +1,8 @@
 package com.uroria.backend.velocity;
 
+import com.uroria.backend.impl.message.AbstractMessageManager;
+import com.uroria.backend.impl.message.BackendMessageUpdate;
 import com.uroria.backend.messenger.BackendMessage;
-import com.uroria.backend.message.BackendMessageUpdate;
-import com.uroria.backend.message.AbstractMessageManager;
 import com.uroria.backend.velocity.events.MessageReceiveEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.apache.pulsar.client.api.PulsarClient;

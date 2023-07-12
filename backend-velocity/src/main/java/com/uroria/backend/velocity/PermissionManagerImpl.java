@@ -1,13 +1,9 @@
 package com.uroria.backend.velocity;
 
+import com.uroria.backend.impl.permission.*;
+import com.uroria.backend.impl.scheduler.BackendScheduler;
 import com.uroria.backend.permission.PermissionGroup;
 import com.uroria.backend.permission.PermissionHolder;
-import com.uroria.backend.permission.BackendPermissionGroupRequest;
-import com.uroria.backend.permission.BackendPermissionGroupUpdate;
-import com.uroria.backend.permission.BackendPermissionHolderRequest;
-import com.uroria.backend.permission.BackendPermissionHolderUpdate;
-import com.uroria.backend.permission.AbstractPermissionManager;
-import com.uroria.backend.scheduler.BackendScheduler;
 import com.uroria.backend.velocity.events.PermissionGroupUpdateEvent;
 import com.uroria.backend.velocity.events.PermissionHolderUpdateEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
