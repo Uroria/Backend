@@ -10,8 +10,8 @@ public final class BackendRootManager extends AbstractManager implements RootMan
     private BackendRootBackendResponse response;
     private BackendRootStopUpdate stop;
 
-    public BackendRootManager(PulsarClient pulsarClient, Logger logger, String moduleName) {
-        super(logger, moduleName);
+    public BackendRootManager(PulsarClient pulsarClient, Logger logger) {
+        super(logger, "BackendModule");
         this.pulsarClient = pulsarClient;
     }
 

@@ -7,11 +7,16 @@ import com.google.gson.GsonBuilder;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.uroria.backend.BackendAPI;
+import com.uroria.backend.Unsafe;
 import com.uroria.backend.clan.ClanManager;
 import com.uroria.backend.friends.FriendManager;
+import com.uroria.backend.management.RootManager;
+import com.uroria.backend.messenger.MessageManager;
 import com.uroria.backend.party.PartyManager;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;
+import com.uroria.backend.server.modules.management.BackendRootManager;
 import com.uroria.backend.settings.SettingsManager;
 import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.utils.TransientField;
@@ -44,7 +49,7 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public final class Uroria implements Server {
+public final class Uroria implements Server, BackendAPI {
     private static final Gson GSON;
     private static final Logger LOGGER = LoggerFactory.getLogger(Uroria.class);
     private static final Json CONFIG;
@@ -90,6 +95,7 @@ public final class Uroria implements Server {
     private final BackendClanManager clanManager;
     private final BackendFriendManager friendManager;
     private final BackendSettingsManager settingsManager;
+    private final BackendRootManager rootManager;
 
     private Uroria() {
         long start = System.currentTimeMillis();
@@ -137,12 +143,15 @@ public final class Uroria implements Server {
         this.clanManager = new BackendClanManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.friendManager = new BackendFriendManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
         this.settingsManager = new BackendSettingsManager(LOGGER, this.pulsarClient, this.database, this.redisConnection);
+        this.rootManager = new BackendRootManager(this.pulsarClient, LOGGER);
+        Unsafe.setAPI(this);
         LOGGER.info("Finished initializing in " + (System.currentTimeMillis() - start) + "ms");
     }
 
     private void start() {
         long start = System.currentTimeMillis();
         LOGGER.info("Starting modules...");
+        this.rootManager.start();
         this.playerManager.start();
         this.statsManager.start();
         this.permissionManager.start();
@@ -163,6 +172,8 @@ public final class Uroria implements Server {
         LOGGER.info("Stopping plugins...");
         this.pluginManager.stopPlugins();
 
+        this.rootManager.stopEverything();
+        this.rootManager.shutdown();
         this.playerManager.shutdown();
         this.statsManager.shutdown();
         this.permissionManager.shutdown();
@@ -248,6 +259,16 @@ public final class Uroria implements Server {
     @Override
     public SettingsManager getSettingsManager() {
         return this.settingsManager;
+    }
+
+    @Override
+    public MessageManager getMessageManager() {
+        return null;
+    }
+
+    @Override
+    public RootManager getRootManager() {
+        return this.rootManager;
     }
 
     public PulsarClient getPulsarClient() {
