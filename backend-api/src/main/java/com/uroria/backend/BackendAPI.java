@@ -1,5 +1,6 @@
 package com.uroria.backend;
 
+import com.uroria.backend.management.RootManager;
 import com.uroria.backend.messenger.MessageManager;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;
@@ -15,6 +16,7 @@ public interface BackendAPI {
     StatsManager getStatsManager();
     SettingsManager getSettingsManager();
     MessageManager getMessageManager();
+    RootManager getRootManager();
 
     static BackendAPI getAPI() {
         return Unsafe.getAPI();

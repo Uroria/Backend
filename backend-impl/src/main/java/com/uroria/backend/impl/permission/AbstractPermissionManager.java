@@ -14,12 +14,10 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractPermissionManager extends AbstractManager implements PermissionManager {
-    protected final Logger logger;
     protected final Collection<PermissionHolder> holders;
     protected final Collection<PermissionGroup> groups;
     public AbstractPermissionManager(PulsarClient pulsarClient, Logger logger) {
-        super(pulsarClient);
-        this.logger = logger;
+        super(pulsarClient, logger);
         this.holders = new CopyOnWriteArrayList<>();
         this.groups = new CopyOnWriteArrayList<>();
     }

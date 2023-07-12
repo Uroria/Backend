@@ -2,6 +2,7 @@ package com.uroria.backend.velocity;
 
 import com.uroria.backend.BackendAPI;
 import com.uroria.backend.impl.AbstractBackendAPI;
+import com.uroria.backend.management.RootManager;
 import com.uroria.backend.messenger.MessageManager;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;
@@ -26,6 +27,7 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
     private final StatsManagerImpl statsManager;
     private final ServerManagerImpl serverManager;
     private final MessageManagerImpl messageManager;
+    private final RootManagerImpl rootManager;
 
     BackendAPIImpl(String pulsarURL, boolean sentry, Logger logger, ProxyServer proxyServer) {
         super(pulsarURL);
@@ -39,6 +41,7 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
         this.settingsManager = new SettingsManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
         this.serverManager = new ServerManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
         this.messageManager = new MessageManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
+        this.rootManager = new RootManagerImpl(this.pulsarClient, this.logger, this.proxyServer);
     }
 
     @Override
@@ -46,6 +49,13 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
         String identifier = UUID.randomUUID().toString();
         this.logger.info("Starting connections...");
         try {
+            this.rootManager.start(identifier);
+
+            if (!this.rootManager.isBackendOnline()) {
+                this.proxyServer.shutdown();
+                return;
+            }
+
             this.playerManager.start(identifier);
             this.permissionManager.start(identifier);
             this.statsManager.start(identifier);
@@ -98,6 +108,11 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
     @Override
     public MessageManager getMessageManager() {
         return this.messageManager;
+    }
+
+    @Override
+    public RootManager getRootManager() {
+        return this.rootManager;
     }
 
     @Override

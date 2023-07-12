@@ -10,6 +10,7 @@ import com.uroria.backend.server.Unsafe;
 import de.leonhard.storage.Json;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.PulsarClientException;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -49,16 +50,11 @@ public final class ServerManagerImpl extends BukkitServerManager {
     }
 
     @Override
-    protected void start(String identifier) {
-        try {
-            this.request = new BackendServerRequest(this.pulsarClient, identifier);
-            this.update = new BackendServerUpdate(this.pulsarClient, identifier, this::checkServer);
-            this.start = new BackendServerStart(this.pulsarClient, identifier);
-            this.requestAll = new BackendAllServersRequest(this.pulsarClient, identifier);
-        } catch (Exception exception) {
-            this.logger.error("Cannot initialize handlers", exception);
-            BackendAPIImpl.captureException(exception);
-        }
+    protected void start(String identifier) throws PulsarClientException {
+        this.request = new BackendServerRequest(this.pulsarClient, identifier);
+        this.update = new BackendServerUpdate(this.pulsarClient, identifier, this::checkServer);
+        this.start = new BackendServerStart(this.pulsarClient, identifier);
+        this.requestAll = new BackendAllServersRequest(this.pulsarClient, identifier);
         if (this.localServerId == -1) return;
         Json config = BackendBukkitPlugin.serverConfig();
 

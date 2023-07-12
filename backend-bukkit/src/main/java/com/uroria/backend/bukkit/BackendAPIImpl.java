@@ -2,12 +2,14 @@ package com.uroria.backend.bukkit;
 
 import com.uroria.backend.BackendAPI;
 import com.uroria.backend.impl.AbstractBackendAPI;
+import com.uroria.backend.management.RootManager;
 import com.uroria.backend.messenger.MessageManager;
 import com.uroria.backend.permission.PermissionManager;
 import com.uroria.backend.player.PlayerManager;
 import com.uroria.backend.settings.SettingsManager;
 import com.uroria.backend.stats.StatsManager;
 import io.sentry.Sentry;
+import org.apache.pulsar.client.api.PulsarClientException;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
 
@@ -24,6 +26,7 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
     private final ServerManagerImpl serverManager;
     private final MessageManagerImpl messageManager;
     private final SettingsManagerImpl settingsManager;
+    private final RootManagerImpl rootManager;
     BackendAPIImpl(String pulsarURL, boolean sentry, Logger logger) {
         super(pulsarURL);
         instance = this;
@@ -35,22 +38,34 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
         this.serverManager = new ServerManagerImpl(this.pulsarClient, this.logger);
         this.messageManager = new MessageManagerImpl(this.pulsarClient, this.logger);
         this.settingsManager = new SettingsManagerImpl(this.pulsarClient, this.logger);
+        this.rootManager = new RootManagerImpl(this.pulsarClient, this.logger);
     }
 
     @Override
     protected void start() {
-        if (BackendBukkitPlugin.isOffline()) {
-            logger.info("Running in offline mode!");
-            return;
+        try {
+            if (BackendBukkitPlugin.isOffline()) {
+                logger.info("Running in offline mode!");
+                return;
+            }
+            this.logger.info("Starting connections...");
+            String identifier = UUID.randomUUID().toString();
+            this.rootManager.start(identifier);
+
+            if (!rootManager.isBackendOnline()) {
+                Bukkit.shutdown();
+                return;
+            }
+
+            this.playerManager.start(identifier);
+            this.permissionManager.start(identifier);
+            this.statsManager.start(identifier);
+            this.serverManager.start(identifier);
+            this.messageManager.start(identifier);
+            this.settingsManager.start(identifier);
+        } catch (PulsarClientException exception) {
+            this.logger.error("Cannot start pulsar instances", exception);
         }
-        this.logger.info("Starting connections...");
-        String identifier = UUID.randomUUID().toString();
-        this.playerManager.start(identifier);
-        this.permissionManager.start(identifier);
-        this.statsManager.start(identifier);
-        this.serverManager.start(identifier);
-        this.messageManager.start(identifier);
-        this.settingsManager.start(identifier);
     }
 
     @Override
@@ -64,6 +79,7 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
             this.serverManager.shutdown();
             this.messageManager.shutdown();
             this.settingsManager.shutdown();
+            this.rootManager.shutdown();
             super.shutdown();
         } catch (Exception exception) {
             this.logger.error("Cannot shutdown pulsar instances", exception);
@@ -115,6 +131,11 @@ public final class BackendAPIImpl extends AbstractBackendAPI implements BackendA
 
     public MessageManager getMessageManager() {
         return this.messageManager;
+    }
+
+    @Override
+    public RootManager getRootManager() {
+        return this.rootManager;
     }
 
     @Override

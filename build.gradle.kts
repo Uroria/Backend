@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
 
 plugins {
@@ -69,7 +70,7 @@ subprojects {
         implementation("net.kyori:adventure-text-serializer-plain:${adventureVersion}")
         implementation("net.kyori:adventure-text-serializer-legacy:${adventureVersion}")
 
-        implementation("org.apache.pulsar:pulsar-client:${pulsarVersion}")
+        compileOnly("org.apache.pulsar:pulsar-client:${pulsarVersion}")
     }
 
     tasks {
@@ -89,6 +90,10 @@ subprojects {
             manifest {
                 attributes["Multi-Release"] = "true"
             }
+        }
+
+        build {
+            dependsOn(shadowJar)
         }
     }
 
