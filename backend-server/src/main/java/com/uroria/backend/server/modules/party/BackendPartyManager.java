@@ -1,10 +1,10 @@
 package com.uroria.backend.server.modules.party;
 
-import com.uroria.backend.common.party.PartyManager;
+import com.uroria.backend.party.PartyManager;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.party.PartyDeleteEvent;
 import com.uroria.backend.pluginapi.events.party.PartyUpdateEvent;
-import com.uroria.backend.common.party.BackendParty;
+import com.uroria.backend.party.BackendParty;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;

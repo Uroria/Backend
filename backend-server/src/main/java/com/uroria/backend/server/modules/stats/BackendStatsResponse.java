@@ -1,8 +1,8 @@
 package com.uroria.backend.server.modules.stats;
 
-import com.uroria.backend.common.stats.BackendStat;
-import com.uroria.backend.common.helpers.StatsRequest;
-import com.uroria.backend.common.pulsar.PulsarResponse;
+import com.uroria.backend.stats.BackendStat;
+import com.uroria.backend.helpers.StatsRequest;
+import com.uroria.backend.pulsar.PulsarResponse;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 

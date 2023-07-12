@@ -13,7 +13,7 @@ val lettuceVersion: String by project.extra
 
 dependencies {
     implementation(project(":backend-plugin-api"))
-    implementation(project(":backend-common"))
+    implementation(project(":backend-api"))
 
     implementation("org.apache.logging.log4j:log4j-api:${log4jVersion}")
     implementation("org.apache.logging.log4j:log4j-core:${log4jVersion}")

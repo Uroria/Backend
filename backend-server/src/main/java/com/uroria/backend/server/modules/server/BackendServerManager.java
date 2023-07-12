@@ -1,13 +1,13 @@
 package com.uroria.backend.server.modules.server;
 
-import com.uroria.backend.common.server.ServerManager;
-import com.uroria.backend.common.server.Unsafe;
+import com.uroria.backend.server.ServerManager;
+import com.uroria.backend.server.Unsafe;
 import com.uroria.backend.pluginapi.BackendRegistry;
 import com.uroria.backend.pluginapi.events.server.ServerStartEvent;
 import com.uroria.backend.pluginapi.events.server.ServerStopEvent;
 import com.uroria.backend.pluginapi.events.server.ServerUpdateEvent;
-import com.uroria.backend.common.server.BackendServer;
-import com.uroria.backend.common.server.ServerStatus;
+import com.uroria.backend.server.BackendServer;
+import com.uroria.backend.server.ServerStatus;
 import com.uroria.backend.server.CloudAPI;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;

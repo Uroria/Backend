@@ -1,7 +1,7 @@
 package com.uroria.backend.pluginapi.events.party;
 
 import com.uroria.backend.pluginapi.events.Event;
-import com.uroria.backend.common.party.BackendParty;
+import com.uroria.backend.party.BackendParty;
 
 public abstract class PartyEvent extends Event {
     private final BackendParty party;

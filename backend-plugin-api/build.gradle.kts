@@ -3,6 +3,6 @@ java {
 }
 
 dependencies {
-    api(project(":backend-common"))
+    api(project(":backend-api"))
 }
 

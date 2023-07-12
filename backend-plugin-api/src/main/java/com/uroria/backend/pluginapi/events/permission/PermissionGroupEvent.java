@@ -1,7 +1,7 @@
 package com.uroria.backend.pluginapi.events.permission;
 
 import com.uroria.backend.pluginapi.events.Event;
-import com.uroria.backend.common.permission.PermissionGroup;
+import com.uroria.backend.permission.PermissionGroup;
 
 public abstract class PermissionGroupEvent extends Event {
     private final PermissionGroup permissionGroup;

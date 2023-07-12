@@ -1,6 +1,6 @@
 package com.uroria.backend.server.modules.server;
 
-import com.uroria.backend.common.pulsar.PulsarResponse;
+import com.uroria.backend.pulsar.PulsarResponse;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 

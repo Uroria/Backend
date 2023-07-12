@@ -1,7 +1,7 @@
 package com.uroria.backend.server.modules.settings;
 
-import com.uroria.backend.common.settings.BackendSettings;
-import com.uroria.backend.common.pulsar.PulsarUpdate;
+import com.uroria.backend.settings.BackendSettings;
+import com.uroria.backend.pulsar.PulsarUpdate;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
