@@ -53,8 +53,8 @@ subprojects {
     }
 
     dependencies {
-        compileOnly("org.jetbrains:annotations:${jetbrainsAnnotationsVersion}")
-        compileOnly("org.projectlombok:lombok:${lombokVersion}")
+        api("org.jetbrains:annotations:${jetbrainsAnnotationsVersion}")
+        api("org.projectlombok:lombok:${lombokVersion}")
         annotationProcessor("org.jetbrains:annotations:${jetbrainsAnnotationsVersion}")
         annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
 
@@ -70,7 +70,7 @@ subprojects {
         implementation("net.kyori:adventure-text-serializer-plain:${adventureVersion}")
         implementation("net.kyori:adventure-text-serializer-legacy:${adventureVersion}")
 
-        compileOnly("org.apache.pulsar:pulsar-client:${pulsarVersion}")
+        implementation("org.apache.pulsar:pulsar-client:${pulsarVersion}")
     }
 
     tasks {

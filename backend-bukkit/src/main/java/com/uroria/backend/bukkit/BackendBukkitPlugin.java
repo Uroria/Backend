@@ -1,5 +1,6 @@
 package com.uroria.backend.bukkit;
 
+import com.uroria.backend.Unsafe;
 import com.uroria.backend.bukkit.commands.StopCommand;
 import com.uroria.backend.bukkit.listeners.PlayerJoin;
 import com.uroria.backend.bukkit.listeners.PlayerPreLogin;
@@ -39,12 +40,18 @@ public final class BackendBukkitPlugin extends JavaPlugin {
             this.backendAPI = null;
             return;
         }
+        Unsafe.setAPI(backendAPI);
         this.backendAPI = backendAPI;
     }
 
     @Override
     public void onEnable() {
-        this.backendAPI.start();
+        try {
+            this.backendAPI.start();
+        } catch (Exception exception) {
+            logger.error("Cannot start backend", exception);
+            Bukkit.shutdown();
+        }
         
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new PlayerPreLogin(this.backendAPI), this);
