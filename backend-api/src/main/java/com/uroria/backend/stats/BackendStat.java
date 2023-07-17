@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class BackendStat extends PropertyHolder<BackendStat> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
@@ -21,7 +22,7 @@ public final class BackendStat extends PropertyHolder<BackendStat> implements Se
         this.uuid = uuid;
         this.gameId = gameId;
         this.time = time;
-        this.scores = new HashMap<>();
+        this.scores = new ConcurrentHashMap<>();
     }
 
     public Optional<Long> getScore(String key) {

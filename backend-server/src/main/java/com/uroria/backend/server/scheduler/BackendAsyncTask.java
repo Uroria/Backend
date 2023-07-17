@@ -98,8 +98,8 @@ public final class BackendAsyncTask<T> implements AsyncTask<T> {
 
     private void processFuture(CompletableFuture<? super T> future, Integer counter) {
         Pair<T, Throwable> result = execute(counter).join();
-        if (result.getSecond() != null) future.completeExceptionally(result.getSecond());
-        else future.complete(result.getFirst());
+        if (result.second() != null) future.completeExceptionally(result.second());
+        else future.complete(result.first());
     }
 
 

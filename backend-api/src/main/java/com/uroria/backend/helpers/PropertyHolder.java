@@ -8,12 +8,13 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class PropertyHolder<T> extends BackendObject<T> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     protected final Map<String, Object> properties;
     public PropertyHolder() {
-        this.properties = new HashMap<>();
+        this.properties = new ConcurrentHashMap<>();
     }
 
     public void setProperty(@NonNull String key, @NonNull String value) {

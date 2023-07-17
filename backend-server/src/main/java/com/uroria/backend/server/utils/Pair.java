@@ -2,22 +2,7 @@ package com.uroria.backend.server.utils;
 
 import java.util.Objects;
 
-public class Pair<F, S> {
-    private final F first;
-    private final S second;
-
-    public Pair(F first, S second) {
-        this.first = first;
-        this.second = second;
-    }
-
-    public F getFirst() {
-        return first;
-    }
-
-    public S getSecond() {
-        return second;
-    }
+public record Pair<F, S>(F first, S second) {
 
     @Override
     public boolean equals(Object o) {
@@ -31,8 +16,4 @@ public class Pair<F, S> {
         return Objects.equals(first, pair.first) && Objects.equals(second, pair.second);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(first, second);
-    }
 }

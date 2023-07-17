@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class PermissionHolder extends BackendObject<PermissionHolder> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
@@ -25,14 +26,14 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     private final List<String> groups;
     public PermissionHolder(@NonNull UUID uuid) {
         this.uuid = uuid;
-        this.permissions = new HashMap<>();
-        this.temporaryPermissions = new HashMap<>();
+        this.permissions = new ConcurrentHashMap<>();
+        this.temporaryPermissions = new ConcurrentHashMap<>();
         this.groups = new ArrayList<>();
     }
 
     public boolean hasPermission(@Nullable String node) {
         if (node == null) return false;
-        if (temporaryPermissions == null) temporaryPermissions = new HashMap<>();
+        if (temporaryPermissions == null) temporaryPermissions = new ConcurrentHashMap<>();
         boolean base = PermissionCalculator.hasPermission(node, permissions);
         boolean temp = PermissionCalculator.hasPermission(node, temporaryPermissions);
         if (base) return true;
@@ -99,7 +100,7 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     public void modify(PermissionHolder holder) {
         ObjectUtils.overrideMap(permissions, holder.permissions);
         ObjectUtils.overrideCollection(groups, holder.groups);
-        if (this.temporaryPermissions == null) this.temporaryPermissions = new HashMap<>();
+        if (this.temporaryPermissions == null) this.temporaryPermissions = new ConcurrentHashMap<>();
         ObjectUtils.overrideMap(temporaryPermissions, holder.temporaryPermissions);
     }
 }

@@ -9,6 +9,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class PermissionGroup extends PropertyHolder<PermissionGroup> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
@@ -17,7 +18,7 @@ public final class PermissionGroup extends PropertyHolder<PermissionGroup> imple
     private int priority;
     public PermissionGroup(@NonNull String name, int priority) {
         this.name = name.toLowerCase();
-        this.permissions = new HashMap<>();
+        this.permissions = new ConcurrentHashMap<>();
         this.priority = priority;
     }
 
