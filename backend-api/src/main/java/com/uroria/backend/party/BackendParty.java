@@ -6,19 +6,18 @@ import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public final class BackendParty extends BackendObject<BackendParty> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID operator;
-    private final List<UUID> members;
+    private final Set<UUID> members;
     private int currentServer;
     public BackendParty(@NonNull UUID operator, int currentServer) {
         this.operator = operator;
-        this.members = new ArrayList<>();
+        this.members = ObjectUtils.newSet();
         this.currentServer = currentServer;
         this.members.add(operator);
     }
@@ -55,8 +54,8 @@ public final class BackendParty extends BackendObject<BackendParty> implements S
         return operator;
     }
 
-    public Collection<UUID> getMembers() {
-        return new ArrayList<>(this.members);
+    public Set<UUID> getMembers() {
+        return new HashSet<>(this.members);
     }
 
     @Override

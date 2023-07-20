@@ -9,7 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 
 public final class BackendServer extends PropertyHolder<BackendServer> implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger("BackendServer");
@@ -20,7 +23,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
     private final int templateId;
     private final int type;
     private final int maxPlayerCount;
-    private final List<UUID> onlinePlayers;
+    private final Set<UUID> onlinePlayers;
     private int status;
     private int id;
 
@@ -32,7 +35,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
         this.type = type.getId();
         this.status = ServerStatus.EMPTY.getId();
         this.maxPlayerCount = maxPlayerCount;
-        this.onlinePlayers = new ArrayList<>();
+        this.onlinePlayers = ObjectUtils.newSet();
     }
 
     public BackendServer(@NonNull String name, int templateId, @NonNull ServerType type) {
@@ -112,7 +115,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
         return Optional.of((Serializable) o);
     }
 
-    public Collection<UUID> getOnlinePlayers() {
+    public Set<UUID> getOnlinePlayers() {
         return onlinePlayers;
     }
 

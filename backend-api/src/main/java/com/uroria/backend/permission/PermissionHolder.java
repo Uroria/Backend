@@ -9,26 +9,25 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public final class PermissionHolder extends BackendObject<PermissionHolder> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID uuid;
     private final Map<String, Boolean> permissions;
     @TransientField private Map<String, Boolean> temporaryPermissions;
-    private final List<String> groups;
+    private final Set<String> groups;
     public PermissionHolder(@NonNull UUID uuid) {
         this.uuid = uuid;
         this.permissions = new ConcurrentHashMap<>();
         this.temporaryPermissions = new ConcurrentHashMap<>();
-        this.groups = new ArrayList<>();
+        this.groups = ObjectUtils.newSet();
     }
 
     public boolean hasPermission(@Nullable String node) {
@@ -83,8 +82,8 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
         return new HashMap<>(temporaryPermissions);
     }
 
-    public Collection<PermissionGroup> getGroups() {
-        return groups.stream().map(name -> BackendAPI.getAPI().getPermissionManager().getGroup(name).orElse(null)).filter(Objects::nonNull).toList();
+    public Set<PermissionGroup> getGroups() {
+        return groups.stream().map(name -> BackendAPI.getAPI().getPermissionManager().getGroup(name).orElse(null)).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     @Override

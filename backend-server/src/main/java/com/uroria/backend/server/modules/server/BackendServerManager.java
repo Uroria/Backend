@@ -12,22 +12,21 @@ import com.uroria.backend.server.CloudAPI;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
+import com.uroria.backend.utils.ObjectUtils;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
 
 public final class BackendServerManager extends AbstractManager implements ServerManager {
     private final PulsarClient pulsarClient;
     private final BackendEventManager eventManager;
     private final CloudAPI api;
-    private final List<BackendServer> servers;
+    private final Set<BackendServer> servers;
     private BackendServerResponse serverResponse;
     private BackendServerUpdate serverUpdate;
     private BackendAllServersResponse allServersResponse;
@@ -39,7 +38,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
         this.pulsarClient = pulsarClient;
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
         this.api = api;
-        this.servers = new CopyOnWriteArrayList<>();
+        this.servers = ObjectUtils.newSet();
     }
 
     @Override
@@ -154,7 +153,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
-    public Collection<BackendServer> getServers() {
+    public Set<BackendServer> getServers() {
         return this.servers;
     }
 

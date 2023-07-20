@@ -13,14 +13,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 public final class BackendPlayer extends PropertyHolder<BackendPlayer> implements Serializable {
     @Serial
     private static final long serialVersionUID = 1;
     private final UUID uuid;
-    private final List<UUID> crew;
-    private final List<BackendPunishment> outdatedPunishments;
+    private final Set<UUID> crew;
+    private final Set<BackendPunishment> outdatedPunishments;
     private String skinURL;
     private String avatar;
     private String clan;
@@ -32,12 +37,12 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         this.uuid = uuid;
         if (currentName == null) this.currentName = null;
         else this.currentName = currentName.toLowerCase();
-        this.crew = new ArrayList<>();
+        this.crew = ObjectUtils.newSet();
         this.locale = Locale.GERMAN;
         this.clan = null;
         this.status = 0;
         this.punishment = null;
-        this.outdatedPunishments = new ArrayList<>();
+        this.outdatedPunishments = ObjectUtils.newSet();
     }
 
     @Override
@@ -146,15 +151,15 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         return this.crew.contains(uuid);
     }
 
-    public Collection<UUID> getCrew() {
-        return new ArrayList<>(crew);
+    public Set<UUID> getCrew() {
+        return new HashSet<>(crew);
     }
 
     public void addCrewMember(@NonNull UUID uuid) {
         this.crew.add(uuid);
     }
 
-    public Collection<BackendPunishment> getOutdatedPunishments() {
+    public Set<BackendPunishment> getOutdatedPunishments() {
         return outdatedPunishments;
     }
 

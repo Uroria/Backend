@@ -8,14 +8,13 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class BackendClan extends PropertyHolder<BackendClan> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
-    private final List<UUID> moderators;
-    private final List<UUID> members;
+    private final Set<UUID> moderators;
+    private final Set<UUID> members;
     private final long foundingDate;
     private final String name;
     private String tag;
@@ -25,8 +24,8 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
         this.name = name;
         this.tag = tag;
         this.operator = operator;
-        this.moderators = new CopyOnWriteArrayList<>();
-        this.members = new CopyOnWriteArrayList<>();
+        this.moderators = ObjectUtils.newSet();
+        this.members = ObjectUtils.newSet();
         this.foundingDate = foundingDate;
         this.members.add(operator);
     }

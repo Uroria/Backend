@@ -7,18 +7,17 @@ import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class BackendFriend extends BackendObject<BackendFriend> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     private final UUID holder;
-    private final List<FriendPair> friends;
+    private final Set<FriendPair> friends;
     public BackendFriend(@NonNull UUID holder) {
         this.holder = holder;
-        this.friends = new ArrayList<>();
+        this.friends = ObjectUtils.newSet();
     }
 
     public void addFriend(@NonNull UUID uuid, long friendshipDate) {
@@ -36,8 +35,8 @@ public class BackendFriend extends BackendObject<BackendFriend> implements Seria
         return holder;
     }
 
-    public Collection<FriendPair> getFriends() {
-        return new ArrayList<>(this.friends);
+    public Set<FriendPair> getFriends() {
+        return new HashSet<>(this.friends);
     }
 
     @Override

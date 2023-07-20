@@ -3,19 +3,19 @@ package com.uroria.backend.impl.server;
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.server.BackendServer;
 import com.uroria.backend.server.ServerManager;
+import com.uroria.backend.utils.ObjectUtils;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
-import java.util.Collection;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
 
 public abstract class AbstractServerManager extends AbstractManager implements ServerManager {
-    protected final Collection<BackendServer> servers;
+    protected final Set<BackendServer> servers;
 
     public AbstractServerManager(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
-        this.servers = new CopyOnWriteArrayList<>();
+        this.servers = ObjectUtils.newSet();
     }
 
     abstract protected void checkServer(BackendServer server);

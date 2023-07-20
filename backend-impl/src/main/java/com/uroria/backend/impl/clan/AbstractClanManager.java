@@ -3,21 +3,21 @@ package com.uroria.backend.impl.clan;
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.clan.BackendClan;
 import com.uroria.backend.clan.ClanManager;
+import com.uroria.backend.utils.ObjectUtils;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
-import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractClanManager extends AbstractManager implements ClanManager {
-    protected final Collection<BackendClan> clans;
+    protected final Set<BackendClan> clans;
 
     public AbstractClanManager(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
-        this.clans = new CopyOnWriteArrayList<>();
+        this.clans = ObjectUtils.newSet();
     }
 
     abstract protected void checkClan(BackendClan clan);
