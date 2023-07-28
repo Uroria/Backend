@@ -4,7 +4,7 @@ import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.permission.PermissionGroup;
 import com.uroria.backend.permission.PermissionHolder;
 import com.uroria.backend.permission.PermissionManager;
-import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
@@ -18,8 +18,8 @@ public abstract class AbstractPermissionManager extends AbstractManager implemen
     protected final Set<PermissionGroup> groups;
     public AbstractPermissionManager(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
-        this.holders = ObjectUtils.newSet();
-        this.groups = ObjectUtils.newSet();
+        this.holders = new ObjectArraySet<>();
+        this.groups = new ObjectArraySet<>();
     }
 
     abstract protected void checkPermissionHolder(PermissionHolder holder);

@@ -3,11 +3,12 @@ package com.uroria.backend.friends;
 import com.uroria.backend.BackendObject;
 import com.uroria.backend.helpers.FriendPair;
 import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ public class BackendFriend extends BackendObject<BackendFriend> implements Seria
     private final Set<FriendPair> friends;
     public BackendFriend(@NonNull UUID holder) {
         this.holder = holder;
-        this.friends = ObjectUtils.newSet();
+        this.friends = new ObjectArraySet<>();
     }
 
     public void addFriend(@NonNull UUID uuid, long friendshipDate) {
@@ -36,7 +37,7 @@ public class BackendFriend extends BackendObject<BackendFriend> implements Seria
     }
 
     public Set<FriendPair> getFriends() {
-        return new HashSet<>(this.friends);
+        return Collections.unmodifiableSet(this.friends);
     }
 
     @Override

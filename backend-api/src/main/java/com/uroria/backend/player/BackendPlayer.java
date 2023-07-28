@@ -3,6 +3,7 @@ package com.uroria.backend.player;
 import com.uroria.backend.clan.BackendClan;
 import com.uroria.backend.helpers.PropertyHolder;
 import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +15,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.Base64;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -37,12 +38,12 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
         this.uuid = uuid;
         if (currentName == null) this.currentName = null;
         else this.currentName = currentName.toLowerCase();
-        this.crew = ObjectUtils.newSet();
+        this.crew = new ObjectArraySet<>();
         this.locale = Locale.GERMAN;
         this.clan = null;
         this.status = 0;
         this.punishment = null;
-        this.outdatedPunishments = ObjectUtils.newSet();
+        this.outdatedPunishments = new ObjectArraySet<>();
     }
 
     @Override
@@ -152,7 +153,7 @@ public final class BackendPlayer extends PropertyHolder<BackendPlayer> implement
     }
 
     public Set<UUID> getCrew() {
-        return new HashSet<>(crew);
+        return Collections.unmodifiableSet(this.crew);
     }
 
     public void addCrewMember(@NonNull UUID uuid) {

@@ -63,7 +63,7 @@ public final class ServerManagerImpl extends AbstractServerManager {
             }
         }
 
-        logger.info("Updating server " + server.getDisplayName() + " " + Arrays.toString(this.servers.stream().map(BackendServer::getDisplayName).toArray()));
+        logger.info("Updating server " + server.getDisplayName() + " of " + this.servers.size() + " total");
 
         for (BackendServer savedServer : this.servers) {
             if (!savedServer.equals(server)) continue;

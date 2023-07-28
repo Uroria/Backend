@@ -2,14 +2,15 @@ package com.uroria.backend.permission;
 
 import com.uroria.backend.helpers.PropertyHolder;
 import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class PermissionGroup extends PropertyHolder<PermissionGroup> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
@@ -18,7 +19,7 @@ public final class PermissionGroup extends PropertyHolder<PermissionGroup> imple
     private int priority;
     public PermissionGroup(@NonNull String name, int priority) {
         this.name = name.toLowerCase();
-        this.permissions = new ConcurrentHashMap<>();
+        this.permissions = new Object2ObjectArrayMap<>();
         this.priority = priority;
     }
 
@@ -48,7 +49,7 @@ public final class PermissionGroup extends PropertyHolder<PermissionGroup> imple
     }
 
     public Map<String, Boolean> getPermissions() {
-        return new HashMap<>(this.permissions);
+        return Collections.unmodifiableMap(this.permissions);
     }
 
     @Override

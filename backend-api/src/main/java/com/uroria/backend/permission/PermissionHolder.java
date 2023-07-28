@@ -4,17 +4,19 @@ import com.uroria.backend.BackendAPI;
 import com.uroria.backend.BackendObject;
 import com.uroria.backend.utils.ObjectUtils;
 import com.uroria.backend.utils.TransientField;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public final class PermissionHolder extends BackendObject<PermissionHolder> implements Serializable {
@@ -22,17 +24,17 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     private final UUID uuid;
     private final Map<String, Boolean> permissions;
     @TransientField private Map<String, Boolean> temporaryPermissions;
-    private final Set<String> groups;
+    private final ObjectArraySet<String> groups;
     public PermissionHolder(@NonNull UUID uuid) {
         this.uuid = uuid;
-        this.permissions = new ConcurrentHashMap<>();
-        this.temporaryPermissions = new ConcurrentHashMap<>();
-        this.groups = ObjectUtils.newSet();
+        this.permissions = new Object2ObjectArrayMap<>();
+        this.temporaryPermissions = new Object2ObjectArrayMap<>();
+        this.groups = new ObjectArraySet<>();
     }
 
     public boolean hasPermission(@Nullable String node) {
         if (node == null) return false;
-        if (temporaryPermissions == null) temporaryPermissions = new ConcurrentHashMap<>();
+        if (temporaryPermissions == null) temporaryPermissions = new Object2ObjectArrayMap<>();
         boolean base = PermissionCalculator.hasPermission(node, permissions);
         boolean temp = PermissionCalculator.hasPermission(node, temporaryPermissions);
         if (base) return true;
@@ -56,17 +58,17 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     }
 
     public void setTemporaryPermission(@NonNull String node, boolean value) {
-        if (this.temporaryPermissions == null) this.temporaryPermissions = new HashMap<>();
+        if (this.temporaryPermissions == null) this.temporaryPermissions = new Object2ObjectArrayMap<>();
         this.temporaryPermissions.put(node, value);
     }
 
     public void unsetTemporaryPermission(@NonNull String node) {
-        if (this.temporaryPermissions == null) this.temporaryPermissions = new HashMap<>();
+        if (this.temporaryPermissions == null) this.temporaryPermissions = new Object2ObjectArrayMap<>();
         this.temporaryPermissions.remove(node);
     }
 
     public void flushTemporaryPermissions() {
-        if (this.temporaryPermissions == null) this.temporaryPermissions = new HashMap<>();
+        if (this.temporaryPermissions == null) this.temporaryPermissions = new Object2ObjectArrayMap<>();
         this.temporaryPermissions.clear();
     }
 
@@ -75,11 +77,11 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     }
 
     public Map<String, Boolean> getPermissions() {
-        return new HashMap<>(this.permissions);
+        return Collections.unmodifiableMap(this.permissions);
     }
 
     public Map<String, Boolean> getTemporaryPermissions() {
-        return new HashMap<>(temporaryPermissions);
+        return Collections.unmodifiableMap(this.temporaryPermissions);
     }
 
     public Set<PermissionGroup> getGroups() {
@@ -99,7 +101,7 @@ public final class PermissionHolder extends BackendObject<PermissionHolder> impl
     public void modify(PermissionHolder holder) {
         ObjectUtils.overrideMap(permissions, holder.permissions);
         ObjectUtils.overrideCollection(groups, holder.groups);
-        if (this.temporaryPermissions == null) this.temporaryPermissions = new ConcurrentHashMap<>();
+        if (this.temporaryPermissions == null) this.temporaryPermissions = new Object2ObjectArrayMap<>();
         ObjectUtils.overrideMap(temporaryPermissions, holder.temporaryPermissions);
     }
 }

@@ -3,7 +3,7 @@ package com.uroria.backend.impl.friend;
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.friends.BackendFriend;
 import com.uroria.backend.friends.FriendManager;
-import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
@@ -17,7 +17,7 @@ public abstract class AbstractFriendManager extends AbstractManager implements F
 
     public AbstractFriendManager(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
-        this.friends = ObjectUtils.newSet();
+        this.friends = new ObjectArraySet<>();
     }
 
     abstract protected void checkFriend(BackendFriend friend);

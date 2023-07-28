@@ -1,20 +1,20 @@
 package com.uroria.backend.helpers;
 
 import com.uroria.backend.BackendObject;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class PropertyHolder<T> extends BackendObject<T> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
     protected final Map<String, Object> properties;
     public PropertyHolder() {
-        this.properties = new ConcurrentHashMap<>();
+        this.properties = new Object2ObjectArrayMap<>();
     }
 
     public void setProperty(@NonNull String key, @NonNull String value) {
@@ -90,7 +90,7 @@ public abstract class PropertyHolder<T> extends BackendObject<T> implements Seri
     }
 
     public Map<String, Object> getProperties() {
-        return new HashMap<>(this.properties);
+        return Collections.unmodifiableMap(this.properties);
     }
 
     protected void setProperties(@NonNull Map<String, Object> properties) {

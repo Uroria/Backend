@@ -2,6 +2,7 @@ package com.uroria.backend.server;
 
 import com.uroria.backend.helpers.PropertyHolder;
 import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public final class BackendServer extends PropertyHolder<BackendServer> implement
         this.type = type.getId();
         this.status = ServerStatus.EMPTY.getId();
         this.maxPlayerCount = maxPlayerCount;
-        this.onlinePlayers = ObjectUtils.newSet();
+        this.onlinePlayers = new ObjectArraySet<>(maxPlayerCount);
     }
 
     public BackendServer(@NonNull String name, int templateId, @NonNull ServerType type) {

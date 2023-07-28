@@ -3,7 +3,7 @@ package com.uroria.backend.impl.settings;
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.settings.BackendSettings;
 import com.uroria.backend.settings.SettingsManager;
-import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 
@@ -14,7 +14,7 @@ public abstract class AbstractSettingsManager extends AbstractManager implements
 
     public AbstractSettingsManager(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
-        this.settings = ObjectUtils.newSet();
+        this.settings = new ObjectArraySet<>();
     }
 
     abstract protected void checkSettings(BackendSettings settings);

@@ -33,8 +33,4 @@ public class ObjectUtils {
             target.add(obj);
         });
     }
-
-    public <T> Set<T> newSet() {
-        return Collections.synchronizedSet(new HashSet<>());
-    }
 }

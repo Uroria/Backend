@@ -150,7 +150,6 @@ public final class BackendClanManager extends AbstractManager implements ClanMan
             if (this.clans.replaceOne(Filters.eq("name", clan.getName()), newDocument).wasAcknowledged()) {
                 ClanUpdateEvent clanUpdateEvent = new ClanUpdateEvent(clan);
                 this.eventManager.callEventAsync(clanUpdateEvent);
-                return;
             }
         } catch (Exception exception) {
             this.logger.error("Unhandled exception", exception);

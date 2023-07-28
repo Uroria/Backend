@@ -12,7 +12,8 @@ import com.uroria.backend.server.CloudAPI;
 import com.uroria.backend.server.Uroria;
 import com.uroria.backend.server.events.BackendEventManager;
 import com.uroria.backend.server.modules.AbstractManager;
-import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ObjectSets;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
         this.pulsarClient = pulsarClient;
         this.eventManager = BackendRegistry.get(BackendEventManager.class).orElseThrow(() -> new NullPointerException("EventManager not initialized"));
         this.api = api;
-        this.servers = ObjectUtils.newSet();
+        this.servers = ObjectSets.synchronize(new ObjectArraySet<>());
     }
 
     @Override

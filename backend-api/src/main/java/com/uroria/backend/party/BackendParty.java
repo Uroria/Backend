@@ -2,11 +2,12 @@ package com.uroria.backend.party;
 
 import com.uroria.backend.BackendObject;
 import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ public final class BackendParty extends BackendObject<BackendParty> implements S
     private int currentServer;
     public BackendParty(@NonNull UUID operator, int currentServer) {
         this.operator = operator;
-        this.members = ObjectUtils.newSet();
+        this.members = new ObjectArraySet<>();
         this.currentServer = currentServer;
         this.members.add(operator);
     }
@@ -55,7 +56,7 @@ public final class BackendParty extends BackendObject<BackendParty> implements S
     }
 
     public Set<UUID> getMembers() {
-        return new HashSet<>(this.members);
+        return Collections.unmodifiableSet(this.members);
     }
 
     @Override

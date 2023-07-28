@@ -2,6 +2,7 @@ package com.uroria.backend.clan;
 
 import com.uroria.backend.helpers.PropertyHolder;
 import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 
 import java.io.Serial;
@@ -24,8 +25,8 @@ public final class BackendClan extends PropertyHolder<BackendClan> implements Se
         this.name = name;
         this.tag = tag;
         this.operator = operator;
-        this.moderators = ObjectUtils.newSet();
-        this.members = ObjectUtils.newSet();
+        this.moderators = new ObjectArraySet<>();
+        this.members = new ObjectArraySet<>();
         this.foundingDate = foundingDate;
         this.members.add(operator);
     }

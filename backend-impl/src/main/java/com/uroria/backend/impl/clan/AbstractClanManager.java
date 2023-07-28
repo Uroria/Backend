@@ -3,7 +3,7 @@ package com.uroria.backend.impl.clan;
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.clan.BackendClan;
 import com.uroria.backend.clan.ClanManager;
-import com.uroria.backend.utils.ObjectUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
@@ -17,7 +17,7 @@ public abstract class AbstractClanManager extends AbstractManager implements Cla
 
     public AbstractClanManager(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
-        this.clans = ObjectUtils.newSet();
+        this.clans = new ObjectArraySet<>();
     }
 
     abstract protected void checkClan(BackendClan clan);

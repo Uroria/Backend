@@ -22,7 +22,7 @@ public final class BackendSettings extends PropertyHolder<BackendSettings> imple
         this.uuid = uuid;
         this.gameId = gameId;
         this.id = id;
-        this.tag = uuid.toString() + "-" + gameId + "-" + id;
+        this.tag = uuid + "-" + gameId + "-" + id;
         this.displayName = displayName;
     }
 
