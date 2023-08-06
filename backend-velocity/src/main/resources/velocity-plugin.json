@@ -1,5 +1,0 @@
-{
-  "main": "com.uroria.backend.velocity.BackendVelocityPlugin",
-  "id": "backend",
-  "name": "BackendAPI"
-}
