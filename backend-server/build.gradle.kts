@@ -3,17 +3,18 @@ plugins {
 }
 
 application {
-    mainClass.set("com.uroria.backend.server.Uroria")
+    mainClass.set("com.uroria.backend.service.Bootstrap")
 }
 
 val log4jVersion: String by project.extra
 val sentryVersion: String by project.extra
 val mongoDBVersion: String by project.extra
 val lettuceVersion: String by project.extra
+val jlineVersion: String by project.extra
+val terminalConsoleAppenderVersion: String by project.extra
 
 dependencies {
-    implementation(project(":backend-plugin-api"))
-    implementation(project(":backend-api"))
+    implementation(project(":backend-impl"))
 
     implementation("org.apache.logging.log4j:log4j-api:${log4jVersion}")
     implementation("org.apache.logging.log4j:log4j-core:${log4jVersion}")
@@ -26,6 +27,9 @@ dependencies {
     implementation("io.lettuce:lettuce-core:${lettuceVersion}")
 
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    runtimeOnly("org.jline:jline-terminal-jansi:${jlineVersion}")
+    implementation("net.minecrell:terminalconsoleappender:${terminalConsoleAppenderVersion}")
 }
 
 tasks {

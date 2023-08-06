@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" shutdownHook="disable">
     <Appenders>
-        <!-- Console logger for debugging (prints stacktrace) -->
+        <TerminalConsole name="TerminalConsole">
+            <PatternLayout pattern="[%d{yyyy.MM.dd-HH:mm:ss]}[%style{%p}{cyan}][%style{%c{1}}{yellow}] %highlight{%m%n}{FATAL=black, ERROR=red, WARN=yellow, INFO=white, DEBUG=white, TRACE=white}"/>
+        </TerminalConsole>
+
+        <!-- Console logger for debugging (prints stacktrace)
         <Console name="ConsoleDebug" target="SYSTEM_OUT">
-            <PatternLayout
-                    pattern="[%d{yyyy.MM.dd-HH:mm:ss]}[%style{%p}{cyan}][%style{%c{1}}{yellow}] %highlight{%m%n}{FATAL=black, ERROR=red, WARN=yellow, INFO=white, DEBUG=white, TRACE=white}"
-                    disableAnsi="false"/>
+            <PatternLayout pattern="[%d{yyyy.MM.dd-HH:mm:ss]}[%style{%p}{cyan}][%style{%c{1}}{yellow}] %highlight{%m%n}{FATAL=black, ERROR=red, WARN=yellow, INFO=white, DEBUG=white, TRACE=white}"/>
         </Console>
+        -->
 
         <RollingFile name="RollingFile" fileName="logs/Current.log" filePattern="logs/%d{yyyy-MM-dd}.log">
-            <PatternLayout pattern="[%d{HH:mm:ss}][%p][%c{1}] %replace{%m}{\u001B\[(0|[34][0-7])m}{} %n" disableAnsi="true"/>
+            <PatternLayout pattern="[%d{HH:mm:ss}][%p][%c{1}] %replace{%m}{\u001B\[(0|[34][0-7])m}{} %n"/>
             <Policies>
                 <OnStartupTriggeringPolicy/>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
-            <DefaultRolloverStrategy max="20"/>
+            <DefaultRolloverStrategy max="40"/>
         </RollingFile>
 
     </Appenders>
@@ -29,9 +32,9 @@
         <Logger name="io.netty" level="WARN"/>
         <Logger name="com.scurrilous" level="WARN"/>
 
-
         <Root level="TRACE">
-            <AppenderRef ref="ConsoleDebug" />
+            <!-- <AppenderRef ref="ConsoleDebug" /> -->
+            <AppenderRef ref="TerminalConsole" level="INFO"/>
             <AppenderRef ref="RollingFile"/>
         </Root>
     </Loggers>

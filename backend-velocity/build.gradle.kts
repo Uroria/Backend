@@ -9,6 +9,7 @@ dependencies {
     api(project(":backend-impl"))
 
     compileOnly("com.velocitypowered:velocity-api:${velocityVersion}")
+    annotationProcessor("com.velocitypowered:velocity-api:${velocityVersion}")
 
     implementation("io.sentry:sentry:${sentryVersion}")
 }

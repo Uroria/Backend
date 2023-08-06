@@ -1,7 +1,6 @@
 rootProject.name = "backend"
 
 val projects = listOf(
-        "backend-plugin-api",
         "backend-impl",
         "backend-api",
         "backend-server",

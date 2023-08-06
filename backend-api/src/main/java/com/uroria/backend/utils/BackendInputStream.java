@@ -1,7 +1,5 @@
 package com.uroria.backend.utils;
 
-import com.uroria.backend.player.BackendPlayer;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -21,14 +19,6 @@ public final class BackendInputStream extends ObjectInputStream implements AutoC
     public UUID readUUID() throws IOException {
         try {
             return (UUID) readObject();
-        } catch (ClassNotFoundException exception) {
-            return null;
-        }
-    }
-
-    public BackendPlayer readPlayer() throws IOException {
-        try {
-            return (BackendPlayer) readObject();
         } catch (ClassNotFoundException exception) {
             return null;
         }

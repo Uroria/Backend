@@ -12,11 +12,15 @@ public enum ServerStatus {
     ENDING(4),
     CLOSED(5),
     STOPPED(6);
-    private @Getter final int id;
+    private final int id;
+
+    public int getID() {
+        return this.id;
+    }
 
     public static ServerStatus getById(int id) {
         for (ServerStatus serverStatus : values()) {
-            if (serverStatus.getId() == id) return serverStatus;
+            if (serverStatus.getID() == id) return serverStatus;
         }
         return EMPTY;
     }

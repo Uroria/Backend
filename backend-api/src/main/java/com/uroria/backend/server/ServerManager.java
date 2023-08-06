@@ -2,18 +2,20 @@ package com.uroria.backend.server;
 
 import lombok.NonNull;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ServerManager {
 
-    Optional<BackendServer> getServer(int id, int timeout);
+    default Optional<Server> getServer(long identifier) {
+        return getServer(identifier, 3000);
+    }
 
-    Optional<BackendServer> getServer(int id);
+    Optional<Server> getServer(long identifier, int timeout);
 
-    BackendServer updateServer(@NonNull BackendServer server);
+    Server startServer(@NonNull Server server);
 
-    BackendServer startServer(@NonNull BackendServer server);
+    void updateServer(@NonNull Server server);
 
-    Collection<BackendServer> getServers();
+    List<Server> getServers();
 }

@@ -6,13 +6,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ClanManager {
-    Optional<BackendClan> getClan(@NonNull String tag, int timeout);
 
-    Optional<BackendClan> getClan(@NonNull UUID operator, int timeout);
+    default Optional<Clan> getClan(String tag) {
+        return getClan(tag, 3000);
+    }
 
-    Optional<BackendClan> getClan(@NonNull String tag);
+    default Optional<Clan> getClan(UUID operator) {
+        return getClan(operator, 3000);
+    }
 
-    Optional<BackendClan> getClan(@NonNull UUID operator);
+    Optional<Clan> getClan(String tag, int timeout);
 
-    BackendClan updateClan(@NonNull BackendClan clan);
+    Optional<Clan> getClan(UUID operator, int timeout);
+
+    void updateClan(@NonNull Clan clan);
 }

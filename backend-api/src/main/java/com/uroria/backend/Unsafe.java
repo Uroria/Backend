@@ -4,15 +4,15 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Unsafe {
-    private BackendAPI api;
+    private Backend instance;
 
-    public static void setAPI(BackendAPI newApi) {
-        if (api != null) return;
-        api = newApi;
+    @Deprecated
+    public void setInstance(Backend instance) {
+        Unsafe.instance = instance;
     }
 
-    public BackendAPI getAPI() {
-        if (api == null) throw new IllegalStateException("API not initialized yet");
-        return api;
+    public Backend getInstance() {
+        if (instance == null) throw new IllegalStateException("Backend not initialized!");
+        return instance;
     }
 }
