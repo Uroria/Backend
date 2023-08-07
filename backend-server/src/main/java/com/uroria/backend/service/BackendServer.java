@@ -48,7 +48,7 @@ public final class BackendServer {
         this.redisConnection = this.redisClient.connect();
 
         logger.info("Initializing backend...");
-        this.backend = new BackendImpl(this.pulsarClient, database, redisConnection);
+        this.backend = new BackendImpl(this.pulsarClient, this, database, redisConnection);
     }
 
     public void start() {
@@ -75,6 +75,7 @@ public final class BackendServer {
     public void shutdown() {
         if (!this.running) return;
         this.running = false;
+        this.backend.getRootManager().shutdownAll();
         logger.info("Shutting down...");
         try {
             this.backend.shutdown();

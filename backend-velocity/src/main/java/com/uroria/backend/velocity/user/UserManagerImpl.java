@@ -20,7 +20,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class UserManagerImpl extends AbstractUserManager implements UserManager {
-
     private final ProxyServer proxyServer;
     private UserUUIDRequestChannel uuidRequest;
     private UserNameRequestChannel nameRequest;

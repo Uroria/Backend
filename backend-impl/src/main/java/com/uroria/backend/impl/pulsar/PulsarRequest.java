@@ -66,6 +66,8 @@ public abstract class PulsarRequest<O, K> {
                     this.consumer.acknowledge(message);
                     if (input.readBoolean()) obj = (O) input.readObject();
                     break;
+                } catch (Exception exception) {
+                    throw new RuntimeException("Cannot receive message", exception);
                 }
             }
             return Optional.ofNullable(obj);

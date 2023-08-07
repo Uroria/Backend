@@ -22,29 +22,30 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
     @Serial private static final long serialVersionUID = 1;
 
     private final UUID uuid;
-    private final Object2BooleanMap<String> permission;
+    private final Object2BooleanMap<String> permissions;
     @TransientField private Object2BooleanMap<String> tempPermissions;
     private final List<String> groups;
 
     public PermHolder(@NonNull UUID uuid) {
         this.uuid = uuid;
-        this.permission = new Object2BooleanArrayMap<>();
+        this.permissions = new Object2BooleanArrayMap<>();
         this.tempPermissions = new Object2BooleanArrayMap<>();
         this.groups = new ObjectArrayList<>();
     }
 
     public boolean hasPermission(@Nullable String node) {
         if (node == null) return false;
-        return PermCalculator.hasPermission(node, this.permission) || PermCalculator.hasPermission(node, this.tempPermissions);
+        if (this.tempPermissions != null) return PermCalculator.hasPermission(node, this.permissions) || PermCalculator.hasPermission(node, this.tempPermissions);
+        return PermCalculator.hasPermission(node, this.permissions);
     }
 
     public void setPermission(@NonNull String node, boolean value) {
-        this.permission.put(node, value);
+        this.permissions.put(node, value);
     }
 
     public void unsetPermission(String node) {
         if (node == null) return;
-        this.permission.remove(node);
+        this.permissions.remove(node);
     }
 
     public void setTempPermission(@NonNull String node, boolean value) {
@@ -86,7 +87,7 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
     }
 
     public Map<String, Boolean> getPermissions() {
-        return Collections.unmodifiableMap(this.permission);
+        return Collections.unmodifiableMap(this.permissions);
     }
 
     public Map<String, Boolean> getTempPermissions() {
@@ -100,7 +101,7 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
     @Override
     public void modify(PermHolder holder) {
         this.deleted = holder.deleted;
-        ObjectUtils.overrideMap(this.permission, holder.permission);
+        ObjectUtils.overrideMap(this.permissions, holder.permissions);
         ObjectUtils.overrideCollection(this.groups, holder.groups);
         if (this.tempPermissions == null) this.tempPermissions = new Object2BooleanArrayMap<>();
         ObjectUtils.overrideMap(this.tempPermissions, holder.tempPermissions);

@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 
 import java.io.IOException;
+import java.util.Map;
 
 public final class Object2BooleanMapTypeAdapterFactory implements TypeAdapterFactory {
 
@@ -34,7 +35,7 @@ public final class Object2BooleanMapTypeAdapterFactory implements TypeAdapterFac
 
         @Override
         public Object2BooleanMap<K> read(JsonReader in) throws IOException {
-            return new Object2BooleanArrayMap<>(delegate.read(in));
+            return new Object2BooleanArrayMap<>((Map<? extends K, Boolean>) delegate.read(in));
         }
     }
 }

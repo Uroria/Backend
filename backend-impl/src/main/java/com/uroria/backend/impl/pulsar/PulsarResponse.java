@@ -58,8 +58,8 @@ public abstract class PulsarResponse<O, K> extends Thread {
                 CompletableFuture.runAsync(() -> {
                     try (BackendInputStream input = new BackendInputStream(message.getData())) {
                         K key = (K) input.readObject();
-                        O obj = response(key);
                         input.close();
+                        O obj = response(key);
                         BackendOutputStream output = new BackendOutputStream();
                         output.writeObject(key);
                         if (obj == null) output.writeBoolean(false);

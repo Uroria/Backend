@@ -5,6 +5,7 @@ import com.uroria.backend.Unsafe;
 import com.uroria.backend.bukkit.clan.ClanManagerImpl;
 import com.uroria.backend.bukkit.friend.FriendManagerImpl;
 import com.uroria.backend.bukkit.permission.PermManagerImpl;
+import com.uroria.backend.bukkit.punishment.PunishmentManagerImpl;
 import com.uroria.backend.bukkit.server.ServerManagerImpl;
 import com.uroria.backend.bukkit.stat.StatsManagerImpl;
 import com.uroria.backend.bukkit.twitch.TwitchManagerImpl;
@@ -30,6 +31,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     private final ClanManagerImpl clanManager;
     private final FriendManagerImpl friendManager;
     private final StatsManagerImpl statsManager;
+    private final PunishmentManagerImpl punishmentManager;
 
     private BackendRequestChannel request;
     private StopUpdateChannel stopAll;
@@ -47,6 +49,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.friendManager = new FriendManagerImpl(getPulsarClient(), logger);
         this.clanManager = new ClanManagerImpl(getPulsarClient(), logger);
         this.statsManager = new StatsManagerImpl(getPulsarClient(), logger);
+        this.punishmentManager = new PunishmentManagerImpl(getPulsarClient(), logger);
     }
 
     @Override
@@ -68,6 +71,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.friendManager.start(identifier);
         this.clanManager.start(identifier);
         this.statsManager.start(identifier);
+        this.punishmentManager.start(identifier);
     }
 
     @Override
@@ -81,6 +85,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.friendManager.shutdown();
         this.clanManager.shutdown();
         this.statsManager.shutdown();
+        this.punishmentManager.shutdown();
         if (this.request != null) this.request.close();
         if (this.stopAll != null) this.stopAll.close();
         super.shutdown();
@@ -127,8 +132,8 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     }
 
     @Override
-    public PunishmentManager getPunishmentManager() {
-        return null;
+    public PunishmentManagerImpl getPunishmentManager() {
+        return this.punishmentManager;
     }
 
     @Override

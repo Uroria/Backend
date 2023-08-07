@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 import java.io.IOException;
+import java.util.Map;
 
 public final class Object2IntMapTypeAdapterFactory implements TypeAdapterFactory {
 
@@ -34,7 +35,7 @@ public final class Object2IntMapTypeAdapterFactory implements TypeAdapterFactory
 
         @Override
         public Object2IntMap<K> read(JsonReader in) throws IOException {
-            return new Object2IntArrayMap<>(delegate.read(in));
+            return new Object2IntArrayMap<>((Map<? extends K, Integer>) delegate.read(in));
         }
     }
 }

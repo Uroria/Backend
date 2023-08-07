@@ -62,4 +62,9 @@ public final class Punished extends BackendObject<Punished> implements Serializa
     public void update() {
 
     }
+
+    @Override
+    public String toString() {
+        return "Punished{uuid="+this.uuid+"}";
+    }
 }

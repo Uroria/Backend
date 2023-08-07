@@ -9,11 +9,14 @@ import com.uroria.backend.punishment.PunishmentManager;
 import com.uroria.backend.server.ServerManager;
 import com.uroria.backend.service.modules.clan.BackendClanManager;
 import com.uroria.backend.service.modules.permission.BackendPermManager;
+import com.uroria.backend.service.modules.punishment.BackendPunishmentManager;
+import com.uroria.backend.service.modules.root.BackendRootManager;
 import com.uroria.backend.service.modules.server.BackendServerManager;
 import com.uroria.backend.service.modules.user.BackendUserManager;
 import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.twitch.TwitchManager;
 import io.lettuce.core.api.StatefulRedisConnection;
+import lombok.Getter;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.slf4j.Logger;
@@ -21,19 +24,25 @@ import org.slf4j.Logger;
 public final class BackendImpl extends AbstractBackend {
     private static final Logger logger = BackendServer.getLogger();
 
+    private final BackendServer server;
     private final BackendUserManager userManager;
     private final BackendPermManager permManager;
     private final BackendClanManager clanManager;
     private final BackendServerManager serverManager;
+    private final BackendPunishmentManager punishmentManager;
+    private @Getter final BackendRootManager rootManager;
 
     @SuppressWarnings("deprecation")
-    public BackendImpl(PulsarClient pulsarClient, MongoDatabase database, StatefulRedisConnection<String, String> redis) {
+    public BackendImpl(PulsarClient pulsarClient, BackendServer server, MongoDatabase database, StatefulRedisConnection<String, String> redis) {
         super(pulsarClient);
+        this.server = server;
         Unsafe.setInstance(this);
         this.userManager = new BackendUserManager(getPulsarClient(), database, redis);
         this.permManager = new BackendPermManager(getPulsarClient(), database, redis);
         this.clanManager = new BackendClanManager(getPulsarClient(), database, redis);
         this.serverManager = new BackendServerManager(getPulsarClient());
+        this.punishmentManager = new BackendPunishmentManager(getPulsarClient(), database, redis);
+        this.rootManager = new BackendRootManager(getPulsarClient(), this.server);
     }
 
     @Override
@@ -42,6 +51,8 @@ public final class BackendImpl extends AbstractBackend {
         this.permManager.start();
         this.clanManager.start();
         this.serverManager.start();
+        this.punishmentManager.start();
+        this.rootManager.start();
     }
 
     @Override
@@ -50,12 +61,14 @@ public final class BackendImpl extends AbstractBackend {
         this.permManager.shutdown();
         this.clanManager.shutdown();
         this.serverManager.shutdown();
+        this.punishmentManager.shutdown();
+        this.rootManager.shutdown();
         super.shutdown();
     }
 
     @Override
     public void stopEverything() {
-
+        this.rootManager.shutdownAll();
     }
 
     @Override
@@ -84,8 +97,8 @@ public final class BackendImpl extends AbstractBackend {
     }
 
     @Override
-    public ClanManager getClanManager() {
-        return null;
+    public BackendClanManager getClanManager() {
+        return this.clanManager;
     }
 
     @Override
@@ -94,12 +107,12 @@ public final class BackendImpl extends AbstractBackend {
     }
 
     @Override
-    public ServerManager getServerManager() {
+    public BackendServerManager getServerManager() {
         return this.serverManager;
     }
 
     @Override
-    public PunishmentManager getPunishmentManager() {
-        return null;
+    public BackendPunishmentManager getPunishmentManager() {
+        return this.punishmentManager;
     }
 }

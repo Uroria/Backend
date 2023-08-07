@@ -35,7 +35,7 @@ public final class Object2ObjectMapTypeAdapterFactory implements TypeAdapterFact
 
         @Override
         public Object2ObjectMap<K, V> read(JsonReader in) throws IOException {
-            return new Object2ObjectArrayMap<>(delegate.read(in));
+            return new Object2ObjectArrayMap<>((Map<? extends K, ? extends V>) delegate.read(in));
         }
     }
 }

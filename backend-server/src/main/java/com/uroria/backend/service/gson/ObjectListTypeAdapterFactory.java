@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 
 import java.io.IOException;
+import java.util.List;
 
 public final class ObjectListTypeAdapterFactory implements TypeAdapterFactory {
 
@@ -34,7 +35,7 @@ public final class ObjectListTypeAdapterFactory implements TypeAdapterFactory {
 
         @Override
         public ObjectList<K> read(JsonReader in) throws IOException {
-            return new ObjectArrayList<>(delegate.read(in));
+            return new ObjectArrayList<>((List<K>) delegate.read(in));
         }
     }
 }

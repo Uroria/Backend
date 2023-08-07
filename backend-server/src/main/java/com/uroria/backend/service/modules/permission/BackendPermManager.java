@@ -124,7 +124,7 @@ public final class BackendPermManager extends AbstractManager implements PermMan
 
     void updateDatabase(@NonNull PermHolder holder) {
         try {
-            this.cache.del("perm_holder:" + holder.getUUID());
+            this.cache.del("permholder:" + holder.getUUID());
             if (holder.isDeleted()) {
                 if (this.holders.deleteOne(Filters.eq("uuid", holder.getUUID().toString())).wasAcknowledged()) {
                     logger.debug("Deleted " + holder);
@@ -148,12 +148,12 @@ public final class BackendPermManager extends AbstractManager implements PermMan
 
     private PermHolder fromJson(String json) {
         PermHolder holder = gson.fromJson(json, PermHolder.class);
-        this.cache.set("perm_holder:" + holder.getUUID(), json, lifespan(Duration.ofHours(8)));
+        this.cache.set("permholder:" + holder.getUUID(), json, lifespan(Duration.ofHours(8)));
         return holder;
     }
 
     private PermHolder getCachedHolder(UUID uuid) {
-        String cachedObject = this.cache.get("perm_holder:" + uuid);
+        String cachedObject = this.cache.get("permholder:" + uuid);
         if (cachedObject == null) return null;
         return gson.fromJson(cachedObject, PermHolder.class);
     }

@@ -10,6 +10,7 @@ import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.velocity.clan.ClanManagerImpl;
 import com.uroria.backend.velocity.friend.FriendManagerImpl;
 import com.uroria.backend.velocity.permission.PermManagerImpl;
+import com.uroria.backend.velocity.punishment.PunishmentManagerImpl;
 import com.uroria.backend.velocity.server.ServerManagerImpl;
 import com.uroria.backend.velocity.twitch.TwitchManagerImpl;
 import com.uroria.backend.velocity.user.UserManagerImpl;
@@ -30,6 +31,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     private final ServerManagerImpl serverManager;
     private final ClanManagerImpl clanManager;
     private final FriendManagerImpl friendManager;
+    private final PunishmentManagerImpl punishmentManager;
 
     private BackendRequestChannel request;
     private StopUpdateChannel stopAll;
@@ -47,6 +49,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.serverManager = new ServerManagerImpl(getPulsarClient(), logger, proxyServer);
         this.friendManager = new FriendManagerImpl(getPulsarClient(), logger, proxyServer);
         this.clanManager = new ClanManagerImpl(getPulsarClient(), logger, proxyServer);
+        this.punishmentManager = new PunishmentManagerImpl(getPulsarClient(), logger, proxyServer);
     }
 
     @Override
@@ -67,6 +70,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.serverManager.start(identifier);
         this.friendManager.start(identifier);
         this.clanManager.start(identifier);
+        this.punishmentManager.start(identifier);
     }
 
     @Override
@@ -79,6 +83,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.serverManager.shutdown();
         this.friendManager.shutdown();
         this.clanManager.shutdown();
+        this.punishmentManager.shutdown();
         if (this.request != null) this.request.close();
         if (this.stopAll != null) this.stopAll.close();
         super.shutdown();
@@ -125,8 +130,8 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     }
 
     @Override
-    public PunishmentManager getPunishmentManager() {
-        return null;
+    public PunishmentManagerImpl getPunishmentManager() {
+        return this.punishmentManager;
     }
 
     @Override
