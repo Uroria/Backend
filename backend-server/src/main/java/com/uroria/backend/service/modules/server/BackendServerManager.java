@@ -65,7 +65,12 @@ public final class BackendServerManager extends AbstractManager implements Serve
             Unsafe.setServerID(server, id);
             server.setStatus(ServerStatus.STARTING);
             updateServer(server);
-            InetSocketAddress address = null; //this.cloudAPI.getAddress(id, 1000000);
+            InetSocketAddress address = this.cloudAPI.getAddress(id, 600000);
+            if (address == null) {
+                server.setStatus(ServerStatus.STOPPED);
+                updateServer(server);
+                return null;
+            }
             server.setProperty("address", address);
             updateServer(server);
             this.logger.info("Starting server " + server.getDisplayName() + " on " + address.getHostName() + ":" + address.getPort());
