@@ -65,4 +65,12 @@ public final class Punishment extends BackendObject<Punishment> implements Seria
     public void update() {
 
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Punishment punishment) {
+            return punishment.endDate == this.endDate && punishment.type == this.type;
+        }
+        return false;
+    }
 }

@@ -65,6 +65,17 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
         this.groups.add(group.getName());
     }
 
+    public void removeGroup(PermGroup group) {
+        if (group == null) return;
+        if (this.groups.stream().noneMatch(name -> group.getName().equals(name))) return;
+        this.groups.remove(group.getName());
+    }
+
+    public void removeGroup(String groupName) {
+        if (groupName == null) return;
+        this.groups.remove(groupName.toLowerCase());
+    }
+
     public List<String> getGroupNames() {
         return Collections.unmodifiableList(this.groups);
     }

@@ -33,6 +33,15 @@ public final class Punished extends BackendObject<Punished> implements Serializa
         this.punishments.add(punishment);
     }
 
+    public void unpunish(Punishment punishment) {
+        if (punishment == null) return;
+        this.punishments.remove(punishment);
+    }
+
+    public Optional<Punishment> getCurrentPunishment() {
+        return this.punishments.stream().findAny();
+    }
+
     public List<Punishment> getPunishments() {
         return Collections.unmodifiableList(this.punishments);
     }
