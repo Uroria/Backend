@@ -13,19 +13,22 @@ import okhttp3.ResponseBody;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public final class CloudAPI {
     private static final Logger logger = LoggerFactory.getLogger("Cloud");
+    private static final JsonParser parser = new JsonParser();
 
     private final UUID uuid;
     private final String token;
     private final OkHttpClient client;
-    private final Int2ObjectArrayMap<String> objects;
+    private final Int2ObjectArrayMap<JsonObject> responses;
     private final WebSocket socket;
 
     public CloudAPI(String stringUUID, String token) {
@@ -37,11 +40,8 @@ public final class CloudAPI {
         }
         this.uuid = uuid;
         this.token = token;
-        this.objects = new Int2ObjectArrayMap<>();
+        this.responses = new Int2ObjectArrayMap<>();
         this.client = new OkHttpClient();
-
-        this.socket = null;
-        if (true) return;
 
         Request request = new Request.Builder()
                 .addHeader("Authorization", "Bearer " + token)
@@ -51,26 +51,47 @@ public final class CloudAPI {
         WebSocketListener listener = new WebSocketListener() {
             @Override
             public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                logger.debug("Closing websocket connection to reaper gateway. Code: "  + code);
+                logger.info("Closing websocket connection to reaper gateway. Code: "  + code);
             }
 
             @Override
-            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                logger.debug("Received message: " + text);
+            public void onMessage(@NotNull WebSocket webSocket, @NotNull String json) {
+                JsonObject object = parser.parse(json).getAsJsonObject();
+                JsonElement eventElement = object.get("event");
+                if (eventElement == null) return;
+                String eventString = eventElement.getAsString();
+                if (eventString.equals("SERVER_STARTED")) {
+                    JsonElement idElement = object.get("server_id");
+                    if (idElement == null) {
+                        logger.warn("Somehow the server has no id?! " + json);
+                        return;
+                    }
+                    int id = idElement.getAsInt();
+                    logger.info("Server " + id + " started. " + json);
+                    responses.put(id, object);
+                }
+                if (eventString.equals("SERVER_STOPPED")) {
+                    JsonElement idElement = object.get("server_id");
+                    if (idElement == null) {
+                        logger.warn("Somehow the server has no id?! " + json);
+                        return;
+                    }
+                    int id = idElement.getAsInt();
+                    logger.info("Server " + id + " stopped. " + json);
+                    responses.remove(id);
+                }
             }
 
             @Override
             public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-                logger.debug("Opened websocket connection to reaper gateway");
-                logger.debug(response.message());
-                response.headers().forEach(header -> logger.debug(header.component1() + " " + header.component2()));
+                logger.info("Opened websocket connection to reaper gateway");
             }
         };
 
         this.socket = client.newWebSocket(request, listener);
     }
 
-    public int startServer(int templateId) {
+    public int startServer(int templateId) throws RuntimeException {
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("template_id", String.valueOf(templateId))
@@ -88,16 +109,42 @@ public final class CloudAPI {
             ResponseBody responseBody = response.body();
             if (responseBody == null) throw new RuntimeException("Body empty");
             String string = responseBody.string();
-            logger.debug(string);
-            JsonObject object = new JsonParser().parse(string).getAsJsonObject();
+            logger.info("Server start response of " + templateId + ". " + string);
+            JsonObject object = parser.parse(string).getAsJsonObject();
             JsonElement status = object.get("status");
             if (status == null) throw new RuntimeException("Received status is not available");
             int asInt = status.getAsInt();
             if (asInt == 404) throw new IllegalArgumentException("TemplateId doesn't exist");
             return object.get("sid").getAsInt();
-        } catch (IOException exception) {
-            throw new RuntimeException(exception);
+        } catch (Exception exception) {
+            throw new RuntimeException("Something went wrong while trying to create a server!", exception);
         }
+    }
+
+    public @Nullable InetSocketAddress getAddress(int id, int timeout) {
+        InetSocketAddress address = null;
+        long start = System.currentTimeMillis();
+        while (address == null) {
+            if ((System.currentTimeMillis() - start) > timeout) break;
+            JsonObject object = this.responses.get(id);
+            if (object == null) continue;
+            JsonElement hostnameElement = object.get("hostname");
+            if (hostnameElement == null) {
+                logger.error("Cannot parse hostname element of " + object);
+                break;
+            }
+            String hostname = hostnameElement.getAsString();
+
+            JsonElement portElement = object.get("port");
+            if (portElement == null) {
+                logger.error("Cannot parse port element of " + object);
+                break;
+            }
+            int port = portElement.getAsInt();
+
+            address = new InetSocketAddress(hostname, port);
+        }
+        return address;
     }
 
     public void close() {

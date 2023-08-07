@@ -41,6 +41,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
 
     @Override
     protected void disable() throws PulsarClientException {
+        this.cloudAPI.close();
         if (this.update != null) this.update.close();
         if (this.start != null) this.start.close();
         if (this.response != null) this.response.close();
