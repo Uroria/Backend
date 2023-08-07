@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -115,6 +116,28 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
             logger.info("Updated " + server);
 
             BukkitUtils.callAsyncEvent(new ServerUpdateEvent(cachedServer));
+
+            switch (cachedServer.getStatus()) {
+                case CLOSED, STOPPED -> {
+                    if (this.thisServer == null) return;
+                    if (localServerId != -1) {
+                        try {
+                            if (cachedServer.equals(this.thisServer)) {
+                                this.logger.info("Shutting down by remote update.");
+                                Bukkit.shutdown();
+
+                                cachedServer.setStatus(ServerStatus.STOPPED);
+                                cachedServer.update();
+                                this.thisServer = null;
+                            }
+                        } catch (Exception exception) {
+                            logger.error("Cannot specify server! Shutting down!", exception);
+                            Bukkit.shutdown();
+                        }
+                    }
+                    return;
+                }
+            }
             return;
         }
 

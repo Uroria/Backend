@@ -13,7 +13,6 @@ import com.uroria.backend.impl.AbstractBackend;
 import com.uroria.backend.impl.root.BackendRequestChannel;
 import com.uroria.backend.impl.root.StopUpdateChannel;
 import com.uroria.backend.punishment.PunishmentManager;
-import com.uroria.backend.stats.StatsManager;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;

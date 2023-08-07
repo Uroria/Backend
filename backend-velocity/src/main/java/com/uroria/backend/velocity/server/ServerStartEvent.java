@@ -2,9 +2,9 @@ package com.uroria.backend.velocity.server;
 
 import com.uroria.backend.server.Server;
 
-public final class ServerUpdateEvent extends ServerEvent {
+public final class ServerStartEvent extends ServerEvent {
 
-    public ServerUpdateEvent(Server server) {
+    public ServerStartEvent(Server server) {
         super(server);
     }
 }

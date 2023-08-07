@@ -6,14 +6,11 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public final class ServerUpdateEvent extends Event {
+public final class ServerUpdateEvent extends ServerEvent {
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
-    private @Getter final Server server;
-
     public ServerUpdateEvent(Server server) {
-        super(true);
-        this.server = server;
+        super(server);
     }
 
     public static HandlerList getHandlerList() {
