@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public final class Server extends PropertyObject<Server> implements Serializable
     private final ObjectList<UUID> onlinePlayers;
     private int status;
     private int id;
+    private InetSocketAddress address;
 
     public Server(@NonNull String name, int templateId, @NonNull ServerType type, int maxPlayerCount) {
         synchronized (this) {
@@ -46,6 +48,14 @@ public final class Server extends PropertyObject<Server> implements Serializable
 
     public Server(@NonNull String name, int templateId, @NonNull ServerType type) {
         this(name, templateId, type, 100);
+    }
+
+    public void setAddress(@NonNull InetSocketAddress address) {
+        this.address = address;
+    }
+
+    public @Nullable InetSocketAddress getAddress() {
+        return this.address;
     }
 
     void setID(int id) {
