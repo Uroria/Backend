@@ -60,7 +60,11 @@ public final class BackendImpl extends AbstractBackend implements Backend {
 
         this.request = new BackendRequestChannel(getPulsarClient(), identifier);
 
-        if (!isOnline()) return;
+        if (!isOnline()) {
+            logger.warn("Backend not online! Shutting down.");
+            Bukkit.shutdown();
+            return;
+        }
 
         this.stopAll = new StopUpdateChannel(getPulsarClient(), identifier, this::stop);
 

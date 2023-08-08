@@ -129,10 +129,9 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
                             if (cachedServer.equals(this.server)) {
                                 this.logger.info("Shutting down by remote update.");
                                 Bukkit.shutdown();
-
+                                this.server = null;
                                 cachedServer.setStatus(ServerStatus.STOPPED);
                                 cachedServer.update();
-                                this.server = null;
                             }
                         } catch (Exception exception) {
                             logger.error("Cannot specify server! Shutting down!", exception);
