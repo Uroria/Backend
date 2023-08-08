@@ -10,7 +10,7 @@ public final class ServerResponse extends PulsarResponse<Server, Long> {
     private final BackendServerManager serverManager;
 
     public ServerResponse(@NonNull PulsarClient pulsarClient, BackendServerManager serverManager) throws PulsarClientException {
-        super(pulsarClient, "server:request", "server:response", serverManager.getModuleName());
+        super(pulsarClient, "server:request:identifier", "server:response:identifier", serverManager.getModuleName());
         this.serverManager = serverManager;
     }
 

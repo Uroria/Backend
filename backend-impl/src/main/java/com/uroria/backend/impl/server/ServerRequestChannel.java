@@ -9,6 +9,6 @@ import org.apache.pulsar.client.api.PulsarClientException;
 public final class ServerRequestChannel extends PulsarRequest<Server, Long> {
 
     public ServerRequestChannel(@NonNull PulsarClient pulsarClient, @NonNull String name) throws PulsarClientException {
-        super(pulsarClient, "server:request", "server:response", name, 4000);
+        super(pulsarClient, "server:request:identifier", "server:response:identifier", name, 4000);
     }
 }

@@ -3,6 +3,7 @@ package com.uroria.backend.service.modules.server;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.uroria.backend.utils.ThreadUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.UUID;
 
 public final class CloudAPI {
@@ -28,7 +30,7 @@ public final class CloudAPI {
     private final UUID uuid;
     private final String token;
     private final OkHttpClient client;
-    private final Int2ObjectArrayMap<JsonObject> responses;
+    private final Int2ObjectArrayMap<InetSocketAddress> responses;
     private final WebSocket socket;
 
     public CloudAPI(String stringUUID, String token) {
@@ -56,6 +58,7 @@ public final class CloudAPI {
 
             @Override
             public void onMessage(@NotNull WebSocket webSocket, @NotNull String json) {
+                logger.debug(json);
                 JsonObject object = parser.parse(json).getAsJsonObject();
                 JsonElement eventElement = object.get("event");
                 if (eventElement == null) return;
@@ -68,7 +71,25 @@ public final class CloudAPI {
                     }
                     int id = idElement.getAsInt();
                     logger.info("Server " + id + " started. " + json);
-                    responses.put(id, object);
+
+                    JsonElement hostElement = object.get("hostname");
+                    if (hostElement == null) {
+                        logger.warn("Hostname element is not present for " + id);
+                        return;
+                    }
+                    String hostname = hostElement.getAsString();
+
+                    JsonElement portElement = object.get("port");
+                    if (portElement == null) {
+                        logger.warn("Port element is not present for " + id);
+                        return;
+                    }
+                    int port = portElement.getAsInt();
+
+                    logger.info("Server " + id + " started on " + hostname + ":" + port);
+
+                    responses.put(id, new InetSocketAddress(hostname, port));
+                    return;
                 }
                 if (eventString.equals("SERVER_STOPPED")) {
                     JsonElement idElement = object.get("server_id");
@@ -122,32 +143,25 @@ public final class CloudAPI {
     }
 
     public @Nullable InetSocketAddress getAddress(int id, int timeout) {
-        InetSocketAddress address = null;
         long start = System.currentTimeMillis();
-        while (address == null) {
-            if ((System.currentTimeMillis() - start) > timeout) break;
-            JsonObject object = this.responses.get(id);
-            if (object == null) continue;
-            JsonElement hostnameElement = object.get("hostname");
-            if (hostnameElement == null) {
-                logger.error("Cannot parse hostname element of " + object);
-                break;
+        try {
+            while (true) {
+                if ((System.currentTimeMillis() - start) > timeout) break;
+                InetSocketAddress address = this.responses.get(id);
+                if (address == null) {
+                    ThreadUtils.sleep(500);
+                    continue;
+                }
+                return address;
             }
-            String hostname = hostnameElement.getAsString();
-
-            JsonElement portElement = object.get("port");
-            if (portElement == null) {
-                logger.error("Cannot parse port element of " + object);
-                break;
-            }
-            int port = portElement.getAsInt();
-
-            address = new InetSocketAddress(hostname, port);
+        } catch (Exception exception) {
+            logger.error("Cannot read address", exception);
+            return null;
         }
-        return address;
+        return null;
     }
 
     public void close() {
-        this.socket.close(200, "Closing connection");
+        this.socket.close(1000, "Closing connection");
     }
 }

@@ -65,7 +65,7 @@ public abstract class AbstractManager {
         try {
             this.disable();
         } catch (Exception exception) {
-            this.logger.error("Shutting down " + moduleName + "...");
+            this.logger.error("Cannot shutdown " + moduleName, exception);
         }
     }
 

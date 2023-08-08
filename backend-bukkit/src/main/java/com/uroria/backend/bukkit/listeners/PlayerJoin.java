@@ -16,7 +16,7 @@ public record PlayerJoin(BackendImpl backend, Logger logger) implements Listener
     public void onPlayerJoinEvent(PlayerJoinEvent joinEvent) {
         CompletableFuture.runAsync(() -> {
             try {
-                Server server = backend.getServerManager().getThisServer();
+                Server server = backend.getServerManager().getServer();
                 if (server == null) return;
                 server.addPlayer(joinEvent.getPlayer().getUniqueId());
                 server.update();

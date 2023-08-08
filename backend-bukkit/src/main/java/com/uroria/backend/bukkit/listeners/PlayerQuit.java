@@ -16,7 +16,7 @@ public record PlayerQuit(BackendImpl backend, Logger logger) implements Listener
     public void onPlayerQuitEvent(PlayerQuitEvent quitEvent) {
         CompletableFuture.runAsync(() -> {
             try {
-                Server server = backend.getServerManager().getThisServer();
+                Server server = backend.getServerManager().getServer();
                 if (server == null) return;
                 server.addPlayer(quitEvent.getPlayer().getUniqueId());
                 server.update();

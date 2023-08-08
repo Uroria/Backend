@@ -5,6 +5,7 @@ import com.uroria.backend.property.PropertyObject;
 import com.uroria.backend.utils.ObjectUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
+import lombok.Getter;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +21,7 @@ public final class Server extends PropertyObject<Server> implements Serializable
     @Serial private static final long serialVersionUID = 1;
 
     private final long identifier;
+    @Getter
     private final String name;
     private final ObjectList<String> groups;
     private final int templateId;
@@ -126,10 +128,6 @@ public final class Server extends PropertyObject<Server> implements Serializable
         return server;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
     public String getDisplayName() {
         return this.name + "-" + this.templateId + "=[" + this.identifier + "~" + this.id + "]";
     }
@@ -160,6 +158,7 @@ public final class Server extends PropertyObject<Server> implements Serializable
     public void modify(Server server) {
         this.id = server.id;
         this.status = server.status;
+        this.address = server.address;
         ObjectUtils.overrideMap(this.properties, server.properties);
         ObjectUtils.overrideCollection(this.onlinePlayers, server.onlinePlayers);
     }

@@ -11,7 +11,13 @@ public interface ServerManager {
         return getServer(identifier, 3000);
     }
 
+    default Optional<Server> getCloudServer(int id) {
+        return getCloudServer(id, 3000);
+    }
+
     Optional<Server> getServer(long identifier, int timeout);
+
+    Optional<Server> getCloudServer(int id, int timeout);
 
     Server startServer(@NonNull Server server);
 

@@ -6,6 +6,7 @@ import com.uroria.backend.bukkit.utils.BukkitUtils;
 import com.uroria.backend.impl.server.AbstractServerManager;
 import com.uroria.backend.impl.server.AllServersRequestChannel;
 import com.uroria.backend.impl.server.KeepAlive;
+import com.uroria.backend.impl.server.ServerIDRequestChannel;
 import com.uroria.backend.impl.server.ServerRequestChannel;
 import com.uroria.backend.impl.server.ServerStartChannel;
 import com.uroria.backend.impl.server.ServerUpdateChannel;
@@ -15,6 +16,7 @@ import com.uroria.backend.server.ServerStatus;
 import com.uroria.backend.server.ServerType;
 import com.uroria.backend.utils.ThreadUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.Getter;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -23,18 +25,18 @@ import org.slf4j.Logger;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
 public final class ServerManagerImpl extends AbstractServerManager implements ServerManager {
     private final int localServerId;
     private ServerRequestChannel request;
+    private ServerIDRequestChannel idRequest;
     private ServerUpdateChannel update;
     private AllServersRequestChannel requestAll;
     private ServerStartChannel start;
     private KeepAlive keepAlive;
-    private Server thisServer;
+    @Getter private Server server;
 
     public ServerManagerImpl(PulsarClient pulsarClient, Logger logger) {
         super(pulsarClient, logger);
@@ -54,45 +56,44 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
     @Override
     public void start(String identifier) throws PulsarClientException {
         this.request = new ServerRequestChannel(this.pulsarClient, identifier);
+        this.idRequest = new ServerIDRequestChannel(this.pulsarClient, identifier);
         this.update = new ServerUpdateChannel(this.pulsarClient, identifier, this::checkServer);
         this.requestAll = new AllServersRequestChannel(this.pulsarClient, identifier);
         this.start = new ServerStartChannel(this.pulsarClient, identifier);
 
         if (this.localServerId == -1) return;
         if (this.localServerId == -2) {
-            this.thisServer = new Server("Offline", -1, ServerType.OTHER);
-            this.thisServer.setStatus(ServerStatus.READY);
+            this.server = new Server("Offline", -1, ServerType.OTHER);
+            this.server.setStatus(ServerStatus.READY);
             return;
         }
-        this.thisServer = getServer(this.localServerId, 5000).orElse(null);
-        if (this.thisServer == null) {
+        this.server = getCloudServer(this.localServerId, 5000).orElse(null);
+        if (this.server == null) {
             logger.error("Cannot find server that fits for local id " + this.localServerId);
             ThreadUtils.sleep(5000);
             Bukkit.shutdown();
             return;
         }
 
+        server.setStatus(ServerStatus.READY);
+
         try {
             ServerConfiguration.getProperties().forEach((key, value) -> {
-                thisServer.setProperty(key, (Serializable) value);
+                server.setProperty(key, (Serializable) value);
             });
-            thisServer.update();
+            server.update();
 
             this.keepAlive = new KeepAlive(this.pulsarClient, identifier, this.localServerId);
-            this.keepAlive.start();
         } catch (Exception exception) {
             this.logger.error("Cannot update this server ", exception);
             Bukkit.shutdown();
         }
     }
 
-    public Server getThisServer() {
-        return this.thisServer;
-    }
-
     @Override
     public void shutdown() throws PulsarClientException {
         if (this.request != null) this.request.close();
+        if (this.idRequest != null) this.idRequest.close();
         if (this.update != null) this.update.close();
         if (this.requestAll != null) this.requestAll.close();
         if (this.start != null) this.start.close();
@@ -101,7 +102,10 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
 
     @Override
     protected void checkServer(@NonNull Server server) {
-        if (this.servers.stream().noneMatch(server::equals)) return;
+        if (this.servers.stream().noneMatch(server::equals)) {
+            this.logger.info("Adding " + server);
+            this.servers.add(server);
+        }
 
         if (server.isDeleted()) {
             this.servers.remove(server);
@@ -119,16 +123,16 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
 
             switch (cachedServer.getStatus()) {
                 case CLOSED, STOPPED -> {
-                    if (this.thisServer == null) return;
+                    if (this.server == null) return;
                     if (localServerId != -1) {
                         try {
-                            if (cachedServer.equals(this.thisServer)) {
+                            if (cachedServer.equals(this.server)) {
                                 this.logger.info("Shutting down by remote update.");
                                 Bukkit.shutdown();
 
                                 cachedServer.setStatus(ServerStatus.STOPPED);
                                 cachedServer.update();
-                                this.thisServer = null;
+                                this.server = null;
                             }
                         } catch (Exception exception) {
                             logger.error("Cannot specify server! Shutting down!", exception);
@@ -140,10 +144,6 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
             }
             return;
         }
-
-        logger.info("Adding " + server);
-        this.servers.add(server);
-        BukkitUtils.callAsyncEvent(new ServerUpdateEvent(server));
     }
 
     @Override
@@ -155,6 +155,19 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
         if (BackendBukkitPlugin.isOffline()) return Optional.empty();
 
         Optional<Server> request = this.request.request(identifier, timeout);
+        request.ifPresent(this.servers::add);
+        return request;
+    }
+
+    @Override
+    public Optional<Server> getCloudServer(int id, int timeout) {
+        for (Server server : this.servers) {
+            if (server.getID() == id) return Optional.of(server);
+        }
+
+        if (BackendBukkitPlugin.isOffline()) return Optional.empty();
+
+        Optional<Server> request = this.idRequest.request(id, timeout);
         request.ifPresent(this.servers::add);
         return request;
     }

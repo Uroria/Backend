@@ -2,6 +2,7 @@ package com.uroria.backend.velocity.server;
 
 import com.uroria.backend.impl.server.AbstractServerManager;
 import com.uroria.backend.impl.server.AllServersRequestChannel;
+import com.uroria.backend.impl.server.ServerIDRequestChannel;
 import com.uroria.backend.impl.server.ServerRequestChannel;
 import com.uroria.backend.impl.server.ServerStartChannel;
 import com.uroria.backend.impl.server.ServerUpdateChannel;
@@ -22,6 +23,7 @@ import java.util.Optional;
 public final class ServerManagerImpl extends AbstractServerManager implements ServerManager {
     private final ProxyServer proxyServer;
     private ServerRequestChannel request;
+    private ServerIDRequestChannel idRequest;
     private ServerUpdateChannel update;
     private AllServersRequestChannel requestAll;
     private ServerStartChannel start;
@@ -34,6 +36,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
     @Override
     public void start(String identifier) throws PulsarClientException {
         this.request = new ServerRequestChannel(this.pulsarClient, identifier);
+        this.idRequest = new ServerIDRequestChannel(this.pulsarClient, identifier);
         this.update = new ServerUpdateChannel(this.pulsarClient, identifier, this::checkServer);
         this.requestAll = new AllServersRequestChannel(this.pulsarClient, identifier);
         this.start = new ServerStartChannel(this.pulsarClient, identifier);
@@ -42,6 +45,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
     @Override
     public void shutdown() throws PulsarClientException {
         if (this.request != null) this.request.close();
+        if (this.idRequest != null) this.idRequest.close();
         if (this.update != null) this.update.close();
         if (this.requestAll != null) this.requestAll.close();
         if (this.start != null) this.start.close();
@@ -49,7 +53,10 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
 
     @Override
     protected void checkServer(@NonNull Server server) {
-        if (this.servers.stream().noneMatch(server::equals)) return;
+        if (this.servers.stream().noneMatch(server::equals)) {
+            this.logger.info("Adding " + server);
+            this.servers.add(server);
+        }
 
         if (server.isDeleted()) {
             this.servers.remove(server);
@@ -87,10 +94,6 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
             }
             return;
         }
-
-        logger.info("Adding " + server);
-        this.servers.add(server);
-        this.proxyServer.getEventManager().fireAndForget(new ServerUpdateEvent(server));
     }
 
     @Override
@@ -102,6 +105,19 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
         if (BackendVelocityPlugin.isOffline()) return Optional.empty();
 
         Optional<Server> request = this.request.request(identifier, timeout);
+        request.ifPresent(this.servers::add);
+        return request;
+    }
+
+    @Override
+    public Optional<Server> getCloudServer(int id, int timeout) {
+        for (Server server : this.servers) {
+            if (server.getID() == id) return Optional.of(server);
+        }
+
+        if (BackendVelocityPlugin.isOffline()) return Optional.empty();
+
+        Optional<Server> request = this.idRequest.request(id, timeout);
         request.ifPresent(this.servers::add);
         return request;
     }
