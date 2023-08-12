@@ -33,4 +33,9 @@ public class BackendConfiguration {
         if (key == null) return null;
         return config.getOrSetDefault(key, key);
     }
+
+    public boolean getBoolean(String key) {
+        if (key == null) return false;
+        return config.getOrSetDefault(key, false);
+    }
 }

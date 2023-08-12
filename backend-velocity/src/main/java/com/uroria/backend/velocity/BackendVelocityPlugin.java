@@ -2,8 +2,10 @@ package com.uroria.backend.velocity;
 
 import com.google.inject.Inject;
 import com.uroria.backend.impl.configuration.BackendConfiguration;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.slf4j.Logger;
@@ -40,6 +42,15 @@ public final class BackendVelocityPlugin {
         } catch (Exception exception) {
             this.logger.error("Cannot start backend", exception);
             this.proxyServer.shutdown();
+        }
+    }
+
+    @Subscribe (order = PostOrder.LAST)
+    public void onProxyShutdownEvent(ProxyShutdownEvent event) {
+        try {
+            this.backend.shutdown();
+        } catch (Exception exception) {
+            this.logger.error("Cannot shutdown backend!", exception);
         }
     }
 

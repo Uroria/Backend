@@ -23,6 +23,6 @@ public final class ServerKeepAlive extends PulsarKeepAliveChecker {
         this.keepAlives.remove(ping);
         server.setStatus(ServerStatus.STOPPED);
         BackendServer.getLogger().warn("Server " + ping.getIdentifier() + " timed out!");
-        this.serverManager.updateServer(server);
+        server.update();
     }
 }

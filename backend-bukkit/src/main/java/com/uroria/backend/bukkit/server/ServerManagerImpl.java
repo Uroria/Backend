@@ -75,6 +75,14 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
             return;
         }
 
+        switch (server.getStatus()) {
+            case STOPPED, CLOSED -> {
+                logger.warn("Server already closed. Stopping it.");
+                Bukkit.shutdown();
+                return;
+            }
+        }
+
         server.setStatus(ServerStatus.READY);
 
         try {
@@ -92,6 +100,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
 
     @Override
     public void shutdown() throws PulsarClientException {
+        Bukkit.getOnlinePlayers().forEach(player -> player.kickPlayer("Shutdown"));
         if (this.request != null) this.request.close();
         if (this.idRequest != null) this.idRequest.close();
         if (this.update != null) this.update.close();
@@ -196,7 +205,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
 
     @Override
     public void updateServer(@NonNull Server server) {
-        if (server.getID() == -1) throw new IllegalStateException("Server was never started");
+        if (server.getID() == -1 && !server.isDeleted()) throw new IllegalStateException("Server was never started");
         try {
             checkServer(server);
             if (BackendBukkitPlugin.isOffline()) return;

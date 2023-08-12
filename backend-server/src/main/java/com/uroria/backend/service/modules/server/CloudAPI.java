@@ -3,6 +3,8 @@ package com.uroria.backend.service.modules.server;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.uroria.backend.Backend;
+import com.uroria.backend.server.ServerStatus;
 import com.uroria.backend.utils.ThreadUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import okhttp3.MultipartBody;
@@ -100,6 +102,10 @@ public final class CloudAPI {
                     int id = idElement.getAsInt();
                     logger.info("Server " + id + " stopped. " + json);
                     responses.remove(id);
+                    Backend.getAPI().getServerManager().getCloudServer(id, 5000).ifPresent(server -> {
+                        server.setStatus(ServerStatus.STOPPED);
+                        server.update();
+                    });
                 }
             }
 

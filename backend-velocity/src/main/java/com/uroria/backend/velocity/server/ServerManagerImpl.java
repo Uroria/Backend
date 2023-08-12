@@ -147,7 +147,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
 
     @Override
     public void updateServer(@NonNull Server server) {
-        if (server.getID() == -1) throw new IllegalStateException("Server was never started");
+        if (server.getID() == -1 && !server.isDeleted()) throw new IllegalStateException("Server was never started");
         try {
             checkServer(server);
             if (BackendVelocityPlugin.isOffline()) return;

@@ -105,10 +105,12 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     void updateLocal(@NonNull Server server) {
-        if (server.getID() == -1) throw new IllegalStateException("Server not started yet");
+        if (server.getID() == -1 && !server.isDeleted()) throw new IllegalStateException("Server not started yet");
+        if (server.isDeleted()) server.setStatus(ServerStatus.STOPPED);
         if (this.servers.stream().noneMatch(server::equals)) {
             switch (server.getStatus()) {
                 case STOPPED, CLOSED -> {
+                    this.servers.removeIf(server::equals);
                     return;
                 }
             }

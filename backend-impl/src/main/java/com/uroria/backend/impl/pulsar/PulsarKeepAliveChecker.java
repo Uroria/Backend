@@ -31,6 +31,7 @@ public abstract class PulsarKeepAliveChecker extends Thread {
                 .subscribe();
         this.bridgeName = bridgeName;
         this.keepAlives = new ObjectArraySet<>();
+        start();
     }
 
     protected abstract void onTimeout(BackendPing ping);
@@ -54,7 +55,7 @@ public abstract class PulsarKeepAliveChecker extends Thread {
                     try (BackendInputStream input = new BackendInputStream(message.getData())) {
                         BackendPing ping = (BackendPing) input.readObject();
                         input.close();
-                        this.keepAlives.removeIf(ping1 -> ping1.getIdentifier() == ping.getIdentifier());
+                        this.keepAlives.removeIf(ping::equals);
                         this.keepAlives.add(ping);
                     } catch (Exception exception) {
                         LOGGER.error("Cannot read keep alive message", exception);

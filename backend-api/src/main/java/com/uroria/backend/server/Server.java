@@ -182,6 +182,6 @@ public final class Server extends PropertyObject<Server> implements Serializable
 
     @Override
     public String toString() {
-        return "Server{name="+this.name+", id="+this.id+", identifier="+this.identifier+"}";
+        return "Server{name="+this.name+", id="+this.id+", identifier="+this.identifier+", status="+getStatus()+"}";
     }
 }

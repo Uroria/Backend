@@ -1,5 +1,6 @@
 package com.uroria.backend.bukkit;
 
+import com.uroria.backend.bukkit.permission.listeners.PlayerLogin;
 import com.uroria.backend.impl.configuration.BackendConfiguration;
 import com.uroria.backend.bukkit.listeners.PlayerJoin;
 import com.uroria.backend.bukkit.listeners.PlayerPreLogin;
@@ -43,7 +44,8 @@ public final class BackendBukkitPlugin extends JavaPlugin {
         pluginManager.registerEvents(new PlayerJoin(this.backend, this.logger), this);
         pluginManager.registerEvents(new PlayerQuit(this.backend, this.logger), this);
 
-
+        if (!BackendConfiguration.getBoolean("permissionIncluded")) return;
+        pluginManager.registerEvents(new PlayerLogin(), this);
     }
 
     @Override
