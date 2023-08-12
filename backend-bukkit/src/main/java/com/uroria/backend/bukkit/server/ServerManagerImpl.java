@@ -193,9 +193,13 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
         if (server.getID() != -1) throw new IllegalStateException("Server already started");
         try {
             if (BackendBukkitPlugin.isOffline()) return server;
+            checkServer(server);
             Optional<Server> request = this.start.request(server, 1000000);
-            if (request.isEmpty()) return null;
-            server = request.get();
+            Server server1 = request.orElse(null);
+            if (server1 != null) {
+                checkServer(server1);
+            }
+            server = server1;
         } catch (Exception exception) {
             this.logger.error("Cannot start server ", exception);
         }
