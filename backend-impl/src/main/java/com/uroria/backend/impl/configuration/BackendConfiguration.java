@@ -25,7 +25,10 @@ public class BackendConfiguration {
     }
 
     public String getPulsarURL() {
-        if (pulsarURL == null) setOffline(true);
+        if (pulsarURL == null) {
+            setOffline(true);
+            return null;
+        }
         if (pulsarURL.isEmpty()) {
             setOffline(true);
             return null;
