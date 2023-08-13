@@ -102,7 +102,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
             if (holder.getUUID().equals(uuid)) return Optional.of(holder);
         }
 
-        if (BackendBukkitPlugin.isOffline()) return Optional.empty();
+        if (BackendBukkitPlugin.isOffline()) return Optional.of(new PermHolder(uuid));
 
         Optional<PermHolder> request = this.holderRequest.request(uuid, timeout);
         request.ifPresent(this.holders::add);
