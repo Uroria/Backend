@@ -5,10 +5,12 @@ import com.uroria.backend.Unsafe;
 import com.uroria.backend.impl.AbstractBackend;
 import com.uroria.backend.impl.root.BackendRequestChannel;
 import com.uroria.backend.impl.root.StopUpdateChannel;
+import com.uroria.backend.message.MessageManager;
 import com.uroria.backend.punishment.PunishmentManager;
 import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.velocity.clan.ClanManagerImpl;
 import com.uroria.backend.velocity.friend.FriendManagerImpl;
+import com.uroria.backend.velocity.message.MessageManagerImpl;
 import com.uroria.backend.velocity.permission.PermManagerImpl;
 import com.uroria.backend.velocity.punishment.PunishmentManagerImpl;
 import com.uroria.backend.velocity.server.ServerManagerImpl;
@@ -32,6 +34,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     private final ClanManagerImpl clanManager;
     private final FriendManagerImpl friendManager;
     private final PunishmentManagerImpl punishmentManager;
+    private final MessageManagerImpl messageManager;
 
     private BackendRequestChannel request;
     private StopUpdateChannel stopAll;
@@ -50,6 +53,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.friendManager = new FriendManagerImpl(getPulsarClient(), logger, proxyServer);
         this.clanManager = new ClanManagerImpl(getPulsarClient(), logger, proxyServer);
         this.punishmentManager = new PunishmentManagerImpl(getPulsarClient(), logger, proxyServer);
+        this.messageManager = new MessageManagerImpl(getPulsarClient(), logger, proxyServer);
     }
 
     @Override
@@ -71,6 +75,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.friendManager.start(identifier);
         this.clanManager.start(identifier);
         this.punishmentManager.start(identifier);
+        this.messageManager.start(identifier);
     }
 
     @Override
@@ -84,6 +89,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.friendManager.shutdown();
         this.clanManager.shutdown();
         this.punishmentManager.shutdown();
+        this.messageManager.shutdown();
         if (this.request != null) this.request.close();
         if (this.stopAll != null) this.stopAll.close();
         super.shutdown();
@@ -132,6 +138,11 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     @Override
     public PunishmentManagerImpl getPunishmentManager() {
         return this.punishmentManager;
+    }
+
+    @Override
+    public MessageManagerImpl getMessageManager() {
+        return this.messageManager;
     }
 
     @Override

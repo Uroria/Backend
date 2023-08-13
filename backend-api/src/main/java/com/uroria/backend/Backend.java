@@ -2,6 +2,7 @@ package com.uroria.backend;
 
 import com.uroria.backend.clan.ClanManager;
 import com.uroria.backend.friend.FriendManager;
+import com.uroria.backend.message.MessageManager;
 import com.uroria.backend.permission.PermManager;
 import com.uroria.backend.punishment.PunishmentManager;
 import com.uroria.backend.server.ServerManager;
@@ -29,6 +30,8 @@ public interface Backend {
     ServerManager getServerManager();
 
     PunishmentManager getPunishmentManager();
+
+    MessageManager getMessageManager();
 
     /**
      * If you call this method, the whole network will shut down.

@@ -4,6 +4,7 @@ import com.uroria.backend.Backend;
 import com.uroria.backend.Unsafe;
 import com.uroria.backend.bukkit.clan.ClanManagerImpl;
 import com.uroria.backend.bukkit.friend.FriendManagerImpl;
+import com.uroria.backend.bukkit.message.MessageManagerImpl;
 import com.uroria.backend.bukkit.permission.PermManagerImpl;
 import com.uroria.backend.bukkit.punishment.PunishmentManagerImpl;
 import com.uroria.backend.bukkit.server.ServerManagerImpl;
@@ -13,6 +14,7 @@ import com.uroria.backend.bukkit.user.UserManagerImpl;
 import com.uroria.backend.impl.AbstractBackend;
 import com.uroria.backend.impl.root.BackendRequestChannel;
 import com.uroria.backend.impl.root.StopUpdateChannel;
+import com.uroria.backend.message.MessageManager;
 import com.uroria.backend.punishment.PunishmentManager;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.bukkit.Bukkit;
@@ -32,6 +34,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     private final FriendManagerImpl friendManager;
     private final StatsManagerImpl statsManager;
     private final PunishmentManagerImpl punishmentManager;
+    private final MessageManagerImpl messageManager;
 
     private BackendRequestChannel request;
     private StopUpdateChannel stopAll;
@@ -50,6 +53,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.clanManager = new ClanManagerImpl(getPulsarClient(), logger);
         this.statsManager = new StatsManagerImpl(getPulsarClient(), logger);
         this.punishmentManager = new PunishmentManagerImpl(getPulsarClient(), logger);
+        this.messageManager = new MessageManagerImpl(getPulsarClient(), logger);
     }
 
     @Override
@@ -76,6 +80,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.clanManager.start(identifier);
         this.statsManager.start(identifier);
         this.punishmentManager.start(identifier);
+        this.messageManager.start(identifier);
     }
 
     @Override
@@ -90,6 +95,7 @@ public final class BackendImpl extends AbstractBackend implements Backend {
         this.clanManager.shutdown();
         this.statsManager.shutdown();
         this.punishmentManager.shutdown();
+        this.messageManager.shutdown();
         if (this.request != null) this.request.close();
         if (this.stopAll != null) this.stopAll.close();
         super.shutdown();
@@ -138,6 +144,11 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     @Override
     public PunishmentManagerImpl getPunishmentManager() {
         return this.punishmentManager;
+    }
+
+    @Override
+    public MessageManagerImpl getMessageManager() {
+        return this.messageManager;
     }
 
     @Override

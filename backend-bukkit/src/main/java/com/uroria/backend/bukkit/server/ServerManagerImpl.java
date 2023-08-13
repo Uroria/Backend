@@ -91,7 +91,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
             });
             server.update();
 
-            this.keepAlive = new KeepAlive(this.pulsarClient, identifier, this.localServerId);
+            this.keepAlive = new KeepAlive(this.pulsarClient, identifier, server.getIdentifier());
         } catch (Exception exception) {
             this.logger.error("Cannot update this server ", exception);
             Bukkit.shutdown();
