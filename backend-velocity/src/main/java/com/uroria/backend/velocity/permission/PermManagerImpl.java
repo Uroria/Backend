@@ -5,11 +5,13 @@ import com.uroria.backend.impl.permission.group.GroupNameRequestChannel;
 import com.uroria.backend.impl.permission.group.GroupUpdateChannel;
 import com.uroria.backend.impl.permission.holder.HolderUUIDRequestChannel;
 import com.uroria.backend.impl.permission.holder.HolderUpdateChannel;
+import com.uroria.backend.impl.scheduler.BackendScheduler;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.PermHolder;
 import com.uroria.backend.permission.PermManager;
 import com.uroria.backend.velocity.BackendVelocityPlugin;
 import com.velocitypowered.api.proxy.ProxyServer;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -17,6 +19,7 @@ import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public final class PermManagerImpl extends AbstractPermManager implements PermManager {
     private final ProxyServer proxyServer;
@@ -36,6 +39,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
         this.groupUpdate = new GroupUpdateChannel(this.pulsarClient, identifier, this::checkGroup);
         this.holderRequest = new HolderUUIDRequestChannel(this.pulsarClient, identifier);
         this.holderUpdate = new HolderUpdateChannel(this.pulsarClient, identifier, this::checkHolder);
+        runCacheChecker();
     }
 
     @Override
@@ -142,5 +146,25 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
         } catch (Exception exception) {
             logger.error("Cannot update " + group, exception);
         }
+    }
+
+    private void runCacheChecker() {
+        BackendScheduler.runTaskLater(() -> {
+            ObjectArraySet<UUID> markedForRemoval = new ObjectArraySet<>();
+            for (PermHolder holder : this.holders) {
+                if (Bukkit.getPlayer(holder.getUUID()) == null) markedForRemoval.add(holder.getUUID());
+            }
+            return markedForRemoval;
+        }, 10, TimeUnit.MINUTES).run(markedForRemoval -> {
+            for (UUID uuid : markedForRemoval) {
+                this.holders.removeIf(user -> user.getUUID().equals(uuid));
+            }
+            int size = markedForRemoval.size();
+            if (size > 0) this.logger.info(size + " Users flushed from cache");
+            runCacheChecker();
+        }, throwable -> {
+            this.logger.error("Unhandled exception in cache checker", throwable);
+            runCacheChecker();
+        });
     }
 }
