@@ -31,6 +31,7 @@ public final class FriendManagerImpl extends AbstractFriendManager implements Fr
     public void start(String identifier) throws PulsarClientException {
         this.request = new FriendUUIDRequestChannel(this.pulsarClient, identifier);
         this.update = new FriendUpdateChannel(this.pulsarClient, identifier, this::checkFriend);
+        runCacheChecker();
     }
 
     @Override
