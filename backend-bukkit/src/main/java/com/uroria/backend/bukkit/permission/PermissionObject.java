@@ -14,7 +14,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 public final class PermissionObject extends PermissibleBase {
     private final Player player;
@@ -28,25 +27,15 @@ public final class PermissionObject extends PermissibleBase {
         if (node == null) return false;
         PermHolder permissionHolder = Backend.getAPI().getPermissionManager().getHolder(this.player.getUniqueId()).orElse(null);
 
+        if (permissionHolder == null) return false;
+
         List<PermGroup> groups = permissionHolder.getGroups();
 
         boolean group = groups.stream().min(Comparator.comparing(PermGroup::getPriority))
                 .map(group1 -> group1.hasPermission(node)).orElse(false);
         boolean holder = permissionHolder.hasPermission(node);
 
-        if (group || holder) return true;
-
-        if (groups.isEmpty()) {
-            CompletableFuture.runAsync(() -> {
-                PermGroup defaultGroup = Backend.getAPI().getPermissionManager().getGroup("default").orElse(null);
-                if (defaultGroup == null) {
-                    defaultGroup = new PermGroup("default", 999);
-                    Backend.getAPI().getPermissionManager().updateGroup(defaultGroup);
-                }
-                permissionHolder.addGroup(defaultGroup);
-            });
-        }
-        return false;
+        return group || holder;
     }
 
     @Override
