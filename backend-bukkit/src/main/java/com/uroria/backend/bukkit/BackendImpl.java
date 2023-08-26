@@ -16,6 +16,7 @@ import com.uroria.backend.impl.root.BackendRequestChannel;
 import com.uroria.backend.impl.root.StopUpdateChannel;
 import com.uroria.backend.message.MessageManager;
 import com.uroria.backend.punishment.PunishmentManager;
+import com.uroria.backend.utils.ThreadUtils;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.bukkit.Bukkit;
 import org.slf4j.Logger;
@@ -87,17 +88,28 @@ public final class BackendImpl extends AbstractBackend implements Backend {
     public void shutdown() throws PulsarClientException {
         if (BackendBukkitPlugin.isOffline()) return;
         this.logger.info("Shutting down connections...");
+        ThreadUtils.sleep(200);
         this.userManager.shutdown();
+        ThreadUtils.sleep(200);
         this.twitchManager.shutdown();
+        ThreadUtils.sleep(200);
         this.permManager.shutdown();
+        ThreadUtils.sleep(200);
         this.serverManager.shutdown();
+        ThreadUtils.sleep(200);
         this.friendManager.shutdown();
+        ThreadUtils.sleep(200);
         this.clanManager.shutdown();
+        ThreadUtils.sleep(200);
         this.statsManager.shutdown();
+        ThreadUtils.sleep(200);
         this.punishmentManager.shutdown();
+        ThreadUtils.sleep(200);
         this.messageManager.shutdown();
+        ThreadUtils.sleep(200);
         if (this.request != null) this.request.close();
         if (this.stopAll != null) this.stopAll.close();
+        ThreadUtils.sleep(200);
         super.shutdown();
     }
 
