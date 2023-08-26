@@ -152,7 +152,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
         BackendScheduler.runTaskLater(() -> {
             ObjectArraySet<UUID> markedForRemoval = new ObjectArraySet<>();
             for (PermHolder holder : this.holders) {
-                if (Bukkit.getPlayer(holder.getUUID()) == null) markedForRemoval.add(holder.getUUID());
+                if (this.proxyServer.getPlayer(holder.getUUID()).isEmpty()) markedForRemoval.add(holder.getUUID());
             }
             return markedForRemoval;
         }, 10, TimeUnit.MINUTES).run(markedForRemoval -> {

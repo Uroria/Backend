@@ -43,7 +43,7 @@ public final class PermGroup extends PropertyObject<PermGroup> implements Serial
 
     public void unsetPermission(String node) {
         if (node == null) return;
-        this.permissions.remove(node);
+        this.permissions.removeBoolean(node);
     }
 
     public Map<String, Boolean> getPermissions() {
@@ -66,6 +66,7 @@ public final class PermGroup extends PropertyObject<PermGroup> implements Serial
         this.deleted = group.deleted;
         this.priority = group.priority;
         ObjectUtils.overrideMap(this.permissions, group.permissions);
+        ObjectUtils.overrideMap(this.properties, group.properties);
     }
 
     @Override

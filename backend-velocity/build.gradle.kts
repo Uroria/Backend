@@ -13,4 +13,3 @@ dependencies {
 
     implementation("io.sentry:sentry:${sentryVersion}")
 }
-

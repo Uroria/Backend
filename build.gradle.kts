@@ -27,13 +27,16 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(16))
+            languageVersion.set(JavaLanguageVersion.of(17))
         }
     }
 
     repositories {
         mavenCentral()
+        maven("https://repo.purpurmc.org/snapshots")
+        maven("https://oss.sonatype.org/content/groups/public/")
         maven("https://jitpack.io")
+        maven("https://repo.codemc.io/repository/maven-snapshots/")
         maven {
             url = uri("https://gitlab.zyonicsoftware.com/api/v4/groups/622/-/packages/maven")
             credentials(HttpHeaderCredentials::class) {
