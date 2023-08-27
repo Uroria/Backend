@@ -17,23 +17,24 @@ import java.util.Set;
 
 public final class PermissionObject extends PermissibleBase {
     private final Player player;
+    private final PermHolder permHolder;
     public PermissionObject(Player player) {
         super(player);
         this.player = player;
+        this.permHolder = Backend.getAPI().getPermissionManager().getHolder(this.player.getUniqueId()).orElseThrow();
     }
 
     @Override
     public boolean hasPermission(String node) {
         if (node == null) return false;
-        PermHolder permissionHolder = Backend.getAPI().getPermissionManager().getHolder(this.player.getUniqueId()).orElse(null);
 
-        if (permissionHolder == null) return false;
+        if (permHolder == null) return false;
 
-        List<PermGroup> groups = permissionHolder.getGroups();
+        List<PermGroup> groups = permHolder.getGroups();
 
         boolean group = groups.stream().min(Comparator.comparing(PermGroup::getPriority))
                 .map(group1 -> group1.hasPermission(node)).orElse(false);
-        boolean holder = permissionHolder.hasPermission(node);
+        boolean holder = permHolder.hasPermission(node);
 
         return group || holder;
     }

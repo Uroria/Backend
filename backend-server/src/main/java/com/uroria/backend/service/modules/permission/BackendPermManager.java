@@ -58,6 +58,7 @@ public final class BackendPermManager extends AbstractManager implements PermMan
             Document savedDocument = this.holders.find(Filters.eq("uuid", uuid.toString())).first();
             if (savedDocument == null) {
                 PermHolder holder = new PermHolder(uuid);
+                holder.addGroup(getDefaultGroup());
                 String json = gson.toJson(holder);
                 Document document = Document.parse(json);
                 if (this.holders.insertOne(document).wasAcknowledged()) {
@@ -71,6 +72,15 @@ public final class BackendPermManager extends AbstractManager implements PermMan
             this.logger.error("Unhandled exception", exception);
             return Optional.empty();
         }
+    }
+
+    private PermGroup getDefaultGroup() {
+        PermGroup group = getGroup("default").orElse(null);
+        if (group == null) {
+            group = new PermGroup("default");
+            group.update();
+        }
+        return group;
     }
 
     @Override

@@ -1,13 +1,11 @@
 package com.uroria.backend.bukkit.listeners;
 
 import com.uroria.backend.bukkit.BackendImpl;
-import com.uroria.backend.permission.PermGroup;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
-import java.util.List;
 import java.util.UUID;
 
 public record PlayerPreLogin(BackendImpl backend) implements Listener {
@@ -25,23 +23,10 @@ public record PlayerPreLogin(BackendImpl backend) implements Listener {
             preLoginEvent.setKickMessage("Backend User timeout");
             preLoginEvent.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
         });
-        backend.getPermissionManager().getHolder(uuid, 10000).ifPresentOrElse(holder -> {
-            List<PermGroup> groups = holder.getGroups();
-            if (!groups.isEmpty()) return;
-            holder.addGroup(getDefaultGroup());
-            holder.update();
-        }, () -> {
+
+        if (backend.getPermissionManager().getHolder(uuid, 10000).isEmpty()) {
             preLoginEvent.setKickMessage("Backend Permission timeout");
             preLoginEvent.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-        });
-    }
-
-    private PermGroup getDefaultGroup() {
-        PermGroup group = backend.getPermissionManager().getGroup("default", 2000).orElse(null);
-        if (group == null) {
-            group = new PermGroup("default");
-            group.update();
         }
-        return group;
     }
 }
