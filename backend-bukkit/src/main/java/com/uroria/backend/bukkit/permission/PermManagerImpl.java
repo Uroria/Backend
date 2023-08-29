@@ -161,7 +161,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
                 this.holders.removeIf(user -> user.getUUID().equals(uuid));
             }
             int size = markedForRemoval.size();
-            if (size > 0) this.logger.info(size + " Users flushed from cache");
+            if (size > 0) this.logger.info(size + " PermHolders flushed from cache");
             runCacheChecker();
         }, throwable -> {
             this.logger.error("Unhandled exception in cache checker", throwable);

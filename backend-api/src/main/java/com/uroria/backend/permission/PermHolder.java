@@ -45,7 +45,7 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
 
     public void unsetPermission(String node) {
         if (node == null) return;
-        this.permissions.remove(node);
+        this.permissions.removeBoolean(node);
     }
 
     public void setTempPermission(@NonNull String node, boolean value) {
@@ -54,7 +54,7 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
 
     public void unsetTempPermission(String node) {
         if (node == null) return;
-        this.tempPermissions.remove(node);
+        this.tempPermissions.removeBoolean(node);
     }
 
     public UUID getUUID() {

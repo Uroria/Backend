@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class BackendConfiguration {
-    private final Json config = new Json("config.json", "./backend", AbstractBackend.class.getClassLoader().getResourceAsStream("backend.json"), ReloadSettings.MANUALLY);
+    private @Getter final Json config = new Json("config.json", "./backend", AbstractBackend.class.getClassLoader().getResourceAsStream("backend.json"), ReloadSettings.MANUALLY);
 
     static {
         reload();
