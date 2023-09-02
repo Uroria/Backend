@@ -1,7 +1,7 @@
 package com.uroria.backend.impl.pulsar;
 
-import com.uroria.backend.utils.BackendInputStream;
-import com.uroria.backend.utils.BackendOutputStream;
+import com.uroria.base.io.InsaneByteArrayInputStream;
+import com.uroria.base.io.InsaneByteArrayOutputStream;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -42,7 +42,7 @@ public abstract class PulsarRequest<O, K> {
     }
 
     public final Optional<O> request(@NonNull K requestKey, int timeout) {
-        try (BackendOutputStream output = new BackendOutputStream()) {
+        try (InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream()) {
             output.writeObject(requestKey);
             output.close();
             this.producer.send(output.toByteArray());
@@ -57,7 +57,7 @@ public abstract class PulsarRequest<O, K> {
                 if ((System.currentTimeMillis() - startTime) > timeout) break;
                 Message<byte[]> message = this.consumer.receive(timeout, TimeUnit.MILLISECONDS);
                 if (message == null) continue;
-                try (BackendInputStream input = new BackendInputStream(message.getData())) {
+                try (InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData())) {
                     K responseKey = (K) input.readObject();
                     if (!requestKey.equals(responseKey)) {
                         this.consumer.negativeAcknowledge(message);

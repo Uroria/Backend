@@ -12,14 +12,6 @@ allprojects {
     version = project.properties["projectVersion"].toString()
 }
 
-val jetbrainsAnnotationsVersion: String by project.extra
-val lombokVersion: String by project.extra
-val junitVersion: String by project.extra
-val simplixStorageVersion: String by project.extra
-val slf4jVersion: String by project.extra
-val adventureVersion: String by project.extra
-val pulsarVersion: String by project.extra
-
 subprojects {
     apply<JavaLibraryPlugin>()
     apply<ShadowPlugin>()
@@ -54,27 +46,6 @@ subprojects {
         }
     }
 
-    dependencies {
-        api("org.jetbrains:annotations:${jetbrainsAnnotationsVersion}")
-        api("org.projectlombok:lombok:${lombokVersion}")
-        annotationProcessor("org.jetbrains:annotations:${jetbrainsAnnotationsVersion}")
-        annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
-
-        api("org.slf4j:slf4j-api:$slf4jVersion")
-
-        implementation("com.uroria.nutshell:nutshell-plugin:0.0.7-alpha")
-
-        api("com.github.simplix-softworks:simplixstorage:${simplixStorageVersion}")
-
-        implementation("net.kyori:adventure-api:${adventureVersion}")
-        implementation("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
-        implementation("net.kyori:adventure-text-minimessage:${adventureVersion}")
-        implementation("net.kyori:adventure-text-serializer-plain:${adventureVersion}")
-        implementation("net.kyori:adventure-text-serializer-legacy:${adventureVersion}")
-
-        implementation("org.apache.pulsar:pulsar-client:${pulsarVersion}")
-    }
-
     tasks {
         test {
             useJUnitPlatform()
@@ -85,17 +56,12 @@ subprojects {
 
         shadowJar {
             transform(Log4j2PluginsCacheFileTransformer::class.java)
-            relocate("de.leonhard.storage", "com.uroria.storage")
         }
 
         jar {
             manifest {
                 attributes["Multi-Release"] = "true"
             }
-        }
-
-        build {
-            dependsOn(shadowJar)
         }
     }
 

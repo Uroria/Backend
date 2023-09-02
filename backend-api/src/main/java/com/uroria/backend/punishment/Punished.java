@@ -1,7 +1,7 @@
 package com.uroria.backend.punishment;
 
 import com.uroria.backend.BackendObject;
-import com.uroria.backend.utils.ObjectUtils;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import lombok.NonNull;
@@ -49,7 +49,7 @@ public final class Punished extends BackendObject<Punished> implements Serializa
     @Override
     public void modify(Punished punished) {
         this.deleted = punished.deleted;
-        ObjectUtils.overrideCollection(punishments, punished.punishments);
+        CollectionUtils.overrideCollection(punishments, punished.punishments);
         this.punishments.removeIf(BackendObject::isDeleted);
         for (Punishment punishment : this.punishments) {
             Optional<Punishment> any = punished.punishments.stream().filter(sub -> sub.equals(punishment)).findAny();

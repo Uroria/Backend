@@ -1,11 +1,10 @@
 package com.uroria.backend.stats;
 
 import com.uroria.backend.Backend;
-import com.uroria.backend.property.PropertyObject;
-import com.uroria.backend.utils.ObjectUtils;
+import com.uroria.backend.BackendObject;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -16,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class Stat extends PropertyObject<Stat> implements Serializable {
+public final class Stat extends BackendObject<Stat> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
 
     private final UUID uuid;
@@ -54,7 +53,7 @@ public final class Stat extends PropertyObject<Stat> implements Serializable {
 
     @Override
     public void modify(Stat stat) {
-        ObjectUtils.overrideMap(this.scores, stat.scores);
+        CollectionUtils.overrideMap(this.scores, stat.scores);
     }
 
     @Override

@@ -3,7 +3,8 @@ java {
     withSourcesJar()
 }
 
-val fastUtilVersion: String by project.extra
+val baseVersion: String by project.extra
 dependencies {
-    api("it.unimi.dsi:fastutil:${fastUtilVersion}")
+    api("com.uroria:base:${baseVersion}")
+    annotationProcessor("com.uroria:base:${baseVersion}")
 }

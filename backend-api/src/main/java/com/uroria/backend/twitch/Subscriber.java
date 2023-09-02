@@ -2,7 +2,7 @@ package com.uroria.backend.twitch;
 
 import com.uroria.backend.Backend;
 import com.uroria.backend.BackendObject;
-import com.uroria.backend.utils.ObjectUtils;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import lombok.NonNull;
@@ -65,7 +65,7 @@ public final class Subscriber extends BackendObject<Subscriber> implements Seria
     @Override
     public void modify(Subscriber subscriber) {
         this.deleted = subscriber.deleted;
-        ObjectUtils.overrideCollection(this.subscriptions, subscriber.subscriptions);
+        CollectionUtils.overrideCollection(this.subscriptions, subscriber.subscriptions);
         this.subscriptions.removeIf(BackendObject::isDeleted);
         for (Subscription subscription : this.subscriptions) {
             Optional<Subscription> any = subscriber.subscriptions.stream().filter(sub -> sub.equals(subscription)).findAny();

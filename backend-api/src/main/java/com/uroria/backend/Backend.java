@@ -9,6 +9,7 @@ import com.uroria.backend.server.ServerManager;
 import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.twitch.TwitchManager;
 import com.uroria.backend.user.UserManager;
+import com.uroria.base.event.EventManager;
 
 /**
  * The primary api-interface of the Backend.
@@ -32,6 +33,8 @@ public interface Backend {
     PunishmentManager getPunishmentManager();
 
     MessageManager getMessageManager();
+
+    EventManager getEventManager();
 
     /**
      * If you call this method, the whole network will shut down.

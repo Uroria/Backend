@@ -1,16 +1,18 @@
 package com.uroria.backend.bukkit;
 
-import com.uroria.backend.bukkit.permission.listeners.PlayerLogin;
+import com.uroria.backend.bukkit.listeners.PlayerLogin;
+import com.uroria.backend.bukkit.server.ServerManager;
 import com.uroria.backend.impl.configuration.BackendConfiguration;
 import com.uroria.backend.bukkit.listeners.PlayerJoin;
 import com.uroria.backend.bukkit.listeners.PlayerPreLogin;
 import com.uroria.backend.bukkit.listeners.PlayerQuit;
 import com.uroria.backend.impl.scheduler.BackendScheduler;
-import com.uroria.nutshell.plugin.utils.BukkitScheduler;
+import com.uroria.backend.wrapper.BackendWrapper;
+import com.uroria.backend.wrapper.configuration.ServerConfiguration;
+import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.event.EventPriority;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -21,16 +23,26 @@ import java.util.concurrent.TimeUnit;
 
 public final class BackendBukkitPlugin extends JavaPlugin {
     private final Logger logger;
-    private final BackendImpl backend;
     private final boolean timeoutEnabled;
     private final int timeout;
+    private @Getter final ServerManager serverManager;
+    private final BackendWrapper wrapper;
 
     public BackendBukkitPlugin() {
         this.logger = LoggerFactory.getLogger("Backend");
-        this.timeoutEnabled = BackendConfiguration.getConfig().getOrSetDefault("autostop.enabled", true);
-        this.timeout = BackendConfiguration.getConfig().getOrSetDefault("autostop.timeoutMin", 5);
+        this.timeoutEnabled = ServerConfiguration.getConfig().getOrSetDefault("autostop.enabled", true);
+        this.timeout = ServerConfiguration.getConfig().getOrSetDefault("autostop.timeoutMin", 5);
         try {
-            this.backend = new BackendImpl(BackendConfiguration.getPulsarURL(), this.logger);
+            this.wrapper = new BackendWrapper(BackendConfiguration.getPulsarURL(), this.logger, BackendConfiguration.isOffline(), () -> {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        Bukkit.getOnlinePlayers().forEach(Player::kick);
+                        Bukkit.shutdown();
+                    }
+                }.runTask(this);
+            }, uuid -> Bukkit.getPlayer(uuid) != null);
+            this.serverManager = new ServerManager(this.logger, BackendWrapper.getAPI().getEventManager());
         } catch (Exception exception) {
             Bukkit.shutdown();
             throw new RuntimeException("Unexpected exception", exception);
@@ -43,7 +55,7 @@ public final class BackendBukkitPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
-            this.backend.start();
+            this.wrapper.start();
         } catch (Exception exception) {
             this.logger.error("Cannot start backend", exception);
             Bukkit.shutdown();
@@ -51,9 +63,9 @@ public final class BackendBukkitPlugin extends JavaPlugin {
         }
 
         PluginManager pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(new PlayerPreLogin(this.backend), this);
-        pluginManager.registerEvents(new PlayerJoin(this.backend, this.logger), this);
-        pluginManager.registerEvents(new PlayerQuit(this.backend, this.logger, this), this);
+        pluginManager.registerEvents(new PlayerPreLogin(this.wrapper), this);
+        pluginManager.registerEvents(new PlayerJoin(this, this.logger), this);
+        pluginManager.registerEvents(new PlayerQuit(this, this.logger), this);
         checkTimeout();
 
         if (!BackendConfiguration.getBoolean("permissionIncluded")) return;
@@ -92,7 +104,7 @@ public final class BackendBukkitPlugin extends JavaPlugin {
     public void onDisable() {
         try {
             HandlerList.unregisterAll(this);
-            this.backend.shutdown();
+            this.wrapper.shutdown();
         } catch (Exception exception) {
             this.logger.error("Couldn't shutdown backend connections properly", exception);
         }

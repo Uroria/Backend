@@ -49,16 +49,7 @@ public final class BackendPunishmentManager extends AbstractManager implements P
             Punished cachedPunished = getCachedPunished(uuid);
             if (cachedPunished != null) return Optional.of(cachedPunished);
             Document savedDocument = this.punisheds.find(Filters.eq("uuid", uuid.toString())).first();
-            if (savedDocument == null) {
-                Punished punished = new Punished(uuid);
-                String json = gson.toJson(punished);
-                Document document = Document.parse(json);
-                if (this.punisheds.insertOne(document).wasAcknowledged()) {
-                    this.logger.debug("Inserted " + punished);
-                    return Optional.of(punished);
-                }
-                return Optional.empty();
-            }
+            if (savedDocument == null) return Optional.empty();
             return Optional.of(fromJson(savedDocument.toJson()));
         } catch (Exception exception) {
             this.logger.error("Unhandled exception", exception);
@@ -77,8 +68,17 @@ public final class BackendPunishmentManager extends AbstractManager implements P
             this.cache.del("punished:" + punished.getUUID());
             String json = gson.toJson(punished);
             fromJson(json);
-            Document document = Document.parse(json);
-            if (this.punisheds.replaceOne(Filters.eq("uuid", punished.getUUID().toString()), document).wasAcknowledged()) {
+            Document newDocument = Document.parse(json);
+            Document document = this.punisheds.find(Filters.eq("uuid", punished.getUUID().toString())).first();
+            if (document == null) {
+                if (this.punisheds.insertOne(newDocument).wasAcknowledged()) {
+                    this.logger.debug("Inserted " + punished);
+                    return;
+                }
+                this.logger.warn("Unable to insert " + punished);
+                return;
+            }
+            if (this.punisheds.replaceOne(Filters.eq("uuid", punished.getUUID().toString()), newDocument).wasAcknowledged()) {
                 this.logger.debug("Replaced " + punished);
                 return;
             }

@@ -2,12 +2,16 @@ package com.uroria.backend.velocity;
 
 import com.google.inject.Inject;
 import com.uroria.backend.impl.configuration.BackendConfiguration;
+import com.uroria.backend.velocity.listeners.PlayerLogin;
+import com.uroria.backend.wrapper.BackendWrapper;
+import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
+import lombok.Getter;
 import org.slf4j.Logger;
 
 @Plugin(
@@ -18,14 +22,14 @@ import org.slf4j.Logger;
 public final class BackendVelocityPlugin {
     private final Logger logger;
     private final ProxyServer proxyServer;
-    private final BackendImpl backend;
+    private @Getter final BackendWrapper backend;
 
     @Inject
     public BackendVelocityPlugin(Logger logger, ProxyServer proxyServer) {
         this.logger = logger;
         this.proxyServer = proxyServer;
         try {
-            this.backend = new BackendImpl(BackendConfiguration.getPulsarURL(), this.logger, proxyServer);
+            this.backend = new BackendWrapper(BackendConfiguration.getPulsarURL(), this.logger, false, this.proxyServer::shutdown, uuid -> proxyServer.getPlayer(uuid).isPresent());
         } catch (Exception exception) {
             this.proxyServer.shutdown();
             throw new RuntimeException("Unexpected exception", exception);
@@ -39,6 +43,8 @@ public final class BackendVelocityPlugin {
     public void onProxyInitializeEvent(ProxyInitializeEvent event) {
         try {
             this.backend.start();
+            EventManager eventManager = this.proxyServer.getEventManager();
+            eventManager.register(this, new PlayerLogin(this));
         } catch (Exception exception) {
             this.logger.error("Cannot start backend", exception);
             this.proxyServer.shutdown();

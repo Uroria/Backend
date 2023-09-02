@@ -2,8 +2,8 @@ package com.uroria.backend.permission;
 
 import com.uroria.backend.Backend;
 import com.uroria.backend.BackendObject;
-import com.uroria.backend.utils.ObjectUtils;
-import com.uroria.backend.utils.TransientField;
+import com.uroria.base.gson.annotations.GsonTransient;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -23,14 +23,15 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
 
     private final UUID uuid;
     private final Object2BooleanMap<String> permissions;
-    @TransientField private Object2BooleanMap<String> tempPermissions;
+    @GsonTransient
+    private Object2BooleanMap<String> tempPermissions;
     private final List<String> groups;
 
     public PermHolder(@NonNull UUID uuid) {
         this.uuid = uuid;
         this.permissions = new Object2BooleanArrayMap<>();
         this.tempPermissions = new Object2BooleanArrayMap<>();
-        this.groups = new ObjectArrayList<>();
+        this.groups = new ObjectArrayList<>(List.of("default"));
     }
 
     public boolean hasPermission(@Nullable String node) {
@@ -101,10 +102,10 @@ public final class PermHolder extends BackendObject<PermHolder> implements Seria
     @Override
     public void modify(PermHolder holder) {
         this.deleted = holder.deleted;
-        ObjectUtils.overrideMap(this.permissions, holder.permissions);
-        ObjectUtils.overrideCollection(this.groups, holder.groups);
+        CollectionUtils.overrideMap(this.permissions, holder.permissions);
+        CollectionUtils.overrideCollection(this.groups, holder.groups);
         if (this.tempPermissions == null) this.tempPermissions = new Object2BooleanArrayMap<>();
-        ObjectUtils.overrideMap(this.tempPermissions, holder.tempPermissions);
+        CollectionUtils.overrideMap(this.tempPermissions, holder.tempPermissions);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.uroria.backend.impl.pulsar;
 
-import com.uroria.backend.utils.BackendInputStream;
-import com.uroria.backend.utils.BackendOutputStream;
+import com.uroria.base.io.InsaneByteArrayInputStream;
+import com.uroria.base.io.InsaneByteArrayOutputStream;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -56,11 +56,11 @@ public abstract class PulsarResponse<O, K> extends Thread {
                 if (message == null) continue;
                 this.consumer.acknowledge(message);
                 CompletableFuture.runAsync(() -> {
-                    try (BackendInputStream input = new BackendInputStream(message.getData())) {
+                    try (InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData())) {
                         K key = (K) input.readObject();
                         input.close();
                         O obj = response(key);
-                        BackendOutputStream output = new BackendOutputStream();
+                        InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream();
                         output.writeObject(key);
                         if (obj == null) output.writeBoolean(false);
                         else {

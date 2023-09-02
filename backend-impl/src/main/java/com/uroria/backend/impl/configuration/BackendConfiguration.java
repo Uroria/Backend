@@ -1,15 +1,14 @@
 package com.uroria.backend.impl.configuration;
 
 import com.uroria.backend.impl.AbstractBackend;
-import de.leonhard.storage.Json;
-import de.leonhard.storage.internal.settings.ReloadSettings;
+import com.uroria.fastconfig.Json;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class BackendConfiguration {
-    private @Getter final Json config = new Json("config.json", "./backend", AbstractBackend.class.getClassLoader().getResourceAsStream("backend.json"), ReloadSettings.MANUALLY);
+    private @Getter final Json config = new Json("config.json", "./backend", AbstractBackend.class.getClassLoader().getResourceAsStream("backend.json"));
 
     static {
         reload();
@@ -19,7 +18,7 @@ public class BackendConfiguration {
     private @Getter @Setter boolean offline;
 
     public void reload() {
-        config.forceReload();
+        config.reload();
         pulsarURL = config.getOrSetDefault("pulsar.url", "pulsar://localhost:6650");
         offline = config.getOrSetDefault("offline", false);
     }

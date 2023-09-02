@@ -5,7 +5,8 @@ val projects = listOf(
         "backend-api",
         "backend-server",
         "backend-velocity",
-        "backend-bukkit"
+        "backend-bukkit",
+        "backend-wrapper"
 )
 
 include(projects)

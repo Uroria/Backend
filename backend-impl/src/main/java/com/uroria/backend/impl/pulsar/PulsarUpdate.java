@@ -1,7 +1,7 @@
 package com.uroria.backend.impl.pulsar;
 
-import com.uroria.backend.utils.BackendInputStream;
-import com.uroria.backend.utils.BackendOutputStream;
+import com.uroria.base.io.InsaneByteArrayInputStream;
+import com.uroria.base.io.InsaneByteArrayOutputStream;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -47,7 +47,7 @@ public abstract class PulsarUpdate<O extends Serializable> extends Thread {
     protected abstract void onUpdate(O object);
 
     public final void update(@NonNull O object) {
-        try (BackendOutputStream output = new BackendOutputStream()) {
+        try (InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream()) {
             output.writeObject(object);
             output.close();
             this.producer.send(output.toByteArray());
@@ -69,7 +69,7 @@ public abstract class PulsarUpdate<O extends Serializable> extends Thread {
                 this.consumer.acknowledge(message);
                 if (message.getProducerName().equals(this.name)) continue;
                 CompletableFuture.runAsync(() -> {
-                    try (BackendInputStream input = new BackendInputStream(message.getData())) {
+                    try (InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData())) {
                         onUpdate((O) input.readObject());
                     } catch (Exception exception) {
                         LOGGER.error("Unhandled exception in ObjectInputStream in PulsarUpdate", exception);

@@ -1,9 +1,6 @@
-val sentryVersion: String by project.extra
-
 dependencies {
-    api(project(":backend-impl"))
+    api(project(":backend-wrapper"))
+    annotationProcessor(project(":backend-wrapper"))
 
-    implementation("io.sentry:sentry:${sentryVersion}")
     compileOnly("org.purpurmc.purpur:purpur-api:1.20.1-R0.1-SNAPSHOT")
 }
-

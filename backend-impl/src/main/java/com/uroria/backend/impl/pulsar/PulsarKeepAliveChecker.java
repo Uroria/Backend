@@ -1,7 +1,7 @@
 package com.uroria.backend.impl.pulsar;
 
 import com.uroria.backend.impl.ping.BackendPing;
-import com.uroria.backend.utils.BackendInputStream;
+import com.uroria.base.io.InsaneByteArrayInputStream;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -52,7 +52,7 @@ public abstract class PulsarKeepAliveChecker extends Thread {
                 if (message == null) continue;
                 consumer.acknowledge(message);
                 CompletableFuture.runAsync(() -> {
-                    try (BackendInputStream input = new BackendInputStream(message.getData())) {
+                    try (InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData())) {
                         BackendPing ping = (BackendPing) input.readObject();
                         input.close();
                         this.keepAlives.removeIf(ping::equals);

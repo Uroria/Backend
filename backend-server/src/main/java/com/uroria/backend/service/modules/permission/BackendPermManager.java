@@ -36,6 +36,12 @@ public final class BackendPermManager extends AbstractManager implements PermMan
 
     @Override
     protected void enable() throws PulsarClientException {
+        PermGroup group = getGroup("default").orElse(null);
+        if (group == null) {
+            group = new PermGroup("default", 999);
+            updateDatabase(group);
+        }
+
         this.holderUpdate = new HolderUpdate(this.pulsarClient, this);
         this.holderResponse = new HolderResponse(this.pulsarClient, this);
         this.groupUpdate = new GroupUpdate(this.pulsarClient, this);
@@ -56,31 +62,12 @@ public final class BackendPermManager extends AbstractManager implements PermMan
             PermHolder cachedHolder = getCachedHolder(uuid);
             if (cachedHolder != null) return Optional.of(cachedHolder);
             Document savedDocument = this.holders.find(Filters.eq("uuid", uuid.toString())).first();
-            if (savedDocument == null) {
-                PermHolder holder = new PermHolder(uuid);
-                holder.addGroup(getDefaultGroup());
-                String json = gson.toJson(holder);
-                Document document = Document.parse(json);
-                if (this.holders.insertOne(document).wasAcknowledged()) {
-                    this.logger.debug("Inserted " + holder);
-                    return Optional.of(holder);
-                }
-                return Optional.empty();
-            }
+            if (savedDocument == null) return Optional.empty();
             return Optional.of(fromJson(savedDocument.toJson()));
         } catch (Exception exception) {
             this.logger.error("Unhandled exception", exception);
             return Optional.empty();
         }
-    }
-
-    private PermGroup getDefaultGroup() {
-        PermGroup group = getGroup("default").orElse(null);
-        if (group == null) {
-            group = new PermGroup("default");
-            group.update();
-        }
-        return group;
     }
 
     @Override
@@ -145,8 +132,17 @@ public final class BackendPermManager extends AbstractManager implements PermMan
             }
             String json = gson.toJson(holder);
             fromJson(json);
-            Document document = Document.parse(json);
-            if (this.holders.replaceOne(Filters.eq("uuid", holder.getUUID().toString()), document).wasAcknowledged()) {
+            Document newDocument = Document.parse(json);
+            Document document = this.holders.find(Filters.eq("uuid", holder.getUUID().toString())).first();
+            if (document == null) {
+                 if (this.holders.insertOne(newDocument).wasAcknowledged()) {
+                     this.logger.debug("Inserted " + holder);
+                     return;
+                 }
+                 this.logger.warn("Unable to insert " + holder);
+                return;
+            }
+            if (this.holders.replaceOne(Filters.eq("uuid", holder.getUUID().toString()), newDocument).wasAcknowledged()) {
                 this.logger.debug("Replaced " + holder);
                 return;
             }

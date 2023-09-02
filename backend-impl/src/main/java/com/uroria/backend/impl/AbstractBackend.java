@@ -39,7 +39,7 @@ public abstract class AbstractBackend implements Backend {
         if (this.pulsarClient != null) this.pulsarClient.shutdown();
     }
 
-    protected final PulsarClient getPulsarClient() {
+    public final PulsarClient getPulsarClient() {
         return this.pulsarClient;
     }
 }

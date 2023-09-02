@@ -1,7 +1,7 @@
 package com.uroria.backend.service.commands.predefined;
 
 import com.uroria.backend.service.commands.Command;
-import org.apache.pulsar.shade.com.google.common.collect.ImmutableList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +20,6 @@ public final class HelpCommand extends Command {
 
     @Override
     protected List<String> tabComplete(String... args) {
-        return ImmutableList.of();
+        return new ObjectArrayList<>();
     }
 }

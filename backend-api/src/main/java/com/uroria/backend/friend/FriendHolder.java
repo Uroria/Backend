@@ -2,7 +2,7 @@ package com.uroria.backend.friend;
 
 import com.uroria.backend.Backend;
 import com.uroria.backend.BackendObject;
-import com.uroria.backend.utils.ObjectUtils;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import lombok.NonNull;
@@ -123,8 +123,8 @@ public final class FriendHolder extends BackendObject<FriendHolder> implements S
     @Override
     public void modify(FriendHolder friend) {
         this.deleted = friend.deleted;
-        ObjectUtils.overrideCollection(this.friends, friend.friends);
-        ObjectUtils.overrideCollection(this.friendRequests, friend.friendRequests);
-        ObjectUtils.overrideCollection(this.sentFriendRequests, friend.sentFriendRequests);
+        CollectionUtils.overrideCollection(this.friends, friend.friends);
+        CollectionUtils.overrideCollection(this.friendRequests, friend.friendRequests);
+        CollectionUtils.overrideCollection(this.sentFriendRequests, friend.sentFriendRequests);
     }
 }

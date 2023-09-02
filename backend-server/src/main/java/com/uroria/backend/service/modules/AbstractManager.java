@@ -1,13 +1,8 @@
 package com.uroria.backend.service.modules;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.uroria.backend.service.BackendServer;
-import com.uroria.backend.service.gson.Object2BooleanMapTypeAdapterFactory;
-import com.uroria.backend.service.gson.Object2IntMapTypeAdapterFactory;
-import com.uroria.backend.service.gson.Object2ObjectMapTypeAdapterFactory;
-import com.uroria.backend.service.gson.ObjectListTypeAdapterFactory;
-import com.uroria.backend.service.gson.TransientExclusionStrategy;
+import com.uroria.base.gson.GsonFactory;
 import io.lettuce.core.SetArgs;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -24,23 +19,8 @@ public abstract class AbstractManager {
     public AbstractManager(PulsarClient pulsarClient, String moduleName) {
         this.pulsarClient = pulsarClient;
         this.logger = BackendServer.getLogger();
-        this.gson = buildGson();
+        this.gson = GsonFactory.create();
         this.moduleName = moduleName;
-    }
-
-    private Gson buildGson() {
-        GsonBuilder builder = new GsonBuilder();
-        builder.disableHtmlEscaping();
-        builder.registerTypeAdapterFactory(new Object2ObjectMapTypeAdapterFactory());
-        builder.registerTypeAdapterFactory(new Object2BooleanMapTypeAdapterFactory());
-        builder.registerTypeAdapterFactory(new Object2IntMapTypeAdapterFactory());
-
-        builder.registerTypeAdapterFactory(new ObjectListTypeAdapterFactory());
-
-        TransientExclusionStrategy exclusionStrategy = new TransientExclusionStrategy();
-        builder.addSerializationExclusionStrategy(exclusionStrategy);
-        builder.addDeserializationExclusionStrategy(exclusionStrategy);
-        return builder.create();
     }
 
     protected abstract void enable() throws PulsarClientException;

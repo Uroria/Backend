@@ -20,7 +20,7 @@ public final class Streamer extends BackendObject<Streamer> implements Serializa
     private String badge;
 
     public Streamer(@NonNull User streamer, @NonNull String twitchChannel) {
-        this.streamerUuid = streamer.getUUID();
+        this.streamerUuid = streamer.getUniqueId();
         this.twitchChannel = twitchChannel;
         this.badge = "";
     }

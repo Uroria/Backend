@@ -3,13 +3,11 @@ repositories {
 }
 
 val velocityVersion: String by project.extra
-val sentryVersion: String by project.extra
 
 dependencies {
-    api(project(":backend-impl"))
+    api(project(":backend-wrapper"))
+    annotationProcessor(project(":backend-wrapper"))
 
     compileOnly("com.velocitypowered:velocity-api:${velocityVersion}")
     annotationProcessor("com.velocitypowered:velocity-api:${velocityVersion}")
-
-    implementation("io.sentry:sentry:${sentryVersion}")
 }

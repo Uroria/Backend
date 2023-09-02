@@ -1,8 +1,8 @@
 package com.uroria.backend.impl.pulsar;
 
 import com.uroria.backend.impl.ping.BackendPing;
-import com.uroria.backend.utils.BackendOutputStream;
-import com.uroria.backend.utils.ThreadUtils;
+import com.uroria.base.io.InsaneByteArrayOutputStream;
+import com.uroria.base.utils.ThreadUtils;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -35,7 +35,7 @@ public class PulsarKeepAlive extends Thread {
     @Override
     public final void run() {
         while (!this.pulsarClient.isClosed() && this.producer.isConnected()) {
-            try (BackendOutputStream output = new BackendOutputStream()) {
+            try (InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream()) {
                 output.writeObject(new BackendPing(this.identifier, System.currentTimeMillis()));
                 output.close();
                 this.producer.send(output.toByteArray());

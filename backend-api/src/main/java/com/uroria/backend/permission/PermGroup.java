@@ -1,8 +1,8 @@
 package com.uroria.backend.permission;
 
 import com.uroria.backend.Backend;
-import com.uroria.backend.property.PropertyObject;
-import com.uroria.backend.utils.ObjectUtils;
+import com.uroria.backend.BackendObject;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import lombok.Getter;
@@ -15,7 +15,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
-public final class PermGroup extends PropertyObject<PermGroup> implements Serializable {
+public final class PermGroup extends BackendObject<PermGroup> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
 
     private @Getter final String name;
@@ -65,8 +65,8 @@ public final class PermGroup extends PropertyObject<PermGroup> implements Serial
     public void modify(PermGroup group) {
         this.deleted = group.deleted;
         this.priority = group.priority;
-        ObjectUtils.overrideMap(this.permissions, group.permissions);
-        ObjectUtils.overrideMap(this.properties, group.properties);
+        CollectionUtils.overrideMap(this.permissions, group.permissions);
+        CollectionUtils.overrideMap(this.properties, group.properties);
     }
 
     @Override

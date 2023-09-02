@@ -1,9 +1,9 @@
 package com.uroria.backend.clan;
 
 import com.uroria.backend.Backend;
-import com.uroria.backend.property.PropertyObject;
+import com.uroria.backend.BackendObject;
 import com.uroria.backend.user.User;
-import com.uroria.backend.utils.ObjectUtils;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import lombok.Getter;
@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-public final class Clan extends PropertyObject<Clan> implements Serializable {
+public final class Clan extends BackendObject<Clan> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
 
     private final ObjectList<UUID> members;
@@ -41,24 +41,24 @@ public final class Clan extends PropertyObject<Clan> implements Serializable {
 
     public void addModerator(@NonNull User user) {
         addMember(user);
-        if (!this.moderators.contains(user.getUUID())) this.moderators.add(user.getUUID());
+        if (!this.moderators.contains(user.getUniqueId())) this.moderators.add(user.getUniqueId());
         update();
     }
 
     public void removeModerator(User user) {
         if (user == null) return;
-        this.moderators.remove(user.getUUID());
+        this.moderators.remove(user.getUniqueId());
         update();
     }
 
     public boolean isMember(User user) {
         if (user == null) return false;
-        return this.members.contains(user.getUUID());
+        return this.members.contains(user.getUniqueId());
     }
 
     public void addMember(@NonNull User user) {
         if (!user.getClanTag().map(tag -> this.tag.equals(tag)).orElse(false)) user.setClan(this);
-        UUID uuid = user.getUUID();
+        UUID uuid = user.getUniqueId();
         if (this.members.contains(uuid)) return;
         this.members.add(uuid);
         update();
@@ -115,8 +115,8 @@ public final class Clan extends PropertyObject<Clan> implements Serializable {
 
     @Override
     public void modify(Clan clan) {
-        ObjectUtils.overrideCollection(this.members, clan.members);
-        ObjectUtils.overrideCollection(this.moderators, clan.moderators);
+        CollectionUtils.overrideCollection(this.members, clan.members);
+        CollectionUtils.overrideCollection(this.moderators, clan.moderators);
         this.tag = clan.tag;
         this.operator = clan.operator;
     }

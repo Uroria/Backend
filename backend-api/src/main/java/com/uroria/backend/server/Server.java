@@ -1,8 +1,8 @@
 package com.uroria.backend.server;
 
 import com.uroria.backend.Backend;
-import com.uroria.backend.property.PropertyObject;
-import com.uroria.backend.utils.ObjectUtils;
+import com.uroria.backend.BackendObject;
+import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import lombok.Getter;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class Server extends PropertyObject<Server> implements Serializable {
+public final class Server extends BackendObject<Server> implements Serializable {
     @Serial private static final long serialVersionUID = 1;
 
     private final long identifier;
@@ -159,8 +159,8 @@ public final class Server extends PropertyObject<Server> implements Serializable
         this.id = server.id;
         this.status = server.status;
         this.address = server.address;
-        ObjectUtils.overrideMap(this.properties, server.properties);
-        ObjectUtils.overrideCollection(this.onlinePlayers, server.onlinePlayers);
+        CollectionUtils.overrideMap(this.properties, server.properties);
+        CollectionUtils.overrideCollection(this.onlinePlayers, server.onlinePlayers);
     }
 
     @Override

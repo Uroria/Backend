@@ -51,16 +51,7 @@ public final class BackendUserManager extends AbstractManager implements UserMan
             User cachedUser = getCachedUser(uuid);
             if (cachedUser != null) return Optional.of(cachedUser);
             Document savedDocument = this.users.find(Filters.eq("uuid", uuid.toString())).first();
-            if (savedDocument == null) {
-                User user = new User(uuid);
-                String json = gson.toJson(user);
-                Document document = Document.parse(json);
-                if (this.users.insertOne(document).wasAcknowledged()) {
-                    this.logger.debug("Inserted " + user);
-                    return Optional.of(user);
-                }
-                return Optional.empty();
-            }
+            if (savedDocument == null) return Optional.empty();
             return Optional.of(fromJson(savedDocument.toJson()));
         } catch (Exception exception) {
             this.logger.error("Unhandled exception", exception);
@@ -92,11 +83,20 @@ public final class BackendUserManager extends AbstractManager implements UserMan
 
     void updateDatabase(@NonNull User user) {
         try {
-            this.cache.del("user:" + user.getUUID());
+            this.cache.del("user:" + user.getUniqueId());
             String json = gson.toJson(user);
             fromJson(json);
-            Document document = Document.parse(json);
-            if (this.users.replaceOne(Filters.eq("uuid", user.getUUID().toString()), document).wasAcknowledged()) {
+            Document newDocument = Document.parse(json);
+            Document document = this.users.find((Filters.eq("uuid", user.getUniqueId().toString()))).first();
+            if (document == null) {
+                if (this.users.insertOne(newDocument).wasAcknowledged()) {
+                    this.logger.debug("Inserted " + user);
+                    return;
+                }
+                this.logger.warn("Unable to insert " + user);
+                return;
+            }
+            if (this.users.replaceOne(Filters.eq("uuid", user.getUniqueId().toString()), newDocument).wasAcknowledged()) {
                 this.logger.debug("Replaced " + user);
                 return;
             }
@@ -108,10 +108,9 @@ public final class BackendUserManager extends AbstractManager implements UserMan
 
     private User fromJson(String json) {
         User user = gson.fromJson(json, User.class);
-        String key = "user:" + user.getUUID();
+        String key = "user:" + user.getUniqueId();
         this.cache.set(key, json, lifespan(Duration.ofHours(4)));
-        String username = user.getUsername();
-        if (username != null) this.cache.set("user:" + username, key, lifespan(Duration.ofHours(24)));
+        this.cache.set("user:" + user.getUsername(), key, lifespan(Duration.ofHours(24)));
         return user;
     }
 

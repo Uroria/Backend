@@ -91,8 +91,17 @@ public class BackendClanManager extends AbstractManager implements ClanManager {
             }
             String json = gson.toJson(clan);
             fromJson(json);
-            Document document = Document.parse(json);
-            if (this.clans.replaceOne(Filters.eq("tag", clan.getTag()), document).wasAcknowledged()) {
+            Document newDocument = Document.parse(json);
+            Document document = this.clans.find(Filters.eq("name", clan.getName())).first();
+            if (document == null) {
+                if (this.clans.insertOne(newDocument).wasAcknowledged()) {
+                    this.logger.debug("Inserted clan " + clan);
+                    return;
+                }
+                this.logger.warn("Unable to insert clan " + clan);
+                return;
+            }
+            if (this.clans.replaceOne(Filters.eq("name", clan.getName()), newDocument).wasAcknowledged()) {
                 logger.debug("Replaced " + clan);
                 return;
             }

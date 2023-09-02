@@ -18,7 +18,7 @@ public final class BackendRootManager extends AbstractManager {
 
     @Override
     public void enable() throws PulsarClientException {
-        this.response = new BackendResponse(this.pulsarClient);
+        this.response = new BackendResponse(this.pulsarClient, logger);
         this.updateChannel = new StopUpdateChannel(this.pulsarClient, getModuleName(), server::explicitShutdown);
     }
 

@@ -1,6 +1,8 @@
 package com.uroria.backend;
 
-public abstract class BackendObject<T> {
+import com.uroria.base.property.AbstractPropertyObject;
+
+public abstract class BackendObject<T> extends AbstractPropertyObject {
     protected boolean deleted;
 
     public abstract void modify(T obj);
