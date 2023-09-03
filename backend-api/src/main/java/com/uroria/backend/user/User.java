@@ -148,11 +148,13 @@ public final class User extends BackendObject<User> implements Serializable, Uro
 
     @Override
     public boolean hasPermission(@Nullable String s) {
+        checkPermHolder();
         return getPermissionState(s).asBooleanValue();
     }
 
     @Override
     public @NotNull PermState getPermissionState(@Nullable String node) {
+        checkPermHolder();
         if (node == null) return PermState.NOT_SET;
 
         if (permHolder == null) return PermState.NOT_SET;
@@ -170,19 +172,27 @@ public final class User extends BackendObject<User> implements Serializable, Uro
 
     @Override
     public void setPermission(@NonNull String node, boolean val) {
+        checkPermHolder();
         this.permHolder.setPermission(node, val);
         this.permHolder.update();
     }
 
     @Override
     public void setPermission(@NonNull String node, @NonNull PermState state) {
+        checkPermHolder();
         this.permHolder.setPermission(node, state.asBooleanValue());
         this.permHolder.update();
     }
 
     @Override
     public void unsetPermission(@NonNull String node) {
+        checkPermHolder();
         this.permHolder.unsetPermission(node);
         this.permHolder.update();
+    }
+
+    private void checkPermHolder() {
+        if (this.permHolder != null) return;
+        this.permHolder = Backend.getAPI().getPermissionManager().getHolder(this.uuid).orElse(null);
     }
 }

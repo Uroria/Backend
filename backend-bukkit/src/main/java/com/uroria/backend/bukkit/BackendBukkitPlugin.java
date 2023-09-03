@@ -9,6 +9,7 @@ import com.uroria.backend.bukkit.listeners.PlayerQuit;
 import com.uroria.backend.impl.scheduler.BackendScheduler;
 import com.uroria.backend.wrapper.BackendWrapper;
 import com.uroria.backend.wrapper.configuration.ServerConfiguration;
+import com.uroria.base.configs.InternalConfigurations;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -19,6 +20,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class BackendBukkitPlugin extends JavaPlugin {
@@ -56,6 +58,7 @@ public final class BackendBukkitPlugin extends JavaPlugin {
     public void onEnable() {
         try {
             this.wrapper.start();
+            this.serverManager.start(UUID.randomUUID().toString());
         } catch (Exception exception) {
             this.logger.error("Cannot start backend", exception);
             Bukkit.shutdown();
@@ -104,6 +107,7 @@ public final class BackendBukkitPlugin extends JavaPlugin {
     public void onDisable() {
         try {
             HandlerList.unregisterAll(this);
+            this.serverManager.shutdown();
             this.wrapper.shutdown();
         } catch (Exception exception) {
             this.logger.error("Couldn't shutdown backend connections properly", exception);
