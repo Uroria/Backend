@@ -83,6 +83,6 @@ public final class ServerManager {
 
     public void shutdown() throws PulsarClientException {
         Bukkit.getOnlinePlayers().forEach(player -> player.kickPlayer("Shutdown"));
-        this.keepAlive.close();
+        if (keepAlive != null) this.keepAlive.close();
     }
 }
