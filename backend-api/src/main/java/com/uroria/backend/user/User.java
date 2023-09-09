@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ public final class User extends BackendObject<User> implements Serializable, Uro
     private int status;
     private final ObjectList<UUID> crew;
     private String clanTag;
+    private String skinURL;
     @GsonTransient
     private transient PermHolder permHolder;
 
@@ -45,6 +47,34 @@ public final class User extends BackendObject<User> implements Serializable, Uro
         this.crew = new ObjectArrayList<>();
         this.language = Language.DEFAULT.toTag();
         this.status = UserStatus.DEFAULT.toCode();
+    }
+
+    public void setSkinURL(@NonNull String skinURL) {
+        this.skinURL = skinURL;
+    }
+
+    public void setSkinURL(@NonNull URL url) {
+        this.skinURL = url.toString();
+    }
+
+    /**
+     * Returns the users skin url as string
+     */
+    public @Nullable String getSkin() {
+        return this.skinURL;
+    }
+
+    /**
+     * Returns the skin URL directly. Is not safe to use.
+     * In favour use {@link User#getSkin()}
+     */
+    @Deprecated
+    public @Nullable URL getSkinURL() {
+        try {
+            return new URL(this.skinURL);
+        } catch (Exception exception) {
+            return null;
+        }
     }
 
     public ObjectList<UUID> getCrew() {
