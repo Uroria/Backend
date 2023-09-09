@@ -107,6 +107,7 @@ public final class UserManagerImpl extends AbstractUserManager implements UserMa
 
     @Override
     public void updateUser(@NonNull User user) {
+        if (this.users.stream().noneMatch(user::equals)) this.users.add(user);
         try {
             checkUser(user);
             if (this.offline) return;

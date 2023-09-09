@@ -85,6 +85,7 @@ public final class PunishmentManagerImpl extends AbstractPunishmentManager imple
 
     @Override
     public void updatePunished(@NonNull Punished punished) {
+        if (this.punisheds.stream().noneMatch(punished::equals)) this.punisheds.add(punished);
         try {
             checkPunished(punished);
             if (this.offline) return;

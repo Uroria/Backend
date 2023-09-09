@@ -132,6 +132,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
 
     @Override
     public void updateHolder(@NonNull PermHolder holder) {
+        if (this.holders.stream().noneMatch(holder::equals)) this.holders.add(holder);
         try {
             checkHolder(holder);
             if (this.offline) return;

@@ -3,7 +3,6 @@ package com.uroria.backend.user;
 import com.uroria.backend.Backend;
 import com.uroria.backend.BackendObject;
 import com.uroria.backend.clan.Clan;
-import com.uroria.backend.permission.PermCalculator;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.PermHolder;
 import com.uroria.base.gson.annotations.GsonTransient;
@@ -12,6 +11,9 @@ import com.uroria.base.permission.PermState;
 import com.uroria.base.user.UroriaUser;
 import com.uroria.base.user.UserStatus;
 import com.uroria.base.utils.CollectionUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectList;
+import it.unimi.dsi.fastutil.objects.ObjectLists;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -33,14 +35,40 @@ public final class User extends BackendObject<User> implements Serializable, Uro
     private @NotNull String language;
     private @Getter @Setter boolean online;
     private int status;
+    private final ObjectList<UUID> crew;
     private String clanTag;
     @GsonTransient
     private transient PermHolder permHolder;
 
     public User(@NonNull UUID uuid) {
         this.uuid = uuid;
+        this.crew = new ObjectArrayList<>();
         this.language = Language.DEFAULT.toTag();
         this.status = UserStatus.DEFAULT.toCode();
+    }
+
+    public ObjectList<UUID> getCrew() {
+        return ObjectLists.unmodifiable(this.crew);
+    }
+
+    public ObjectList<UUID> getUnsafeCrew() {
+        return this.crew;
+    }
+
+    public void addCrewMember(@NonNull User user) {
+        this.crew.add(user.uuid);
+        update();
+    }
+
+    public void removeCrewMember(UUID uuid) {
+        if (uuid == null) return;
+        this.crew.remove(uuid);
+        update();
+    }
+
+    public void removeCrewMember(User user) {
+        if (user == null) return;
+        removeCrewMember(user.uuid);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.uroria.backend.punishment;
 
+import com.uroria.backend.Backend;
 import com.uroria.backend.BackendObject;
 import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -60,7 +61,7 @@ public final class Punished extends BackendObject<Punished> implements Serializa
 
     @Override
     public void update() {
-
+        Backend.getAPI().getPunishmentManager().updatePunished(this);
     }
 
     @Override
