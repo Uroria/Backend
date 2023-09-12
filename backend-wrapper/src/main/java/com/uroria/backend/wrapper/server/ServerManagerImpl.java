@@ -60,6 +60,11 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
         }
 
         if (server.isDeleted()) {
+            for (Server cachedServer : this.servers) {
+                if (cachedServer.equals(server)) {
+                    cachedServer.delete();
+                }
+            }
             this.servers.remove(server);
             this.eventManager.callAndForget(new ServerUpdateEvent(server));
             return;
@@ -87,6 +92,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
                     }
                 }
                 case STOPPED -> {
+                    cachedServer.delete();
                     if (cachedServer.getStatus() == ServerStatus.CLOSED) {
                         this.eventManager.callAndForget(new ServerStopEvent(cachedServer));
                         return;
