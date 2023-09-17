@@ -1,11 +1,9 @@
 package com.uroria.backend.wrapper;
 
-import com.uroria.backend.Backend;
 import com.uroria.backend.Unsafe;
-import com.uroria.backend.impl.AbstractBackend;
+import com.uroria.backend.impl.AbstractBackendWrapper;
 import com.uroria.backend.impl.root.BackendRequestChannel;
 import com.uroria.backend.impl.root.StopUpdateChannel;
-import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.wrapper.clan.ClanManagerImpl;
 import com.uroria.backend.wrapper.friend.FriendManagerImpl;
 import com.uroria.backend.wrapper.message.MessageManagerImpl;
@@ -23,7 +21,7 @@ import org.slf4j.Logger;
 import java.util.UUID;
 import java.util.function.Function;
 
-public final class BackendWrapper extends AbstractBackend implements Backend {
+public final class BackendWrapper extends AbstractBackendWrapper implements BackendOld {
     private static BackendWrapper instance;
 
     private final Logger logger;

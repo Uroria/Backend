@@ -1,11 +1,8 @@
 package com.uroria.backend.bukkit.server;
 
-import com.uroria.backend.Backend;
 import com.uroria.backend.bukkit.BackendBukkitPlugin;
 import com.uroria.backend.impl.server.KeepAlive;
-import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerStatus;
-import com.uroria.backend.server.ServerType;
 import com.uroria.backend.wrapper.BackendWrapper;
 import com.uroria.backend.wrapper.configuration.ServerConfiguration;
 import com.uroria.base.event.EventManager;
@@ -23,7 +20,8 @@ public final class ServerManager {
     private final EventManager eventManager;
     final int localServerId;
     private KeepAlive keepAlive;
-    @Getter Server server;
+    @Getter
+    Serverold server;
 
     public ServerManager(Logger logger, EventManager eventManager) {
         this.logger = logger;
@@ -44,11 +42,11 @@ public final class ServerManager {
     public void start(String identifier) {
         if (this.localServerId == -1) return;
         if (this.localServerId == -2) {
-            this.server = new Server("Offline", -1, ServerType.OTHER);
+            this.server = new Serverold("Offline", -1, GroupType.OTHER);
             this.server.setStatus(ServerStatus.READY);
             return;
         }
-        this.server = Backend.getAPI().getServerManager().getCloudServer(this.localServerId, 5000).orElse(null);
+        this.server = BackendOld.getAPI().getServerManager().getCloudServer(this.localServerId, 5000).orElse(null);
         if (this.server == null) {
             logger.error("Cannot find server that fits for local id " + this.localServerId);
             ThreadUtils.sleep(5000);

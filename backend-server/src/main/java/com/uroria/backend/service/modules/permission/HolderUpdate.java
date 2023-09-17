@@ -1,12 +1,11 @@
 package com.uroria.backend.service.modules.permission;
 
 import com.uroria.backend.impl.pulsar.PulsarUpdate;
-import com.uroria.backend.permission.PermHolder;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-public final class HolderUpdate extends PulsarUpdate<PermHolder> {
+public final class HolderUpdate extends PulsarUpdate<PermHolderOld> {
     private final BackendPermManager permManager;
 
     public HolderUpdate(@NonNull PulsarClient pulsarClient, BackendPermManager permManager) throws PulsarClientException {
@@ -15,7 +14,7 @@ public final class HolderUpdate extends PulsarUpdate<PermHolder> {
     }
 
     @Override
-    protected void onUpdate(PermHolder holder) {
+    protected void onUpdate(PermHolderOld holder) {
         this.permManager.updateDatabase(holder);
     }
 }

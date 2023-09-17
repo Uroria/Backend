@@ -3,9 +3,6 @@ package com.uroria.backend.service.modules.permission;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.uroria.backend.permission.PermGroup;
-import com.uroria.backend.permission.PermHolder;
-import com.uroria.backend.permission.PermManager;
 import com.uroria.backend.service.modules.AbstractManager;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -36,9 +33,9 @@ public final class BackendPermManager extends AbstractManager implements PermMan
 
     @Override
     protected void enable() throws PulsarClientException {
-        PermGroup group = getGroup("default").orElse(null);
+        PermGroupOld group = getGroup("default").orElse(null);
         if (group == null) {
-            group = new PermGroup("default", 999);
+            group = new PermGroupOld("default", 999);
             updateDatabase(group);
         }
 
@@ -57,9 +54,9 @@ public final class BackendPermManager extends AbstractManager implements PermMan
     }
 
     @Override
-    public Optional<PermHolder> getHolder(UUID uuid, int timeout) {
+    public Optional<PermHolderOld> getHolder(UUID uuid, int timeout) {
         try {
-            PermHolder cachedHolder = getCachedHolder(uuid);
+            PermHolderOld cachedHolder = getCachedHolder(uuid);
             if (cachedHolder != null) return Optional.of(cachedHolder);
             Document savedDocument = this.holders.find(Filters.eq("uuid", uuid.toString())).first();
             if (savedDocument == null) return Optional.empty();
@@ -71,11 +68,11 @@ public final class BackendPermManager extends AbstractManager implements PermMan
     }
 
     @Override
-    public Optional<PermGroup> getGroup(String name, int timeout) {
+    public Optional<PermGroupOld> getGroup(String name, int timeout) {
         try {
             Document document = this.groups.find(Filters.eq("name", name)).first();
             if (document == null) return Optional.empty();
-            return Optional.of(gson.fromJson(document.toJson(), PermGroup.class));
+            return Optional.of(gson.fromJson(document.toJson(), PermGroupOld.class));
         } catch (Exception exception) {
             this.logger.error("Unhandled exception", exception);
             return Optional.empty();
@@ -83,18 +80,18 @@ public final class BackendPermManager extends AbstractManager implements PermMan
     }
 
     @Override
-    public void updateHolder(@NonNull PermHolder holder) {
+    public void updateHolder(@NonNull PermHolderOld holder) {
         updateDatabase(holder);
         this.holderUpdate.update(holder);
     }
 
     @Override
-    public void updateGroup(@NonNull PermGroup group) {
+    public void updateGroup(@NonNull PermGroupOld group) {
         updateDatabase(group);
         this.groupUpdate.update(group);
     }
 
-    void updateDatabase(@NonNull PermGroup group) {
+    void updateDatabase(@NonNull PermGroupOld group) {
         if (group.isDeleted()) {
             if (this.groups.deleteOne(Filters.eq("name", group.getName())).wasAcknowledged()) {
                 logger.debug("Deleted " + group);
@@ -119,7 +116,7 @@ public final class BackendPermManager extends AbstractManager implements PermMan
         this.logger.warn("Unable to replace " + group);
     }
 
-    void updateDatabase(@NonNull PermHolder holder) {
+    void updateDatabase(@NonNull PermHolderOld holder) {
         try {
             this.cache.del("permholder:" + holder.getUUID());
             if (holder.isDeleted()) {
@@ -152,15 +149,15 @@ public final class BackendPermManager extends AbstractManager implements PermMan
         }
     }
 
-    private PermHolder fromJson(String json) {
-        PermHolder holder = gson.fromJson(json, PermHolder.class);
+    private PermHolderOld fromJson(String json) {
+        PermHolderOld holder = gson.fromJson(json, PermHolderOld.class);
         this.cache.set("permholder:" + holder.getUUID(), json, lifespan(Duration.ofHours(8)));
         return holder;
     }
 
-    private PermHolder getCachedHolder(UUID uuid) {
+    private PermHolderOld getCachedHolder(UUID uuid) {
         String cachedObject = this.cache.get("permholder:" + uuid);
         if (cachedObject == null) return null;
-        return gson.fromJson(cachedObject, PermHolder.class);
+        return gson.fromJson(cachedObject, PermHolderOld.class);
     }
 }

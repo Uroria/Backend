@@ -1,10 +1,7 @@
 package com.uroria.backend.service.modules.server;
 
 import com.uroria.backend.impl.configuration.BackendConfiguration;
-import com.uroria.backend.server.Server;
-import com.uroria.backend.server.ServerManager;
 import com.uroria.backend.server.ServerStatus;
-import com.uroria.backend.server.Unsafe;
 import com.uroria.backend.service.BackendServer;
 import com.uroria.backend.service.modules.AbstractManager;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
@@ -17,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 public final class BackendServerManager extends AbstractManager implements ServerManager {
-    private final ObjectArraySet<Server> servers;
+    private final ObjectArraySet<Serverold> servers;
     private final CloudAPI cloudAPI;
     private ServerUpdate update;
     private ServerStart start;
@@ -58,23 +55,23 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
-    public Optional<Server> getServer(long identifier, int timeout) {
-        for (Server server : this.servers) {
+    public Optional<Serverold> getServer(long identifier, int timeout) {
+        for (Serverold server : this.servers) {
             if (server.getIdentifier() == identifier) return Optional.of(server);
         }
         return Optional.empty();
     }
 
     @Override
-    public Optional<Server> getCloudServer(int id, int timeout) {
-        for (Server server : this.servers){
+    public Optional<Serverold> getCloudServer(int id, int timeout) {
+        for (Serverold server : this.servers){
             if (server.getID() == id) return Optional.of(server);
         }
         return Optional.empty();
     }
 
     @Override
-    public Server startServer(@NonNull Server server) {
+    public Serverold startServer(@NonNull Serverold server) {
         if (server.getStatus() != ServerStatus.EMPTY) return null;
         try {
             int id = this.cloudAPI.startServer(server.getTemplateID());
@@ -99,12 +96,12 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
-    public void updateServer(@NonNull Server server) {
+    public void updateServer(@NonNull Serverold server) {
         updateLocal(server);
         this.update.update(server);
     }
 
-    void updateLocal(@NonNull Server server) {
+    void updateLocal(@NonNull Serverold server) {
         if (server.getID() == -1 && !server.isDeleted()) throw new IllegalStateException("Server not started yet");
         if (server.isDeleted()) server.setStatus(ServerStatus.STOPPED);
         if (this.servers.stream().noneMatch(server::equals)) {
@@ -116,7 +113,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
             }
         }
 
-        for (Server savedServer : this.servers) {
+        for (Serverold savedServer : this.servers) {
             if (!savedServer.equals(server)) continue;
             savedServer.modify(server);
 
@@ -130,7 +127,7 @@ public final class BackendServerManager extends AbstractManager implements Serve
     }
 
     @Override
-    public List<Server> getServers() {
+    public List<Serverold> getServers() {
         return this.servers.stream().toList();
     }
 }

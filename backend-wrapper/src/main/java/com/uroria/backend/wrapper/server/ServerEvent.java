@@ -1,12 +1,11 @@
 package com.uroria.backend.wrapper.server;
 
-import com.uroria.backend.server.Server;
 import lombok.Getter;
 
 public abstract class ServerEvent {
-    private @Getter final Server server;
+    private @Getter final Serverold server;
 
-    public ServerEvent(Server server) {
+    public ServerEvent(Serverold server) {
         this.server = server;
     }
 }

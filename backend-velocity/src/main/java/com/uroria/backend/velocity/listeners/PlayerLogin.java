@@ -1,8 +1,6 @@
 package com.uroria.backend.velocity.listeners;
 
-import com.uroria.backend.permission.PermHolder;
 import com.uroria.backend.punishment.Punished;
-import com.uroria.backend.user.User;
 import com.uroria.backend.velocity.BackendVelocityPlugin;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
@@ -22,17 +20,17 @@ public record PlayerLogin(BackendVelocityPlugin plugin) {
         return EventTask.async(() -> {
             Player player = loginEvent.getPlayer();
             UUID uuid = player.getUniqueId();
-            PermHolder holder = plugin.getBackend().getPermissionManager().getHolder(uuid, 10000).orElse(null);
+            PermHolderOld holder = plugin.getBackend().getPermissionManager().getHolder(uuid, 10000).orElse(null);
             if (holder == null) {
                 LOGGER.info(player.getUsername() + " registered PermissionHolder");
-                holder = new PermHolder(uuid);
+                holder = new PermHolderOld(uuid);
                 holder.update();
             }
             boolean updateUser = false;
-            User user = plugin.getBackend().getUserManager().getUser(uuid, 10000).orElse(null);
+            UserOld user = plugin.getBackend().getUserManager().getUser(uuid, 10000).orElse(null);
             if (user == null) {
                 LOGGER.info(player.getUsername() + " registered User");
-                user = new User(uuid);
+                user = new UserOld(uuid);
                 user.setUsername(player.getUsername());
                 updateUser = true;
             } else {

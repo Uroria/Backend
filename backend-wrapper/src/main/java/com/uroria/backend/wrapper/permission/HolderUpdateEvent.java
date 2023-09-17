@@ -1,13 +1,12 @@
 package com.uroria.backend.wrapper.permission;
 
-import com.uroria.backend.permission.PermHolder;
 import lombok.Getter;
 
 public class HolderUpdateEvent {
 
-    private @Getter final PermHolder holder;
+    private @Getter final PermHolderOld holder;
 
-    public HolderUpdateEvent(PermHolder holder) {
+    public HolderUpdateEvent(PermHolderOld holder) {
         this.holder = holder;
     }
 }

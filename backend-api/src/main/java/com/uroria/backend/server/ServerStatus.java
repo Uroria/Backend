@@ -7,10 +7,9 @@ import lombok.Getter;
 public enum ServerStatus {
     EMPTY(0),
     STARTING(1),
-    READY(2),
+    QUEUE(2),
     INGAME(3),
-    ENDING(4),
-    CLOSED(5),
+    CLOSED(4),
     STOPPED(6);
     private final int id;
 

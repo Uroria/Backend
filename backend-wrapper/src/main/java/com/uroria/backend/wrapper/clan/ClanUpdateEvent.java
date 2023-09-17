@@ -1,13 +1,12 @@
 package com.uroria.backend.wrapper.clan;
 
-import com.uroria.backend.clan.Clan;
 import lombok.Getter;
 
 public final class ClanUpdateEvent {
 
-    private @Getter final Clan clan;
+    private @Getter final ClanOld clan;
 
-    public ClanUpdateEvent(Clan clan) {
+    public ClanUpdateEvent(ClanOld clan) {
         this.clan = clan;
     }
 }

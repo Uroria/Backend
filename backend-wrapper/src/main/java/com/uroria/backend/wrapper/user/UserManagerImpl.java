@@ -5,8 +5,6 @@ import com.uroria.backend.impl.user.AbstractUserManager;
 import com.uroria.backend.impl.user.UserNameRequestChannel;
 import com.uroria.backend.impl.user.UserUUIDRequestChannel;
 import com.uroria.backend.impl.user.UserUpdateChannel;
-import com.uroria.backend.user.User;
-import com.uroria.backend.user.UserManager;
 import com.uroria.base.event.EventManager;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
@@ -50,7 +48,7 @@ public final class UserManagerImpl extends AbstractUserManager implements UserMa
     }
 
     @Override
-    protected void checkUser(@NonNull User user) {
+    protected void checkUser(@NonNull UserOld user) {
         if (this.users.stream().noneMatch(user::equals)) return;
 
         if (user.isDeleted()) {
@@ -59,7 +57,7 @@ public final class UserManagerImpl extends AbstractUserManager implements UserMa
             return;
         }
 
-        for (User cachedUser : this.users) {
+        for (UserOld cachedUser : this.users) {
             if (!cachedUser.equals(user)) continue;
             cachedUser.modify(user);
 
@@ -75,38 +73,38 @@ public final class UserManagerImpl extends AbstractUserManager implements UserMa
     }
 
     @Override
-    public Optional<User> getUser(UUID uuid, int timeout) {
-        for (User user : this.users) {
+    public Optional<UserOld> getUser(UUID uuid, int timeout) {
+        for (UserOld user : this.users) {
             if (user.getUniqueId().equals(uuid)) return Optional.of(user);
         }
 
         if (this.offline) {
-            User user = new User(uuid);
+            UserOld user = new UserOld(uuid);
             users.add(user);
             return Optional.of(user);
         }
 
-        Optional<User> request = uuidRequest.request(uuid, timeout);
+        Optional<UserOld> request = uuidRequest.request(uuid, timeout);
         request.ifPresent(this.users::add);
         return request;
     }
 
     @Override
-    public Optional<User> getUser(String name, int timeout) {
-        for (User user : this.users) {
+    public Optional<UserOld> getUser(String name, int timeout) {
+        for (UserOld user : this.users) {
             String username = user.getUsername();
             if (username.equalsIgnoreCase(name)) return Optional.of(user);
         }
 
         if (this.offline) return Optional.empty();
 
-        Optional<User> request = nameRequest.request(name.toLowerCase(), timeout);
+        Optional<UserOld> request = nameRequest.request(name.toLowerCase(), timeout);
         request.ifPresent(this.users::add);
         return request;
     }
 
     @Override
-    public void updateUser(@NonNull User user) {
+    public void updateUser(@NonNull UserOld user) {
         if (this.users.stream().noneMatch(user::equals)) this.users.add(user);
         try {
             checkUser(user);
@@ -120,7 +118,7 @@ public final class UserManagerImpl extends AbstractUserManager implements UserMa
     private void runCacheChecker() {
         BackendScheduler.runTaskLater(() -> {
             ObjectArraySet<UUID> markedForRemoval = new ObjectArraySet<>();
-            for (User user : this.users) {
+            for (UserOld user : this.users) {
                 if (!this.onlinePlayerCheck.apply(user.getUniqueId())) markedForRemoval.add(user.getUniqueId());
             }
             return markedForRemoval;

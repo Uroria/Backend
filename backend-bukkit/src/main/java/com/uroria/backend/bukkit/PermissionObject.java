@@ -1,7 +1,5 @@
 package com.uroria.backend.bukkit;
 
-import com.uroria.backend.Backend;
-import com.uroria.backend.user.User;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.permissions.Permission;
@@ -15,11 +13,11 @@ import java.util.Set;
 
 public final class PermissionObject extends PermissibleBase {
     private final Player player;
-    private final User user;
+    private final UserOld user;
     public PermissionObject(Player player) {
         super(player);
         this.player = player;
-        this.user = Backend.getAPI().getUserManager().getUser(this.player.getUniqueId()).orElseThrow();
+        this.user = BackendOld.getAPI().getUserManager().getUser(this.player.getUniqueId()).orElseThrow();
     }
 
     @Override

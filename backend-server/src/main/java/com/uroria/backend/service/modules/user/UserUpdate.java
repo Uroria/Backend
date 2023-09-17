@@ -1,11 +1,10 @@
 package com.uroria.backend.service.modules.user;
 
 import com.uroria.backend.impl.pulsar.PulsarUpdate;
-import com.uroria.backend.user.User;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-public final class UserUpdate extends PulsarUpdate<User> {
+public final class UserUpdate extends PulsarUpdate<UserOld> {
     private final BackendUserManager userManager;
 
     public UserUpdate(PulsarClient pulsarClient, BackendUserManager userManager) throws PulsarClientException {
@@ -14,7 +13,7 @@ public final class UserUpdate extends PulsarUpdate<User> {
     }
 
     @Override
-    protected void onUpdate(User user) {
+    protected void onUpdate(UserOld user) {
         this.userManager.updateDatabase(user);
     }
 }

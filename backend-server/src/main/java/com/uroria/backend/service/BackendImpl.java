@@ -3,7 +3,7 @@ package com.uroria.backend.service;
 import com.mongodb.client.MongoDatabase;
 import com.uroria.backend.Unsafe;
 import com.uroria.backend.friend.FriendManager;
-import com.uroria.backend.impl.AbstractBackend;
+import com.uroria.backend.impl.AbstractBackendWrapper;
 import com.uroria.backend.service.modules.clan.BackendClanManager;
 import com.uroria.backend.service.modules.message.BackendMessageManager;
 import com.uroria.backend.service.modules.permission.BackendPermManager;
@@ -11,7 +11,6 @@ import com.uroria.backend.service.modules.punishment.BackendPunishmentManager;
 import com.uroria.backend.service.modules.root.BackendRootManager;
 import com.uroria.backend.service.modules.server.BackendServerManager;
 import com.uroria.backend.service.modules.user.BackendUserManager;
-import com.uroria.backend.stats.StatsManager;
 import com.uroria.backend.twitch.TwitchManager;
 import com.uroria.base.event.EventManager;
 import com.uroria.base.event.EventManagerFactory;
@@ -21,7 +20,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.slf4j.Logger;
 
-public final class BackendImpl extends AbstractBackend {
+public final class BackendImpl extends AbstractBackendWrapper {
     private static final Logger logger = BackendServer.getLogger();
 
     private final EventManager eventManager;

@@ -5,7 +5,6 @@ import com.uroria.backend.impl.punishment.PunishedRequestChannel;
 import com.uroria.backend.impl.punishment.PunishedUpdateChannel;
 import com.uroria.backend.impl.scheduler.BackendScheduler;
 import com.uroria.backend.punishment.Punished;
-import com.uroria.backend.punishment.PunishmentManager;
 import com.uroria.base.event.EventManager;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;

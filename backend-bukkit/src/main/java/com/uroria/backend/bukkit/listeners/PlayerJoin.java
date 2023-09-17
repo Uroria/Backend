@@ -1,7 +1,6 @@
 package com.uroria.backend.bukkit.listeners;
 
 import com.uroria.backend.bukkit.BackendBukkitPlugin;
-import com.uroria.backend.server.Server;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -16,7 +15,7 @@ public record PlayerJoin(BackendBukkitPlugin plugin, Logger logger) implements L
     public void onPlayerJoinEvent(PlayerJoinEvent joinEvent) {
         CompletableFuture.runAsync(() -> {
             try {
-                Server server = plugin.getServerManager().getServer();
+                Serverold server = plugin.getServerManager().getServer();
                 if (server == null) return;
                 server.addPlayer(joinEvent.getPlayer().getUniqueId());
                 server.update();

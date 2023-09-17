@@ -1,56 +1,43 @@
 package com.uroria.backend;
 
-import com.uroria.backend.clan.ClanManager;
-import com.uroria.backend.friend.FriendManager;
-import com.uroria.backend.message.MessageManager;
-import com.uroria.backend.permission.PermManager;
-import com.uroria.backend.punishment.PunishmentManager;
-import com.uroria.backend.server.ServerManager;
-import com.uroria.backend.stats.StatsManager;
-import com.uroria.backend.twitch.TwitchManager;
-import com.uroria.backend.user.UserManager;
-import com.uroria.base.event.EventManager;
+import com.uroria.backend.clan.Clan;
+import com.uroria.backend.permission.PermGroup;
+import com.uroria.backend.server.Server;
+import com.uroria.backend.server.ServerGroup;
+import com.uroria.backend.user.User;
+import lombok.experimental.UtilityClass;
 
-/**
- * The primary api-interface of the Backend.
- */
-public interface Backend {
+import java.util.Optional;
+import java.util.UUID;
 
-    PermManager getPermissionManager();
+@UtilityClass
+public class Backend {
 
-    TwitchManager getTwitchManager();
+    public Optional<User> getUser(UUID uuid) {
+        return getWrapper().getUser(uuid);
+    }
 
-    UserManager getUserManager();
+    public Optional<User> getUser(String username) {
+        return getWrapper().getUser(username);
+    }
 
-    FriendManager getFriendManager();
+    public Optional<Clan> getClan(String tag) {
+        return getWrapper().getClan(tag);
+    }
 
-    ClanManager getClanManager();
+    public Optional<Server> getServer(long identifier) {
+        return getWrapper().getServer(identifier);
+    }
 
-    StatsManager getStatsManager();
+    public Optional<ServerGroup> getServerGroup(String name) {
+        return getWrapper().getServerGroup(name);
+    }
 
-    ServerManager getServerManager();
+    public Optional<PermGroup> getPermissionGroup(String name) {
+        return getWrapper().getPermissionGroup(name);
+    }
 
-    PunishmentManager getPunishmentManager();
-
-    MessageManager getMessageManager();
-
-    EventManager getEventManager();
-
-    /**
-     * If you call this method, the whole network will shut down.
-     * Just don't use it, if you don't know what you're doing!
-     */
-    void stopEverything();
-
-    /**
-     * Check if the Backend is online.
-     */
-    boolean isOnline();
-
-    /**
-     * Get the API used to interact with the backend.
-     */
-    static Backend getAPI() {
+    public BackendWrapper getWrapper() {
         return Unsafe.getInstance();
     }
 }

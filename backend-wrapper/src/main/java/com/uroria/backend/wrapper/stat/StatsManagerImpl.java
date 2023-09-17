@@ -4,8 +4,6 @@ import com.uroria.backend.impl.stats.AbstractStatsManager;
 import com.uroria.backend.impl.stats.StatUpdateChannel;
 import com.uroria.backend.impl.stats.StatsRequest;
 import com.uroria.backend.impl.stats.StatsRequestChannel;
-import com.uroria.backend.stats.Stat;
-import com.uroria.backend.stats.StatsManager;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +31,7 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
     }
 
     @Override
-    protected void checkStat(Stat stat) {
+    protected void checkStat(StatOld stat) {
     }
 
     @Override
@@ -43,8 +41,8 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
     }
 
     @Override
-    public Collection<Stat> getStats(@NotNull UUID holder, int gameId) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStats(@NotNull UUID holder, int gameId) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -52,14 +50,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.RAW, null, 0, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsWithScoreGreaterThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsWithScoreGreaterThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -67,14 +65,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITH_SCORE_GREATER_THAN, scoreKey, value, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsWithScoreLowerThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsWithScoreLowerThanValue(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -82,14 +80,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITH_SCORE_LOWER_THAN, scoreKey, value, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsWithScore(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsWithScore(@NotNull UUID holder, int gameId, @NotNull String scoreKey, long value) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -97,14 +95,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITH_SCORE, scoreKey, value, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsInTimeRangeOf(@NotNull UUID holder, int gameId, long startMs, long endMs) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsInTimeRangeOf(@NotNull UUID holder, int gameId, long startMs, long endMs) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -112,14 +110,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(holder, gameId, StatsRequest.Action.WITHIN_TIME_RANGE, null, 0, startMs, endMs);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStats(int gameId) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStats(int gameId) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -127,14 +125,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.RAW, null, 0, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NotNull String scoreKey, long value) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsWithScoreGreaterThanValue(int gameId, @NotNull String scoreKey, long value) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -142,14 +140,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITH_SCORE_GREATER_THAN, scoreKey, value, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsWithScoreLowerThanValue(int gameId, @NotNull String scoreKey, long value) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsWithScoreLowerThanValue(int gameId, @NotNull String scoreKey, long value) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -157,14 +155,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITH_SCORE_LOWER_THAN, scoreKey, value, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsWithScore(int gameId, @NotNull String scoreKey, long value) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsWithScore(int gameId, @NotNull String scoreKey, long value) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -172,14 +170,14 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITH_SCORE, scoreKey, value, 0, 0);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public Collection<Stat> getStatsInTimeRangeOf(int gameId, long startMs, long endMs) {
-        Collection<Stat> stats = new ArrayList<>();
+    public Collection<StatOld> getStatsInTimeRangeOf(int gameId, long startMs, long endMs) {
+        Collection<StatOld> stats = new ArrayList<>();
 
         if (this.offline) {
             return stats;
@@ -187,13 +185,13 @@ public final class StatsManagerImpl extends AbstractStatsManager implements Stat
 
         StatsRequest statsRequest = new StatsRequest(null, gameId, StatsRequest.Action.WITHIN_TIME_RANGE, null, 0, startMs, endMs);
 
-        Optional<Collection<Stat>> request = this.request.request(statsRequest);
+        Optional<Collection<StatOld>> request = this.request.request(statsRequest);
         request.ifPresent(stats::addAll);
         return stats;
     }
 
     @Override
-    public void updateStat(@NotNull Stat stat) {
+    public void updateStat(@NotNull StatOld stat) {
         try {
             checkStat(stat);
             if (this.offline) return;

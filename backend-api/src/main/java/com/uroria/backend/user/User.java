@@ -1,256 +1,63 @@
 package com.uroria.backend.user;
 
-import com.uroria.backend.Backend;
-import com.uroria.backend.BackendObject;
 import com.uroria.backend.clan.Clan;
-import com.uroria.backend.permission.PermGroup;
-import com.uroria.backend.permission.PermHolder;
-import com.uroria.base.gson.annotations.GsonTransient;
+import com.uroria.backend.user.crew.CrewHolder;
+import com.uroria.backend.user.punishment.Punishable;
 import com.uroria.base.lang.Language;
-import com.uroria.base.permission.PermState;
-import com.uroria.base.user.UroriaUser;
 import com.uroria.base.user.UserStatus;
-import com.uroria.base.utils.CollectionUtils;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
-import it.unimi.dsi.fastutil.objects.ObjectLists;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.net.URL;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class User extends BackendObject<User> implements Serializable, UroriaUser {
-    @Serial private static final long serialVersionUID = 1;
+public interface User extends Punishable, CrewHolder, Player {
+    @NotNull String getUsername();
 
-    private final UUID uuid;
-    private String name;
-    private @NotNull String language;
-    private @Getter @Setter boolean online;
-    private int status;
-    private final ObjectList<UUID> crew;
-    private String clanTag;
-    private String skinURL;
-    @GsonTransient
-    private transient PermHolder permHolder;
+    @NotNull Language getLanguage();
 
-    public User(@NonNull UUID uuid) {
-        this.uuid = uuid;
-        this.crew = new ObjectArrayList<>();
-        this.language = Language.DEFAULT.toTag();
-        this.status = UserStatus.DEFAULT.toCode();
-    }
+    boolean isOnline();
 
-    public void setSkinURL(@NonNull String skinURL) {
-        this.skinURL = skinURL;
-    }
+    UserStatus getStatus();
 
-    public void setSkinURL(@NonNull URL url) {
-        this.skinURL = url.toString();
-    }
+    UserStatus getRealStatus();
 
-    /**
-     * Returns the users skin url as string
-     */
-    public @Nullable String getSkin() {
-        return this.skinURL;
-    }
+    long getPlaytime();
 
-    /**
-     * Returns the skin URL directly. Is not safe to use.
-     * In favour use {@link User#getSkin()}
-     */
-    @Deprecated
-    public @Nullable URL getSkinURL() {
-        try {
-            return new URL(this.skinURL);
-        } catch (Exception exception) {
-            return null;
-        }
-    }
+    void setPlaytime(long playtime);
 
-    public ObjectList<UUID> getCrew() {
-        return ObjectLists.unmodifiable(this.crew);
-    }
+    long getLastJoin();
 
-    public ObjectList<UUID> getUnsafeCrew() {
-        return this.crew;
-    }
+    void setLastJoin(long lastJoin);
 
-    public void addCrewMember(@NonNull User user) {
-        this.crew.add(user.uuid);
-        update();
-    }
+    long getFirstJoin();
 
-    public void removeCrewMember(UUID uuid) {
-        if (uuid == null) return;
-        this.crew.remove(uuid);
-        update();
-    }
+    void setStatus(@NonNull UserStatus status);
 
-    public void removeCrewMember(User user) {
-        if (user == null) return;
-        removeCrewMember(user.uuid);
-    }
+    void setLanguage(@NonNull Language language);
 
-    @Override
-    public UserStatus getRealStatus() {
-        return UserStatus.fromCode(this.status);
-    }
+    void setUsername(@NonNull String username);
 
-    @Override
-    public UserStatus getStatus() {
-        if (this.online) return getRealStatus();
-        return UserStatus.INVISIBLE;
-    }
+    List<User> getFriends();
 
-    /**
-     * Sets the online status of the user.
-     * {@link User#update() Required to update!}
-     */
-    public void setStatus(@NonNull UserStatus status) {
-        this.status = status.toCode();
-    }
+    List<User> getFriendRequests();
 
-    /**
-     * Sets the users locale.
-     * {@link User#update() Required to update!}
-     */
-    public void setLanguage(@NonNull Language language) {
-        this.language = language.toTag();
-    }
+    void addFriendRequest(@NonNull User user);
 
-    /**
-     * Sets the users username.
-     * {@link User#update() Required to update!}
-     */
-    public void setUsername(@NonNull String username) {
-        this.name = username.toLowerCase();
-    }
+    void removeFriendRequest(User user);
 
-    @Override
-    public UUID getUniqueId() {
-        return uuid;
-    }
+    void removeFriendRequest(UUID uuid);
 
-    @Override
-    public String getUsername() {
-        return this.name;
-    }
+    void addFriend(@NonNull User user);
 
-    @Override
-    public @NotNull Language getLanguage() {
-        return Language.fromTag(this.language);
-    }
+    void removeFriend(User user);
 
-    public Optional<String> getClanTag() {
-        return Optional.ofNullable(this.clanTag);
-    }
+    void removeFriend(UUID uuid);
 
-    public Optional<Clan> getClan() {
-        return Backend.getAPI().getClanManager().getClan(this.clanTag);
-    }
+    Optional<Clan> getClan();
 
-    public void setClan(@NonNull Clan clan) {
-        this.clanTag = clan.getTag();
-        update();
-        if (clan.isMember(this)) return;
-        clan.addMember(this);
-    }
+    void joinClan(@NonNull Clan clan);
 
-    /**
-     * Automatically quits the clan the user is currently in.
-     */
-    public void quitClan() {
-        if (this.clanTag == null) return;
-        Backend.getAPI().getClanManager().getClan(this.clanTag).ifPresent(clan -> {
-            clan.removeMember(this.uuid);
-        });
-        this.clanTag = null;
-        update();
-    }
-
-    @Override
-    public void modify(User user) {
-        this.deleted = user.deleted;
-        this.name = user.name;
-        this.language = user.language;
-        this.online = user.online;
-        this.status = user.status;
-        CollectionUtils.overrideMap(this.properties, user.properties);
-    }
-
-    @Override
-    public void update() {
-        Backend.getAPI().getUserManager().updateUser(this);
-    }
-
-    @Override
-    public String toString() {
-        return "User{uuid="+this.uuid+", name="+this.name+"}";
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof User user)) return false;
-        return this.uuid.equals(user.uuid);
-    }
-
-    @Override
-    public boolean hasPermission(@Nullable String s) {
-        checkPermHolder();
-        return getPermissionState(s).asBooleanValue();
-    }
-
-    @Override
-    public @NotNull PermState getPermissionState(@Nullable String node) {
-        checkPermHolder();
-        if (node == null) return PermState.NOT_SET;
-
-        if (permHolder == null) return PermState.NOT_SET;
-
-        List<PermGroup> groups = permHolder.getGroups();
-
-        boolean group = groups.stream().min(Comparator.comparing(PermGroup::getPriority))
-                .map(group1 -> group1.hasPermission(node)).orElse(false);
-        boolean holder = permHolder.hasPermission(node);
-
-        if (holder) return PermState.TRUE;
-        if (group) return PermState.TRUE;
-        return PermState.FALSE;
-    }
-
-    @Override
-    public void setPermission(@NonNull String node, boolean val) {
-        checkPermHolder();
-        this.permHolder.setPermission(node, val);
-        this.permHolder.update();
-    }
-
-    @Override
-    public void setPermission(@NonNull String node, @NonNull PermState state) {
-        checkPermHolder();
-        this.permHolder.setPermission(node, state.asBooleanValue());
-        this.permHolder.update();
-    }
-
-    @Override
-    public void unsetPermission(@NonNull String node) {
-        checkPermHolder();
-        this.permHolder.unsetPermission(node);
-        this.permHolder.update();
-    }
-
-    private void checkPermHolder() {
-        if (this.permHolder != null) return;
-        this.permHolder = Backend.getAPI().getPermissionManager().getHolder(this.uuid).orElse(null);
-    }
+    void leaveClan();
 }

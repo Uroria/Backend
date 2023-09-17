@@ -4,8 +4,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.uroria.backend.service.modules.AbstractManager;
-import com.uroria.backend.user.User;
-import com.uroria.backend.user.UserManager;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import lombok.NonNull;
@@ -45,10 +43,10 @@ public final class BackendUserManager extends AbstractManager implements UserMan
     }
 
     @Override
-    public Optional<User> getUser(UUID uuid, int timeout) {
+    public Optional<UserOld> getUser(UUID uuid, int timeout) {
         if (uuid == null) return Optional.empty();
         try {
-            User cachedUser = getCachedUser(uuid);
+            UserOld cachedUser = getCachedUser(uuid);
             if (cachedUser != null) return Optional.of(cachedUser);
             Document savedDocument = this.users.find(Filters.eq("uuid", uuid.toString())).first();
             if (savedDocument == null) return Optional.empty();
@@ -60,11 +58,11 @@ public final class BackendUserManager extends AbstractManager implements UserMan
     }
 
     @Override
-    public Optional<User> getUser(String name, int timeout) {
+    public Optional<UserOld> getUser(String name, int timeout) {
         if (name == null) return Optional.empty();
         name = name.toLowerCase();
         try {
-            User cachedUser = getCachedUser(name);
+            UserOld cachedUser = getCachedUser(name);
             if (cachedUser != null) return Optional.of(cachedUser);
             Document savedDocument = this.users.find(Filters.eq("name", name)).first();
             if (savedDocument == null) return Optional.empty();
@@ -76,12 +74,12 @@ public final class BackendUserManager extends AbstractManager implements UserMan
     }
 
     @Override
-    public void updateUser(@NonNull User user) {
+    public void updateUser(@NonNull UserOld user) {
         updateDatabase(user);
         this.update.update(user);
     }
 
-    void updateDatabase(@NonNull User user) {
+    void updateDatabase(@NonNull UserOld user) {
         try {
             this.cache.del("user:" + user.getUniqueId());
             String json = gson.toJson(user);
@@ -106,25 +104,25 @@ public final class BackendUserManager extends AbstractManager implements UserMan
         }
     }
 
-    private User fromJson(String json) {
-        User user = gson.fromJson(json, User.class);
+    private UserOld fromJson(String json) {
+        UserOld user = gson.fromJson(json, UserOld.class);
         String key = "user:" + user.getUniqueId();
         this.cache.set(key, json, lifespan(Duration.ofHours(4)));
         this.cache.set("user:" + user.getUsername(), key, lifespan(Duration.ofHours(24)));
         return user;
     }
 
-    private User getCachedUser(UUID uuid) {
+    private UserOld getCachedUser(UUID uuid) {
         String cachedObject = this.cache.get("user:" + uuid);
         if (cachedObject == null) return null;
-        return gson.fromJson(cachedObject, User.class);
+        return gson.fromJson(cachedObject, UserOld.class);
     }
 
-    private User getCachedUser(String name) {
+    private UserOld getCachedUser(String name) {
         String cachedObjectKey = this.cache.get("user:" + name);
         if (cachedObjectKey == null) return null;
         String cachedObject = this.cache.get(cachedObjectKey);
         if (cachedObject == null) return null;
-        return gson.fromJson(cachedObject, User.class);
+        return gson.fromJson(cachedObject, UserOld.class);
     }
 }

@@ -1,13 +1,12 @@
 package com.uroria.backend.wrapper.permission;
 
-import com.uroria.backend.permission.PermGroup;
 import lombok.Getter;
 
 public class GroupUpdateEvent {
 
-    private @Getter final PermGroup group;
+    private @Getter final PermGroupOld group;
 
-    public GroupUpdateEvent(PermGroup group) {
+    public GroupUpdateEvent(PermGroupOld group) {
         this.group = group;
     }
 }

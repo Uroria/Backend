@@ -1,6 +1,5 @@
 package com.uroria.backend.bukkit.server;
 
-import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerStatus;
 import com.uroria.backend.wrapper.server.ServerUpdateEvent;
 import com.uroria.base.event.Listener;
@@ -19,7 +18,7 @@ public final class ServerListener extends Listener<ServerUpdateEvent> {
 
     @Override
     public void onEvent(ServerUpdateEvent serverUpdateEvent) {
-        Server server = serverUpdateEvent.getServer();
+        Serverold server = serverUpdateEvent.getServer();
         switch (server.getStatus()) {
             case CLOSED, STOPPED -> {
                 if (serverManager.getServer() == null) return;

@@ -1,12 +1,11 @@
 package com.uroria.backend.service.modules.permission;
 
 import com.uroria.backend.impl.pulsar.PulsarResponse;
-import com.uroria.backend.permission.PermGroup;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-public final class GroupResponse extends PulsarResponse<PermGroup, String> {
+public final class GroupResponse extends PulsarResponse<PermGroupOld, String> {
     private final BackendPermManager permManager;
 
     public GroupResponse(@NonNull PulsarClient pulsarClient, BackendPermManager permManager) throws PulsarClientException {
@@ -15,7 +14,7 @@ public final class GroupResponse extends PulsarResponse<PermGroup, String> {
     }
 
     @Override
-    protected PermGroup response(@NonNull String key) {
+    protected PermGroupOld response(@NonNull String key) {
         return this.permManager.getGroup(key, 0).orElse(null);
     }
 }

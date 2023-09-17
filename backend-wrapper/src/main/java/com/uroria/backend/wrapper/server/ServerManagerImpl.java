@@ -6,8 +6,6 @@ import com.uroria.backend.impl.server.ServerIDRequestChannel;
 import com.uroria.backend.impl.server.ServerRequestChannel;
 import com.uroria.backend.impl.server.ServerStartChannel;
 import com.uroria.backend.impl.server.ServerUpdateChannel;
-import com.uroria.backend.server.Server;
-import com.uroria.backend.server.ServerManager;
 import com.uroria.backend.server.ServerStatus;
 import com.uroria.base.event.EventManager;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -53,14 +51,14 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
     }
 
     @Override
-    protected void checkServer(@NonNull Server server) {
+    protected void checkServer(@NonNull Serverold server) {
         if (this.servers.stream().noneMatch(server::equals)) {
             this.logger.info("Adding " + server);
             this.servers.add(server);
         }
 
         if (server.isDeleted()) {
-            for (Server cachedServer : this.servers) {
+            for (Serverold cachedServer : this.servers) {
                 if (cachedServer.equals(server)) {
                     cachedServer.delete();
                 }
@@ -70,7 +68,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
             return;
         }
 
-        for (Server cachedServer : this.servers) {
+        for (Serverold cachedServer : this.servers) {
             if (!cachedServer.equals(server)) continue;
             cachedServer.modify(server);
 
@@ -104,47 +102,47 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
     }
 
     @Override
-    public Optional<Server> getServer(long identifier, int timeout) {
-        for (Server server : this.servers) {
+    public Optional<Serverold> getServer(long identifier, int timeout) {
+        for (Serverold server : this.servers) {
             if (server.getIdentifier() == identifier) return Optional.of(server);
         }
 
         if (this.offline) return Optional.empty();
 
-        Optional<Server> request = this.request.request(identifier, timeout);
+        Optional<Serverold> request = this.request.request(identifier, timeout);
         request.ifPresent(this.servers::add);
         return request;
     }
 
     @Override
-    public Optional<Server> getCloudServer(int id, int timeout) {
-        for (Server server : this.servers) {
+    public Optional<Serverold> getCloudServer(int id, int timeout) {
+        for (Serverold server : this.servers) {
             if (server.getID() == id) return Optional.of(server);
         }
 
         if (this.offline) return Optional.empty();
 
-        Optional<Server> request = this.idRequest.request(id, timeout);
+        Optional<Serverold> request = this.idRequest.request(id, timeout);
         request.ifPresent(this.servers::add);
         return request;
     }
 
     @Override
-    public List<Server> getServers() {
+    public List<Serverold> getServers() {
         if (this.offline) return new ObjectArrayList<>();
 
-        Optional<List<Server>> request = this.requestAll.request(1, 20000);
+        Optional<List<Serverold>> request = this.requestAll.request(1, 20000);
         return request.orElse(new ObjectArrayList<>());
     }
 
     @Override
-    public Server startServer(@NonNull Server server) throws IllegalStateException {
+    public Serverold startServer(@NonNull Serverold server) throws IllegalStateException {
         if (server.getID() != -1) throw new IllegalStateException("Server already started");
         try {
             if (this.offline) return server;
             checkServer(server);
-            Optional<Server> request = this.start.request(server, 1000000);
-            Server server1 = request.orElse(null);
+            Optional<Serverold> request = this.start.request(server, 1000000);
+            Serverold server1 = request.orElse(null);
             if (server1 != null) {
                 checkServer(server1);
             }
@@ -157,7 +155,7 @@ public final class ServerManagerImpl extends AbstractServerManager implements Se
     }
 
     @Override
-    public void updateServer(@NonNull Server server) {
+    public void updateServer(@NonNull Serverold server) {
         if (server.getID() == -1 && !server.isDeleted()) throw new IllegalStateException("Server was never started");
         try {
             checkServer(server);

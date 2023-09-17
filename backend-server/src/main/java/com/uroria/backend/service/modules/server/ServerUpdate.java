@@ -1,12 +1,11 @@
 package com.uroria.backend.service.modules.server;
 
 import com.uroria.backend.impl.pulsar.PulsarUpdate;
-import com.uroria.backend.server.Server;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-public final class ServerUpdate extends PulsarUpdate<Server> {
+public final class ServerUpdate extends PulsarUpdate<Serverold> {
     private final BackendServerManager serverManager;
 
     public ServerUpdate(@NonNull PulsarClient pulsarClient, BackendServerManager serverManager) throws PulsarClientException {
@@ -15,7 +14,7 @@ public final class ServerUpdate extends PulsarUpdate<Server> {
     }
 
     @Override
-    protected void onUpdate(Server server) {
+    protected void onUpdate(Serverold server) {
         this.serverManager.updateLocal(server);
     }
 }

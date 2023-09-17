@@ -6,9 +6,6 @@ import com.uroria.backend.impl.permission.group.GroupUpdateChannel;
 import com.uroria.backend.impl.permission.holder.HolderUUIDRequestChannel;
 import com.uroria.backend.impl.permission.holder.HolderUpdateChannel;
 import com.uroria.backend.impl.scheduler.BackendScheduler;
-import com.uroria.backend.permission.PermGroup;
-import com.uroria.backend.permission.PermHolder;
-import com.uroria.backend.permission.PermManager;
 import com.uroria.base.event.EventManager;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
@@ -55,7 +52,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
     }
 
     @Override
-    protected void checkGroup(@NonNull PermGroup group) {
+    protected void checkGroup(@NonNull PermGroupOld group) {
         if (this.groups.stream().noneMatch(group::equals)) return;
 
         if (group.isDeleted()) {
@@ -64,7 +61,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
             return;
         }
 
-        for (PermGroup cachedGroup : this.groups) {
+        for (PermGroupOld cachedGroup : this.groups) {
             if (!cachedGroup.equals(group)) continue;
             cachedGroup.modify(group);
 
@@ -80,7 +77,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
     }
 
     @Override
-    protected void checkHolder(@NonNull PermHolder holder) {
+    protected void checkHolder(@NonNull PermHolderOld holder) {
         if (this.holders.stream().noneMatch(holder::equals)) return;
 
         if (holder.isDeleted()) {
@@ -89,7 +86,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
             return;
         }
 
-        for (PermHolder cachedHolder : this.holders) {
+        for (PermHolderOld cachedHolder : this.holders) {
             if (!cachedHolder.equals(holder)) continue;
             cachedHolder.modify(holder);
 
@@ -105,33 +102,33 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
     }
 
     @Override
-    public Optional<PermHolder> getHolder(UUID uuid, int timeout) {
-        for (PermHolder holder : this.holders) {
+    public Optional<PermHolderOld> getHolder(UUID uuid, int timeout) {
+        for (PermHolderOld holder : this.holders) {
             if (holder.getUUID().equals(uuid)) return Optional.of(holder);
         }
 
-        if (this.offline) return Optional.of(new PermHolder(uuid));
+        if (this.offline) return Optional.of(new PermHolderOld(uuid));
 
-        Optional<PermHolder> request = this.holderRequest.request(uuid, timeout);
+        Optional<PermHolderOld> request = this.holderRequest.request(uuid, timeout);
         request.ifPresent(this.holders::add);
         return request;
     }
 
     @Override
-    public Optional<PermGroup> getGroup(String name, int timeout) {
-        for (PermGroup group : this.groups) {
+    public Optional<PermGroupOld> getGroup(String name, int timeout) {
+        for (PermGroupOld group : this.groups) {
             if (group.getName().equals(name)) return Optional.of(group);
         }
 
         if (this.offline) return Optional.empty();
 
-        Optional<PermGroup> request = this.groupRequest.request(name, timeout);
+        Optional<PermGroupOld> request = this.groupRequest.request(name, timeout);
         request.ifPresent(this.groups::add);
         return request;
     }
 
     @Override
-    public void updateHolder(@NonNull PermHolder holder) {
+    public void updateHolder(@NonNull PermHolderOld holder) {
         if (this.holders.stream().noneMatch(holder::equals)) this.holders.add(holder);
         try {
             checkHolder(holder);
@@ -143,7 +140,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
     }
 
     @Override
-    public void updateGroup(@NonNull PermGroup group) {
+    public void updateGroup(@NonNull PermGroupOld group) {
         try {
             checkGroup(group);
             if (this.offline) return;
@@ -156,7 +153,7 @@ public final class PermManagerImpl extends AbstractPermManager implements PermMa
     private void runCacheChecker() {
         BackendScheduler.runTaskLater(() -> {
             ObjectArraySet<UUID> markedForRemoval = new ObjectArraySet<>();
-            for (PermHolder holder : this.holders) {
+            for (PermHolderOld holder : this.holders) {
                 if (!this.onlinePlayerCheck.apply(holder.getUUID())) markedForRemoval.add(holder.getUUID());
             }
             return markedForRemoval;

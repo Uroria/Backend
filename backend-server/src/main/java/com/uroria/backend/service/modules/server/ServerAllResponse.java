@@ -1,14 +1,13 @@
 package com.uroria.backend.service.modules.server;
 
 import com.uroria.backend.impl.pulsar.PulsarResponse;
-import com.uroria.backend.server.Server;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
 import java.util.List;
 
-public final class ServerAllResponse extends PulsarResponse<List<Server>, Integer> {
+public final class ServerAllResponse extends PulsarResponse<List<Serverold>, Integer> {
     private final BackendServerManager serverManager;
 
     public ServerAllResponse(@NonNull PulsarClient pulsarClient, BackendServerManager serverManager) throws PulsarClientException {
@@ -17,7 +16,7 @@ public final class ServerAllResponse extends PulsarResponse<List<Server>, Intege
     }
 
     @Override
-    protected List<Server> response(@NonNull Integer key) {
+    protected List<Serverold> response(@NonNull Integer key) {
         return this.serverManager.getServers();
     }
 }

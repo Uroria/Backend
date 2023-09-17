@@ -1,12 +1,11 @@
 package com.uroria.backend.service.modules.clan;
 
-import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.pulsar.PulsarUpdate;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-public final class ClanUpdate extends PulsarUpdate<Clan> {
+public final class ClanUpdate extends PulsarUpdate<ClanOld> {
     private final BackendClanManager clanManager;
 
     public ClanUpdate(@NonNull PulsarClient pulsarClient, BackendClanManager clanManager) throws PulsarClientException {
@@ -15,7 +14,7 @@ public final class ClanUpdate extends PulsarUpdate<Clan> {
     }
 
     @Override
-    protected void onUpdate(Clan clan) {
+    protected void onUpdate(ClanOld clan) {
         this.clanManager.updateDatabase(clan);
     }
 }

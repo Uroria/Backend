@@ -1,7 +1,5 @@
 package com.uroria.backend.wrapper.clan;
 
-import com.uroria.backend.clan.Clan;
-import com.uroria.backend.clan.ClanManager;
 import com.uroria.backend.impl.clan.AbstractClanManager;
 import com.uroria.backend.impl.clan.ClanOperatorRequestChannel;
 import com.uroria.backend.impl.clan.ClanTagRequestChannel;
@@ -50,7 +48,7 @@ public final class ClanManagerImpl extends AbstractClanManager implements ClanMa
     }
 
     @Override
-    protected void checkClan(@NonNull Clan clan) {
+    protected void checkClan(@NonNull ClanOld clan) {
         if (this.clans.stream().noneMatch(clan::equals)) return;
 
         if (clan.isDeleted()) {
@@ -59,7 +57,7 @@ public final class ClanManagerImpl extends AbstractClanManager implements ClanMa
             return;
         }
 
-        for (Clan cachedClan : this.clans) {
+        for (ClanOld cachedClan : this.clans) {
             if (!cachedClan.equals(clan)) continue;
             cachedClan.modify(clan);
 
@@ -75,31 +73,31 @@ public final class ClanManagerImpl extends AbstractClanManager implements ClanMa
     }
 
     @Override
-    public Optional<Clan> getClan(String tag, int timeout) {
-        for (Clan clan : this.clans) {
+    public Optional<ClanOld> getClan(String tag, int timeout) {
+        for (ClanOld clan : this.clans) {
             if (clan.getTag().equals(tag)) return Optional.of(clan);
         }
 
         if (this.offline) return Optional.empty();
 
-        Optional<Clan> request = this.tagRequest.request(tag, timeout);
+        Optional<ClanOld> request = this.tagRequest.request(tag, timeout);
         request.ifPresent(this.clans::add);
         return request;
     }
 
     @Override
-    public Optional<Clan> getClan(UUID operator, int timeout) {
-        for (Clan clan : this.clans) {
+    public Optional<ClanOld> getClan(UUID operator, int timeout) {
+        for (ClanOld clan : this.clans) {
             if (clan.getOperator().equals(operator)) return Optional.of(clan);
         }
 
-        Optional<Clan> request = this.operatorRequest.request(operator, timeout);
+        Optional<ClanOld> request = this.operatorRequest.request(operator, timeout);
         request.ifPresent(this.clans::add);
         return request;
     }
 
     @Override
-    public void updateClan(@NonNull Clan clan) {
+    public void updateClan(@NonNull ClanOld clan) {
         try {
             checkClan(clan);
             if (this.offline) return;
@@ -112,7 +110,7 @@ public final class ClanManagerImpl extends AbstractClanManager implements ClanMa
     private void runCacheChecker() {
         BackendScheduler.runTaskLater(() -> {
             ObjectArraySet<String> markedForRemoval = new ObjectArraySet<>();
-            for (Clan clan : this.clans) {
+            for (ClanOld clan : this.clans) {
                 boolean remove = true;
                 for (UUID uuid : clan.getMembers()) {
                     if (!this.onlinePlayerCheck.apply(uuid)) {

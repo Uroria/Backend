@@ -1,7 +1,6 @@
 package com.uroria.backend.bukkit.listeners;
 
 import com.uroria.backend.bukkit.BackendBukkitPlugin;
-import com.uroria.backend.server.Server;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,7 +18,7 @@ public record PlayerQuit(BackendBukkitPlugin plugin, Logger logger) implements L
             int size = Bukkit.getOnlinePlayers().size();
             if (size < 3) plugin.checkTimeout();
             try {
-                Server server = plugin.getServerManager().getServer();
+                Serverold server = plugin.getServerManager().getServer();
                 if (server == null) return;
                 server.addPlayer(quitEvent.getPlayer().getUniqueId());
                 server.update();

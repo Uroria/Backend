@@ -3,8 +3,6 @@ package com.uroria.backend.service.modules.clan;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.uroria.backend.clan.Clan;
-import com.uroria.backend.clan.ClanManager;
 import com.uroria.backend.service.modules.AbstractManager;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -45,9 +43,9 @@ public class BackendClanManager extends AbstractManager implements ClanManager {
     }
 
     @Override
-    public Optional<Clan> getClan(String tag, int timeout) {
+    public Optional<ClanOld> getClan(String tag, int timeout) {
         try {
-            Clan cachedClan = getCachedClan(tag);
+            ClanOld cachedClan = getCachedClan(tag);
             if (cachedClan != null) return Optional.of(cachedClan);
             Document savedDocument = this.clans.find(Filters.eq("tag", tag)).first();
             if (savedDocument == null) return Optional.empty();
@@ -59,9 +57,9 @@ public class BackendClanManager extends AbstractManager implements ClanManager {
     }
 
     @Override
-    public Optional<Clan> getClan(UUID operator, int timeout) {
+    public Optional<ClanOld> getClan(UUID operator, int timeout) {
         try {
-            Clan cachedClan = getCachedClan(operator);
+            ClanOld cachedClan = getCachedClan(operator);
             if (cachedClan != null) return Optional.of(cachedClan);
             Document savedDocument = this.clans.find(Filters.eq("operator", operator.toString())).first();
             if (savedDocument == null) return Optional.empty();
@@ -73,11 +71,11 @@ public class BackendClanManager extends AbstractManager implements ClanManager {
     }
 
     @Override
-    public void updateClan(@NonNull Clan clan) {
+    public void updateClan(@NonNull ClanOld clan) {
         updateDatabase(clan);
     }
 
-    void updateDatabase(@NonNull Clan clan) {
+    void updateDatabase(@NonNull ClanOld clan) {
         try {
             this.cache.del("clan:tag:" + clan.getTag());
             this.cache.del("clan:operator:" + clan.getOperator());
@@ -111,25 +109,25 @@ public class BackendClanManager extends AbstractManager implements ClanManager {
         }
     }
 
-    private Clan fromJson(String json) {
-        Clan clan = gson.fromJson(json, Clan.class);
+    private ClanOld fromJson(String json) {
+        ClanOld clan = gson.fromJson(json, ClanOld.class);
         String key = "clan:tag:" + clan.getTag();
         this.cache.set(key, json, lifespan(Duration.ofHours(48)));
         this.cache.set("clan:operator:" + clan.getOperator(), key, lifespan(Duration.ofHours(24)));
         return clan;
     }
 
-    private Clan getCachedClan(UUID operator) {
+    private ClanOld getCachedClan(UUID operator) {
         String cachedObjectKey = this.cache.get("clan:operator:" + operator);
         if (cachedObjectKey == null) return null;
         String cachedObject = this.cache.get(cachedObjectKey);
         if (cachedObject == null) return null;
-        return gson.fromJson(cachedObject, Clan.class);
+        return gson.fromJson(cachedObject, ClanOld.class);
     }
 
-    private Clan getCachedClan(String tag) {
+    private ClanOld getCachedClan(String tag) {
         String cachedObject = this.cache.get("clan:tag:" + tag);
         if (cachedObject == null) return null;
-        return gson.fromJson(cachedObject, Clan.class);
+        return gson.fromJson(cachedObject, ClanOld.class);
     }
 }

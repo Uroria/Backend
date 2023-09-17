@@ -1,6 +1,5 @@
 package com.uroria.backend.service.modules.clan;
 
-import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.pulsar.PulsarResponse;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -8,7 +7,7 @@ import org.apache.pulsar.client.api.PulsarClientException;
 
 import java.util.UUID;
 
-public final class ClanOperatorResponse extends PulsarResponse<Clan, UUID> {
+public final class ClanOperatorResponse extends PulsarResponse<ClanOld, UUID> {
     private final BackendClanManager clanManager;
 
     public ClanOperatorResponse(@NonNull PulsarClient pulsarClient, BackendClanManager clanManager) throws PulsarClientException {
@@ -17,7 +16,7 @@ public final class ClanOperatorResponse extends PulsarResponse<Clan, UUID> {
     }
 
     @Override
-    protected Clan response(@NonNull UUID key) {
+    protected ClanOld response(@NonNull UUID key) {
         return this.clanManager.getClan(key, 0).orElse(null);
     }
 }
