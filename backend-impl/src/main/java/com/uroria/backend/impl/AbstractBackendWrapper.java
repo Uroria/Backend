@@ -4,17 +4,14 @@ import com.uroria.backend.BackendWrapper;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractBackendWrapper implements BackendWrapper {
     protected final PulsarClient pulsarClient;
-    protected final String identifier;
 
     protected AbstractBackendWrapper(String pulsarURL) {
         if (pulsarURL == null) {
             this.pulsarClient = null;
-            this.identifier = null;
             return;
         }
         try {
@@ -25,12 +22,10 @@ public abstract class AbstractBackendWrapper implements BackendWrapper {
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
-        this.identifier = UUID.randomUUID().toString();
     }
 
     protected AbstractBackendWrapper(PulsarClient pulsarClient) {
         this.pulsarClient = pulsarClient;
-        this.identifier = UUID.randomUUID().toString();
     }
 
     abstract public void start() throws PulsarClientException;

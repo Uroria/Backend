@@ -11,62 +11,20 @@ import com.uroria.base.lang.Language;
 import com.uroria.base.user.UserStatus;
 import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+@SuppressWarnings("unchecked")
 public final class UserWrapper extends AbstractUser {
-    private final AbstractUserManager userManager;
-
-    public UserWrapper(AbstractUserManager userManager, @NonNull UUID uuid, long firstJoin) {
-        super(uuid, firstJoin);
-        this.userManager = userManager;
+    public UserWrapper(AbstractUserManager userManager, @NonNull UUID uuid) {
+        super(userManager, uuid);
     }
 
     @Override
     public boolean isDeleted() {
-        if (this.deleted == -1) {
-            return
-        }
-        return deleted == 1;
-    }
-
-    @Override
-    public Map<String, Object> getProperties() {
-        return null;
-    }
-
-    @Override
-    public String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
-        return null;
-    }
-
-    @Override
-    public int getPropertyIntOrElse(@NonNull String key, int defValue) {
-        return 0;
-    }
-
-    @Override
-    public long getPropertyLongOrElse(@NonNull String key, long defValue) {
-        return 0;
-    }
-
-    @Override
-    public double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
-        return 0;
-    }
-
-    @Override
-    public float getPropertyFloatOrElse(@NonNull String key, float defValue) {
-        return 0;
-    }
-
-    @Override
-    public boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
-        return false;
+        return getBoolean(1, false);
     }
 
     @Override
@@ -131,42 +89,43 @@ public final class UserWrapper extends AbstractUser {
 
     @Override
     public @NotNull String getUsername() {
-        return null;
+        return getString(1, "N/A");
     }
 
     @Override
     public @NotNull Language getLanguage() {
-        return null;
+        return Language.fromTag(getString(2, "nil"));
     }
 
     @Override
     public boolean isOnline() {
-        return false;
+        return getBoolean(2, true);
     }
 
     @Override
     public UserStatus getStatus() {
-        return null;
+        if (!isOnline()) return UserStatus.INVISIBLE;
+        return getRealStatus();
     }
 
     @Override
     public UserStatus getRealStatus() {
-        return null;
+        return UserStatus.fromCode(getInt(1, 0));
     }
 
     @Override
     public long getPlaytime() {
-        return 0;
+        return getLong(2, 0);
     }
 
     @Override
     public long getLastJoin() {
-        return 0;
+        return getLong(1, 0);
     }
 
     @Override
     public long getFirstJoin() {
-        return 0;
+        return getLong(3, 0);
     }
 
     @Override
@@ -181,7 +140,7 @@ public final class UserWrapper extends AbstractUser {
 
     @Override
     public Optional<Clan> getClan() {
-        return Optional.empty();
+        return null;
     }
 
     @Override
@@ -207,76 +166,6 @@ public final class UserWrapper extends AbstractUser {
     @Override
     public List<Mute> getExpiredMutes() {
         return null;
-    }
-
-    @Override
-    public Object getObject(int key, Object defVal) {
-        return null;
-    }
-
-    @Override
-    public String getString(int key, String defVal) {
-        return null;
-    }
-
-    @Override
-    public int getInt(int key, int defVal) {
-        return 0;
-    }
-
-    @Override
-    public long getLong(int key, int defVal) {
-        return 0;
-    }
-
-    @Override
-    public boolean getBoolean(int key, boolean defVal) {
-        return false;
-    }
-
-    @Override
-    public float getFloat(int key, float defVal) {
-        return 0;
-    }
-
-    @Override
-    public double getDouble(int key, double defVal) {
-        return 0;
-    }
-
-    @Override
-    public void updateObject(int key, @Nullable Object value) {
-
-    }
-
-    @Override
-    public void updateString(int key, @Nullable String value) {
-
-    }
-
-    @Override
-    public int updateInt(int key, int value) {
-        return 0;
-    }
-
-    @Override
-    public long updateLong(int key, long value) {
-        return 0;
-    }
-
-    @Override
-    public boolean updateBoolean(int key, boolean value) {
-        return false;
-    }
-
-    @Override
-    public float updateFloat(int key, float value) {
-        return 0;
-    }
-
-    @Override
-    public double updateDouble(int key, double value) {
-        return 0;
     }
 
     @Override

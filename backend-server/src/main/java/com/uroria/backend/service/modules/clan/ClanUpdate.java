@@ -1,6 +1,6 @@
 package com.uroria.backend.service.modules.clan;
 
-import com.uroria.backend.impl.pulsar.PulsarUpdate;
+import com.uroria.backend.impl.pulsarold.PulsarUpdate;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;

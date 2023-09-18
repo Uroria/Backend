@@ -1,6 +1,5 @@
 package com.uroria.backend.bukkit.listeners;
 
-import com.uroria.backend.wrapper.BackendWrapper;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;

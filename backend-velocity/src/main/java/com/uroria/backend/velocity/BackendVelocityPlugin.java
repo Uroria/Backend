@@ -3,7 +3,6 @@ package com.uroria.backend.velocity;
 import com.google.inject.Inject;
 import com.uroria.backend.impl.configuration.BackendConfiguration;
 import com.uroria.backend.velocity.listeners.PlayerLogin;
-import com.uroria.backend.wrapper.BackendWrapper;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
