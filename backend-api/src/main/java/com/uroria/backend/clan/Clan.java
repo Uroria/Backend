@@ -1,14 +1,13 @@
 package com.uroria.backend.clan;
 
 import com.uroria.backend.Deletable;
-import com.uroria.backend.PropertyHolder;
 import com.uroria.backend.user.User;
 import lombok.NonNull;
 
 import java.util.Collection;
 import java.util.UUID;
 
-public interface Clan extends Deletable, PropertyHolder {
+public interface Clan extends Deletable {
 
     String getTag();
 

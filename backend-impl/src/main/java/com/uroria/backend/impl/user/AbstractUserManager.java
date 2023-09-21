@@ -6,12 +6,12 @@ import com.uroria.base.io.InsaneByteArrayInputStream;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
+import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public abstract class AbstractUserManager extends AbstractManager {
@@ -19,9 +19,8 @@ public abstract class AbstractUserManager extends AbstractManager {
 
     protected final ObjectSet<UserWrapper> users;
 
-
-    public AbstractUserManager(@NonNull PulsarClient pulsarClient) {
-        super(pulsarClient, LOGGER, "user/request", "user/update");
+    public AbstractUserManager(@NonNull PulsarClient pulsarClient, @Nullable CryptoKeyReader cryptoKeyReader) {
+        super(pulsarClient, LOGGER, "user/request", "user/update", cryptoKeyReader);
         this.users = new ObjectArraySet<>();
     }
 

@@ -16,9 +16,8 @@ import java.util.UUID;
 public final class Wrapper extends AbstractBackendWrapper implements BackendWrapper {
     private final UserManager userManager;
 
-    public Wrapper(String pulsarURL) {
-        super(pulsarURL);
-        this.userManager = new UserManager(getPulsarClient());
+    public Wrapper() {
+        this.userManager = new UserManager(getPulsarClient(), getCryptoKeyReader());
     }
 
     @Override

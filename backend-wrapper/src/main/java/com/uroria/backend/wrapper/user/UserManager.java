@@ -2,12 +2,13 @@ package com.uroria.backend.wrapper.user;
 
 import com.uroria.backend.impl.user.AbstractUserManager;
 import lombok.NonNull;
+import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
 public final class UserManager extends AbstractUserManager {
-    public UserManager(@NonNull PulsarClient pulsarClient) {
-        super(pulsarClient);
+    public UserManager(@NonNull PulsarClient pulsarClient, CryptoKeyReader cryptoKeyReader) {
+        super(pulsarClient, cryptoKeyReader);
     }
 
     @Override

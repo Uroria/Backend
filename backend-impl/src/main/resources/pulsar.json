@@ -1,0 +1,15 @@
+{
+   "pulsar": {
+      "encryption": {
+         "enabled": false,
+         "publicKey": "",
+         "privateKey": ""
+      },
+      "jwtAuth": {
+         "enabled": false,
+         "token": ""
+      },
+      "primaryUrl": "",
+      "urls": []
+   }
+}

@@ -5,6 +5,7 @@ import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
+import com.uroria.base.event.EventManager;
 import lombok.experimental.UtilityClass;
 
 import java.util.Optional;
@@ -35,6 +36,10 @@ public class Backend {
 
     public Optional<PermGroup> getPermissionGroup(String name) {
         return getWrapper().getPermissionGroup(name);
+    }
+
+    public EventManager getEventManager() {
+        return getWrapper().getEventManager();
     }
 
     public BackendWrapper getWrapper() {

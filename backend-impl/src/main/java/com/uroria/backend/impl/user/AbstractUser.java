@@ -1,10 +1,8 @@
 package com.uroria.backend.impl.user;
 
-import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.AbstractBackendObject;
 import com.uroria.backend.user.User;
 import com.uroria.base.lang.Language;
-import com.uroria.base.user.UserStatus;
 import com.uroria.base.utils.CollectionUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -17,9 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/*
-    The messy class
- */
 public abstract class AbstractUser extends AbstractBackendObject implements User {
     protected final AbstractUserManager userManager;
 
@@ -38,7 +33,7 @@ public abstract class AbstractUser extends AbstractBackendObject implements User
     protected ObjectList<UUID> crew;
     protected Object2ObjectMap<String, Object> properties;
 
-    public AbstractUser(AbstractUserManager userManager, @NonNull UUID uuid) {
+    AbstractUser(AbstractUserManager userManager, @NonNull UUID uuid) {
         this.userManager = userManager;
         this.uuid = uuid;
         this.status = -1;
@@ -342,208 +337,5 @@ public abstract class AbstractUser extends AbstractBackendObject implements User
     @Override
     public final void updateDouble(int key, double value) {
         this.userManager.updateObject(this.uuid, key, value);
-    }
-
-    @Override
-    public final Map<String, Object> getProperties() {
-        return (Map<String, Object>) getObject(1, new Object2ObjectArrayMap<>());
-    }
-
-    @Override
-    public final String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
-        String string = (String) getProperties().get(key);
-        if (string == null) return defValue;
-        return string;
-    }
-
-    @Override
-    public final int getPropertyIntOrElse(@NonNull String key, int defValue) {
-        Integer i = (Integer) getProperties().get(key);
-        if (i == null) return defValue;
-        return i;
-    }
-
-    @Override
-    public final long getPropertyLongOrElse(@NonNull String key, long defValue) {
-        Long l = (Long) getProperties().get(key);
-        if (l == null) return defValue;
-        return l;
-    }
-
-    @Override
-    public final double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
-        Double d = (Double) getProperties().get(key);
-        if (d == null) return defValue;
-        return d;
-    }
-
-    @Override
-    public final float getPropertyFloatOrElse(@NonNull String key, float defValue) {
-        Float f = (Float) getProperties().get(key);
-        if (f == null) return defValue;
-        return f;
-    }
-
-    @Override
-    public final boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
-        Boolean b = (Boolean) getProperties().get(key);
-        if (b == null) return defValue;
-        return b;
-    }
-
-    @Override
-    public final void delete() {
-        updateBoolean(1, true);
-    }
-
-    @Override
-    public final UUID getUniqueId() {
-        return this.uuid;
-    }
-
-    @Override
-    public final void addCrewMember(@NonNull User user) {
-        List<UUID> crew = getUnsafeCrew();
-        crew.add(user.getUniqueId());
-        updateObject(4, crew);
-    }
-
-    @Override
-    public final void removeCrewMember(User user) {
-        if (user == null) return;
-        removeCrewMember(user.getUniqueId());
-    }
-
-    @Override
-    public final void removeCrewMember(UUID uuid) {
-        if (uuid == null) return;
-        List<UUID> crew = getUnsafeCrew();
-        crew.remove(uuid);
-        updateObject(4, crew);
-    }
-
-    public abstract List<UUID> getUnsafeCrew();
-
-    public final void setFirstJoin(long firstJoin) {
-        updateLong(3, firstJoin);
-    }
-
-    @Override
-    public final void setPlaytime(long playtime) {
-        updateLong(2, playtime);
-    }
-
-    @Override
-    public final void setLastJoin(long lastJoin) {
-        updateLong(1, lastJoin);
-    }
-
-    @Override
-    public final void setStatus(@NonNull UserStatus status) {
-        updateInt(1, status.toCode());
-    }
-
-    @Override
-    public final void setLanguage(@NonNull Language language) {
-        updateString(2, language.toTag());
-    }
-
-    @Override
-    public final void setUsername(@NonNull String username) {
-        updateString(1, username);
-    }
-
-    @Override
-    public final void addFriendRequest(@NonNull User user) {
-        List<UUID> friendRequests = getUnsafeFriendRequests();
-        friendRequests.add(user.getUniqueId());
-        updateObject(3, friendRequests);
-    }
-
-    @Override
-    public final void removeFriendRequest(User user) {
-        if (user == null) return;
-        removeFriendRequest(user.getUniqueId());
-    }
-
-    @Override
-    public final void removeFriendRequest(UUID uuid) {
-        if (uuid == null) return;
-        List<UUID> friendRequests = getUnsafeFriendRequests();
-        friendRequests.remove(uuid);
-        updateObject(3, friendRequests);
-    }
-
-    @Override
-    public final void addFriend(@NonNull User user) {
-        List<UUID> friends = getUnsafeFriends();
-        friends.add(user.getUniqueId());
-        updateObject(2, friends);
-    }
-
-    @Override
-    public final void removeFriend(User user) {
-        if (user == null) return;
-        removeFriend(user.getUniqueId());
-    }
-
-    @Override
-    public final void removeFriend(UUID uuid) {
-        if (uuid == null) return;
-        List<UUID> friends = getUnsafeFriends();
-        friends.remove(uuid);
-        updateObject(2, friends);
-    }
-
-    public abstract List<UUID> getUnsafeFriends();
-
-    public abstract List<UUID> getUnsafeFriendRequests();
-
-    @Override
-    public final void joinClan(@NonNull Clan clan) {
-        updateString(3, clan.getName());
-    }
-
-    @Override
-    public final void leaveClan() {
-        if (getClan().isEmpty()) return;
-        updateString(3, null);
-    }
-
-    public final void setProperty(@NonNull String key, Object object) {
-        Map<String, Object> properties = getProperties();
-        if (object != null) properties.put(key, object);
-        else properties.remove(key);
-        updateObject(1, properties);
-    }
-
-    @Override
-    public final void setProperty(@NonNull String key, @NonNull String value) {
-        setProperty(key, (Object) value);
-    }
-
-    @Override
-    public final void setProperty(@NonNull String key, int value) {
-        setProperty(key, (Object) value);
-    }
-
-    @Override
-    public final void setProperty(@NonNull String key, long value) {
-        setProperty(key, (Object) value);
-    }
-
-    @Override
-    public final void setProperty(@NonNull String key, double value) {
-        setProperty(key, (Object) value);
-    }
-
-    @Override
-    public final void setProperty(@NonNull String key, float value) {
-        setProperty(key, (Object) value);
-    }
-
-    @Override
-    public final void setProperty(@NonNull String key, boolean value) {
-        setProperty(key, (Object) value);
     }
 }

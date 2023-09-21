@@ -3,9 +3,9 @@ package com.uroria.backend.impl.pulsar;
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.base.io.InsaneByteArrayOutputStream;
 import lombok.NonNull;
+import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 public abstract class PulsarUpdateChannel extends PulsarChannel {
     private final UpdateThread updateThread;
 
-    public PulsarUpdateChannel(@NonNull PulsarClient client, @NonNull String name, @NonNull String topic) {
-        super(client, name, topic);
+    public PulsarUpdateChannel(@NonNull PulsarClient client, CryptoKeyReader cryptoKeyReader, @NonNull String name, @NonNull String topic) {
+        super(client, cryptoKeyReader, name, topic);
         this.updateThread = new UpdateThread(this);
         this.updateThread.start();
     }

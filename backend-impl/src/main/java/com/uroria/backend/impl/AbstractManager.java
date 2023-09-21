@@ -4,6 +4,7 @@ import com.uroria.backend.impl.pulsar.PulsarRequestChannel;
 import com.uroria.backend.impl.pulsar.PulsarUpdateChannel;
 import com.uroria.backend.impl.pulsar.Result;
 import com.uroria.base.io.InsaneByteArrayInputStream;
+import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.jetbrains.annotations.Nullable;
@@ -17,13 +18,16 @@ public abstract class AbstractManager implements RequestManager, UpdateManager {
     protected final Logger logger;
     protected final PulsarRequestChannel request;
     protected final PulsarUpdateChannel update;
+    @Nullable
+    protected final CryptoKeyReader cryptoKeyReader;
 
-    public AbstractManager(PulsarClient pulsarClient, Logger logger, String requestTopic, String updateTopic) {
+    public AbstractManager(PulsarClient pulsarClient, Logger logger, String requestTopic, String updateTopic, @Nullable CryptoKeyReader cryptoKeyReader) {
         this.pulsarClient = pulsarClient;
         this.logger = logger;
+        this.cryptoKeyReader = cryptoKeyReader;
         String identifier = UUID.randomUUID().toString();
-        this.request = new PulsarRequestChannel(pulsarClient, identifier, requestTopic);
-        this.update = new PulsarUpdateChannel(pulsarClient, identifier, updateTopic) {
+        this.request = new PulsarRequestChannel(pulsarClient, cryptoKeyReader, identifier, requestTopic);
+        this.update = new PulsarUpdateChannel(pulsarClient, cryptoKeyReader, identifier, updateTopic) {
             @Override
             public void onUpdate(InsaneByteArrayInputStream input) {
                 try {

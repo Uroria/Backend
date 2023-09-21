@@ -5,6 +5,7 @@ import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
+import com.uroria.base.event.EventManager;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,4 +23,6 @@ public interface BackendWrapper {
     Optional<ServerGroup> getServerGroup(String name);
 
     Optional<PermGroup> getPermissionGroup(String name);
+
+    EventManager getEventManager();
 }

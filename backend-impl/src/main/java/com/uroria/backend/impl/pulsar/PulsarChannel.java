@@ -2,11 +2,15 @@ package com.uroria.backend.impl.pulsar;
 
 import lombok.NonNull;
 import org.apache.pulsar.client.api.Consumer;
+import org.apache.pulsar.client.api.ConsumerBuilder;
+import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Producer;
+import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +24,15 @@ public class PulsarChannel {
     protected static final Logger LOGGER = LoggerFactory.getLogger("PulsarChannel");
 
     protected final PulsarClient client;
+    protected final CryptoKeyReader cryptoKeyReader;
     protected final Producer<byte[]> producer;
     protected final Consumer<byte[]> consumer;
     protected final String name;
     protected final String topic;
 
-    public PulsarChannel(@NonNull PulsarClient client, @NonNull String name, @NonNull String topic) {
+    public PulsarChannel(@NonNull PulsarClient client, @Nullable CryptoKeyReader cryptoKeyReader, @NonNull String name, @NonNull String topic) {
         this.client = client;
+        this.cryptoKeyReader = cryptoKeyReader;
         this.name = name;
         this.topic = topic;
         this.producer = buildProducer();
@@ -83,7 +89,9 @@ public class PulsarChannel {
     private Producer<byte[]> buildProducer() throws RuntimeException {
         Producer<byte[]> producer;
         try {
-            producer = this.client.newProducer()
+            ProducerBuilder<byte[]> producerBuilder = this.client.newProducer();
+            if (this.cryptoKeyReader != null) producerBuilder.cryptoKeyReader(this.cryptoKeyReader);
+            producer = producerBuilder
                     .producerName(this.name)
                     .topic(PREFIX + TENANT + "/" + this.topic + PRODUCER)
                     .create();
@@ -96,7 +104,9 @@ public class PulsarChannel {
     private Consumer<byte[]> buildConsumer() throws RuntimeException {
         Consumer<byte[]> consumer;
         try {
-            consumer = this.client.newConsumer()
+            ConsumerBuilder<byte[]> consumerBuilder = this.client.newConsumer();
+            if (this.cryptoKeyReader != null) consumerBuilder.cryptoKeyReader(this.cryptoKeyReader);
+            consumer = consumerBuilder
                     .consumerName(this.name)
                     .subscriptionName(this.name)
                     .ackTimeout(20, TimeUnit.SECONDS)

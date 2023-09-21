@@ -3,6 +3,7 @@ package com.uroria.backend.impl.pulsar;
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.base.io.InsaneByteArrayOutputStream;
 import lombok.NonNull;
+import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -13,8 +14,8 @@ import java.util.function.Consumer;
 public final class PulsarRequestChannel extends PulsarChannel {
     private static long lastId;
 
-    public PulsarRequestChannel(@NonNull PulsarClient client, @NonNull String name, @NonNull String topic) {
-        super(client, name, topic);
+    public PulsarRequestChannel(@NonNull PulsarClient client, CryptoKeyReader cryptoKeyReader, @NonNull String name, @NonNull String topic) {
+        super(client, cryptoKeyReader, name, topic);
     }
 
     public Result<InsaneByteArrayInputStream> request(@NonNull Consumer<InsaneByteArrayOutputStream> key, long timeout) {
