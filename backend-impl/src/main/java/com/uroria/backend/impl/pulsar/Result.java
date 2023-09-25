@@ -43,6 +43,11 @@ public abstract sealed class Result<T> permits Result.Some, Result.None, Result.
         return getValue();
     }
 
+    public boolean isPresent() {
+        if (this instanceof Result.Error<T>) return false;
+        return !(this instanceof Result.None<T>);
+    }
+
     public T handle(Function<T,T> some, Supplier<T> none, Consumer<Throwable> error) {
         if (this instanceof Result.Error<T> errorResult) {
             error.accept(errorResult.throwable);

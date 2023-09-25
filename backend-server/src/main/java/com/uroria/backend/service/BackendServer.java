@@ -3,11 +3,12 @@ package com.uroria.backend.service;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.uroria.backend.impl.configuration.BackendConfiguration;
+import com.uroria.backend.impl.configurations.PulsarConfiguration;
 import com.uroria.backend.service.commands.CommandManager;
 import com.uroria.backend.service.commands.predefined.HelpCommand;
 import com.uroria.backend.service.commands.predefined.StopCommand;
 import com.uroria.backend.service.console.BackendConsole;
+import com.uroria.backend.wrapper.Wrapper;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import lombok.Getter;
@@ -29,7 +30,6 @@ public final class BackendServer {
     private @Getter final MongoDatabase database;
     private @Getter final RedisClient redisClient;
     private @Getter final StatefulRedisConnection<String, String> redisConnection;
-    private @Getter final BackendImpl backend;
 
     public BackendServer() {
         logger.info("Initializing...");
@@ -37,7 +37,7 @@ public final class BackendServer {
         this.console = new BackendConsole(this);
 
         logger.info("Connecting to pulsar instance...");
-        this.pulsarClient = buildPulsarClient(BackendConfiguration.getPulsarURL());
+        this.pulsarClient = buildPulsarClient(PulsarConfiguration.getPulsarPrimaryUrl());
 
         logger.info("Connecting to mongo instance...");
         this.mongoClient = MongoClients.create(BackendConfiguration.getString("mongo.url"));
@@ -47,8 +47,10 @@ public final class BackendServer {
         this.redisClient = RedisClient.create(BackendConfiguration.getString("redis.url"));
         this.redisConnection = this.redisClient.connect();
 
-        logger.info("Initializing backend...");
-        this.backend = new BackendImpl(this.pulsarClient, this, database, redisConnection);
+        logger.info("Initializing wrapper...");
+        this.backend = new Wrapper();
+
+
     }
 
     public void start() {

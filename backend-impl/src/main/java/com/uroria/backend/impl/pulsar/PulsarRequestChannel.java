@@ -1,5 +1,7 @@
 package com.uroria.backend.impl.pulsar;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.base.io.InsaneByteArrayOutputStream;
 import lombok.NonNull;
@@ -16,6 +18,51 @@ public final class PulsarRequestChannel extends PulsarChannel {
 
     public PulsarRequestChannel(@NonNull PulsarClient client, CryptoKeyReader cryptoKeyReader, @NonNull String name, @NonNull String topic) {
         super(client, cryptoKeyReader, name, topic);
+    }
+
+    public Result<JsonElement> request(String key, long timeout) {
+        try (InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream()) {
+            output.writeUTF(key);
+            output.close();
+            Result<MessageId> result = send(output.toByteArray());
+            if (result instanceof Result.Error<MessageId> error) {
+                return Result.error(error.getThrowable());
+            }
+        } catch (Exception exception) {
+            return Result.error(exception);
+        }
+
+        long start = System.currentTimeMillis();
+        try {
+            JsonElement value = null;
+            while (true) {
+                if ((System.currentTimeMillis() - start) > timeout) break;
+                Result<Message<byte[]>> result = receive();
+                if (result instanceof Result.Error<Message<byte[]>> error) {
+                    return Result.error(error.getThrowable());
+                }
+
+                Message<byte[]> message = result.getValue();
+                if (message == null) continue;
+
+                try (InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData())) {
+                    String aKey = input.readUTF();
+                    if (!key.equals(aKey)) {
+                        nAck(message);
+                        continue;
+                    }
+                    ack(message);
+                    String valueString = input.readUTF();
+                    value = JsonParser.parseString(valueString);
+                    break;
+                } catch (Exception exception) {
+                    return Result.error(exception);
+                }
+            }
+            return Result.of(value);
+        } catch (Exception exception) {
+            return Result.error(exception);
+        }
     }
 
     public Result<InsaneByteArrayInputStream> request(@NonNull Consumer<InsaneByteArrayOutputStream> key, long timeout) {

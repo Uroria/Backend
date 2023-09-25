@@ -17,6 +17,8 @@ public interface Clan extends Deletable {
 
     long getFoundingDate();
 
+    boolean hasMember(@NonNull User user);
+
     void addMember(@NonNull User user);
 
     void addOperator(@NonNull User user);

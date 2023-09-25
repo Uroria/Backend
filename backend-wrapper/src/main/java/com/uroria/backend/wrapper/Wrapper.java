@@ -3,11 +3,11 @@ package com.uroria.backend.wrapper;
 import com.uroria.backend.BackendWrapper;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.AbstractBackendWrapper;
+import com.uroria.backend.impl.user.UserManager;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
-import com.uroria.backend.wrapper.user.UserManager;
 import org.apache.pulsar.client.api.PulsarClientException;
 
 import java.util.Optional;
@@ -33,12 +33,12 @@ public final class Wrapper extends AbstractBackendWrapper implements BackendWrap
 
     @Override
     public Optional<User> getUser(UUID uuid) {
-        return Optional.ofNullable(this.userManager.getUser(uuid));
+        return Optional.ofNullable(this.userManager.getWrapper(uuid));
     }
 
     @Override
     public Optional<User> getUser(String username) {
-        return Optional.ofNullable(this.userManager.getUser(username));
+        return Optional.ofNullable(this.userManager.getWrapper(username));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.uroria.backend.impl.pulsar;
 
+import com.google.gson.JsonElement;
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.base.io.InsaneByteArrayOutputStream;
 import lombok.NonNull;
@@ -11,12 +12,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public abstract class PulsarUpdateChannel extends PulsarChannel {
-    private final UpdateThread updateThread;
 
     public PulsarUpdateChannel(@NonNull PulsarClient client, CryptoKeyReader cryptoKeyReader, @NonNull String name, @NonNull String topic) {
         super(client, cryptoKeyReader, name, topic);
-        this.updateThread = new UpdateThread(this);
-        this.updateThread.start();
+        UpdateThread updateThread = new UpdateThread(this);
+        updateThread.start();
     }
 
     public final void update(@NonNull Consumer<InsaneByteArrayOutputStream> data) {
@@ -27,6 +27,17 @@ public abstract class PulsarUpdateChannel extends PulsarChannel {
         } catch (Exception exception) {
             LOGGER.error("Unable to update on " + topic, exception);
         }
+    }
+
+    public final void update(String key, JsonElement element) {
+        update(output -> {
+            try {
+                output.writeUTF(key);
+                output.writeUTF(element.getAsString());
+            } catch (Exception exception) {
+                throw new RuntimeException(exception);
+            }
+        });
     }
 
     public abstract void onUpdate(InsaneByteArrayInputStream input);
@@ -47,7 +58,9 @@ public abstract class PulsarUpdateChannel extends PulsarChannel {
                     if (message == null) continue;
                     CompletableFuture.runAsync(() -> {
                         try {
-                            update.onUpdate(new InsaneByteArrayInputStream(message.getData()));
+                            InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData());
+                            update.onUpdate(input);
+                            input.close();
                         } catch (Exception exception) {
                             LOGGER.error("Unable to read message", exception);
                         }
