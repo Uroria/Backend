@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.uroria.backend.Backend;
+import com.uroria.backend.Deletable;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.pulsar.PulsarObject;
 import com.uroria.backend.impl.pulsar.Result;
@@ -14,12 +15,19 @@ import com.uroria.backend.user.User;
 import com.uroria.backend.user.punishment.Punishment;
 import com.uroria.backend.user.punishment.mute.Mute;
 import com.uroria.base.lang.Language;
+import com.uroria.base.permission.PermState;
 import com.uroria.base.user.UserStatus;
+import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,42 +38,219 @@ public final class UserWrapper implements User {
     private final PulsarObject object;
     private final UUID uuid;
     private final String prefix;
+    private final ObjectSet<Permission> permissions;
+    private boolean deleted;
 
     public UserWrapper(@NonNull PulsarObject object, @NonNull UUID uuid) {
         this.object = object;
         this.uuid = uuid;
-        this.prefix = getPrefix();
-    }
-
-    public void clear() {
-        this.object.remove("user." + this.uuid);
-    }
-
-    private String getPrefix() {
-        return "user." + uuid + ".";
+        this.permissions = new ObjectArraySet<>();
+        this.prefix = "user." + uuid + ".";
     }
 
     @Override
     public void delete() {
+        if (isDeleted()) return;
+        this.deleted = true;
         object.set(prefix + "deleted", true);
+        object.remove("user." + uuid);
     }
 
     @Override
     public boolean isDeleted() {
+        if (this.deleted) return true;
         Result<JsonElement> result = object.get(prefix + "deleted");
         JsonElement element = result.get();
         if (element == null) return false;
-        return element.getAsBoolean();
+        boolean val = element.getAsBoolean();
+        if (val) this.deleted = true;
+        return val;
     }
 
     @Override
     public List<PermGroup> getPermGroups() {
-        return null;
+        return new ObjectArrayList<>();
     }
 
     @Override
     public Permission getPermission(String node) {
-        return null;
+        Deletable.checkDeleted(this);
+        Permission savedPermission = getRootPermission(node);
+        if (savedPermission != null) return savedPermission;
+
+        Permission groups = getPermGroups().stream().filter(group -> {
+                    Permission permission = group.getPermission(node);
+                    return permission.getState() != PermState.NOT_SET;
+                }).max(Comparator.comparing(PermGroup::getPriority))
+                .map(group -> group.getPermission(node))
+                .orElse(null);
+
+        if (groups != null) {
+            this.permissions.add(groups);
+            return groups;
+        }
+
+        final String[] nodeParts = node.split("\\.");
+        final StringBuilder currentNode = new StringBuilder();
+        int i = 0;
+        while (i <= nodeParts.length) {
+            if (i > 0) currentNode.append(".");
+
+            currentNode.append(nodeParts[i]);
+
+            String current = currentNode.toString();
+
+            Permission rootPermission = getRootPermission(current);
+            if (rootPermission != null) {
+                this.permissions.add(getImpl(node, rootPermission.getState()));
+                return rootPermission;
+            }
+
+            String wildcardNode = current + ".*";
+
+            Permission wildCardPermission = getRootPermission(wildcardNode);
+            if (wildCardPermission != null) {
+                this.permissions.add(getImpl(node, wildCardPermission.getState()));
+                return wildCardPermission;
+            }
+
+            i++;
+        }
+
+        Permission impl = getImpl(node, PermState.NOT_SET);
+        this.permissions.add(impl);
+        return impl;
+    }
+
+    private Permission getImpl(final String node, final PermState finalState) {
+        return new Permission() {
+            private PermState state = finalState;
+
+            @Override
+            public void setState(@NonNull PermState state) {
+                this.state = state;
+                setPermission(node, state);
+            }
+
+            @Override
+            public String getNode() {
+                return node;
+            }
+
+            @Override
+            public PermState getState() {
+                return this.state;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj instanceof Permission perm) {
+                    return perm.getNode().equals(this.getNode());
+                }
+                return false;
+            }
+        };
+    }
+
+    private void setPermission(String node, boolean value) {
+        this.permissions.removeIf(perm -> perm.getNode().equals(node));
+        PermState state;
+        if (value) state = PermState.TRUE;
+        else state = PermState.FALSE;
+        this.permissions.add(getImpl(node, state));
+        if (value) {
+            List<String> allowed = getStringArray(prefix + "allowed");
+            allowed.removeIf(someNode -> someNode.equals(node));
+            allowed.add(node);
+            setStringArray(allowed, prefix + "allowed");
+            return;
+        }
+        List<String> disallowed = getStringArray(prefix + "disallowed");
+        disallowed.removeIf(someNode -> someNode.equals(node));
+        disallowed.add(node);
+        setStringArray(disallowed, prefix + "disallowed");
+    }
+
+    private void setPermission(String node, PermState state) {
+        node = node.toLowerCase();
+        switch (state) {
+            case TRUE -> setPermission(node, true);
+            case FALSE -> setPermission(node, false);
+            case NOT_SET -> unsetPermission(node);
+        }
+    }
+
+    private void unsetPermission(String node) {
+        List<String> allowed = getStringArray(prefix + "allowed");
+        List<String> disallowed = getStringArray(prefix + "disallowed");
+        allowed.remove(node);
+        disallowed.remove(node);
+        setStringArray(allowed, prefix + "allowed");
+        setStringArray(disallowed, prefix + "disallowed");
+    }
+
+    private List<String> getRawAllowed() {
+        return getStringArray(prefix + ".allowed");
+    }
+
+    private List<String> getRawDisallowed() {
+        return getStringArray(prefix + ".disallowed");
+    }
+
+    private List<String> getStringArray(String key) {
+        Result<JsonElement> result = this.object.get(key);
+        JsonElement element = result.get();
+        if (element == null) return ObjectLists.emptyList();
+        JsonArray stringArray = element.getAsJsonArray();
+        return stringArray.asList().stream()
+                .map(JsonElement::getAsString)
+                .toList();
+    }
+
+    private void setStringArray(List<String> list, String key) {
+        Result<JsonElement> result = this.object.get(key);
+        JsonArray array = new JsonArray();
+        list.forEach(array::add);
+        this.object.set(key, array);
+    }
+
+    private Object2BooleanMap<String> getRawPermissions() {
+        Object2BooleanMap<String> map = new Object2BooleanArrayMap<>();
+        List<String> allowed = getRawAllowed();
+        List<String> disallowed = getRawDisallowed();
+        allowed.forEach(string -> map.put(string, true));
+        disallowed.forEach(string -> map.put(string, false));
+        return map;
+    }
+
+    private Permission getRootPermission(String node) {
+        final String finalNode = node.toLowerCase();
+        return this.permissions.stream()
+                .filter(perm -> perm.getNode().equals(finalNode))
+                .findAny()
+                .orElse(null);
+    }
+
+    @Override
+    public void refreshPermissions() {
+        Deletable.checkDeleted(this);
+        Object2BooleanMap<String> raw = getRawPermissions();
+        this.permissions.removeIf(perm -> !raw.containsKey(perm.getNode()));
+        for (Permission perm : this.permissions) {
+            String node = perm.getNode();
+            boolean allowed = raw.getBoolean(node);
+            if (perm.isGiven() == allowed) continue;
+            this.permissions.remove(perm);
+            PermState state;
+            if (allowed) state = PermState.TRUE;
+            else state = PermState.FALSE;
+            this.permissions.add(getImpl(node, state));
+        }
+    }
+
+    @Override
+    public ObjectSet<Permission> getSetPermissions() {
+        return this.permissions;
     }
 
     @Override
@@ -244,8 +429,7 @@ public final class UserWrapper implements User {
         Result<JsonElement> result = this.object.get(prefix + "friendRequests");
         JsonElement element = result.get();
         if (element == null) return ObjectLists.emptyList();
-        JsonArray uuidArray = element.getAsJsonArray();
-        return uuidArray.asList().stream()
+        return element.getAsJsonArray().asList().stream()
                 .map(el -> UUID.fromString(el.getAsString()))
                 .toList();
     }

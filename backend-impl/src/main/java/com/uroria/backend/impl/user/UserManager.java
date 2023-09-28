@@ -22,10 +22,10 @@ public final class UserManager extends AbstractManager {
     private final PulsarRequestChannel request;
     private final ObjectSet<UserWrapper> users;
 
-    public UserManager(@NonNull PulsarClient pulsarClient, @Nullable CryptoKeyReader cryptoKeyReader) {
-        super(pulsarClient, LOGGER, "user/request", "user/update", cryptoKeyReader);
+    public UserManager(@NonNull PulsarClient pulsar, @Nullable CryptoKeyReader reader) {
+        super(pulsar, LOGGER, "user/request", "user/update", reader);
         this.users = new ObjectArraySet<>();
-        this.request = new PulsarRequestChannel(pulsarClient, cryptoKeyReader, UUID.randomUUID().toString(), "users/request");
+        this.request = new PulsarRequestChannel(pulsar, reader, UUID.randomUUID().toString(), "users/request");
     }
 
 

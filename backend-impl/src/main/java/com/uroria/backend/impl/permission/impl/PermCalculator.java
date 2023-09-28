@@ -3,6 +3,7 @@ package com.uroria.backend.impl.permission.impl;
 import com.uroria.backend.permission.Permission;
 import com.uroria.base.permission.PermState;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
 @UtilityClass
 public class PermCalculator {
 
-    public Permission getPermission(String node, ObjectSet<PermissionImpl> perms) {
+    public Permission getPermission(String node, ObjectSet<Permission> perms) {
         final String[] nodeParts = node.split("\\.");
         final StringBuilder currentNode = new StringBuilder();
         for (int i = 0; i < nodeParts.length; i++) {
@@ -22,7 +23,7 @@ public class PermCalculator {
 
             final String finalCurrentNode = currentNode.toString();
 
-            PermissionImpl perm = perms.stream()
+            Permission perm = perms.stream()
                     .filter(permission -> permission.getNode().equals(finalCurrentNode))
                     .findAny().orElse(null);
             if (perm != null) return perm;
@@ -34,7 +35,22 @@ public class PermCalculator {
                     .findAny().orElse(null);
             if (perm != null) return perm;
         }
-        return new PermissionImpl(node, PermState.NOT_SET);
+        return new Permission() {
+            @Override
+            public void setState(@NonNull PermState state) {
+
+            }
+
+            @Override
+            public String getNode() {
+                return node;
+            }
+
+            @Override
+            public PermState getState() {
+                return PermState.NOT_SET;
+            }
+        };
     }
 
     public boolean hasPermission(String node, Map<String, Boolean> permissions) {

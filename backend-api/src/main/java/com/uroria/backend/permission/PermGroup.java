@@ -1,6 +1,8 @@
 package com.uroria.backend.permission;
 
-public interface PermGroup extends Permissible {
+import com.uroria.backend.Deletable;
+
+public interface PermGroup extends Permissible, Deletable {
 
     String getName();
 
