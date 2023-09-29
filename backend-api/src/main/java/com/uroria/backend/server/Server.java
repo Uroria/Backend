@@ -1,6 +1,6 @@
 package com.uroria.backend.server;
 
-import org.jetbrains.annotations.Nullable;
+import com.uroria.problemo.result.Result;
 
 import java.net.InetSocketAddress;
 
@@ -12,7 +12,7 @@ public interface Server extends ServerGroupTarget {
 
     ServerStatus getStatus();
 
-    @Nullable InetSocketAddress getAddress();
+    Result<InetSocketAddress> getAddress();
 
     int getTemplateId();
 }

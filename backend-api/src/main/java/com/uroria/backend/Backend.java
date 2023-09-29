@@ -6,35 +6,35 @@ import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
 import com.uroria.base.event.EventManager;
+import com.uroria.problemo.result.Result;
 import lombok.experimental.UtilityClass;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @UtilityClass
 public class Backend {
 
-    public Optional<User> getUser(UUID uuid) {
+    public Result<User> getUser(UUID uuid) {
         return getWrapper().getUser(uuid);
     }
 
-    public Optional<User> getUser(String username) {
+    public Result<User> getUser(String username) {
         return getWrapper().getUser(username);
     }
 
-    public Optional<Clan> getClan(String tag) {
+    public Result<Clan> getClan(String tag) {
         return getWrapper().getClan(tag);
     }
 
-    public Optional<Server> getServer(long identifier) {
+    public Result<Server> getServer(long identifier) {
         return getWrapper().getServer(identifier);
     }
 
-    public Optional<ServerGroup> getServerGroup(String name) {
+    public Result<ServerGroup> getServerGroup(String name) {
         return getWrapper().getServerGroup(name);
     }
 
-    public Optional<PermGroup> getPermissionGroup(String name) {
+    public Result<PermGroup> getPermissionGroup(String name) {
         return getWrapper().getPermissionGroup(name);
     }
 

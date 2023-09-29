@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.base.io.InsaneByteArrayOutputStream;
+import com.uroria.problemo.Problem;
+import com.uroria.problemo.result.Result;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.Message;
@@ -25,11 +27,11 @@ public final class PulsarRequestChannel extends PulsarChannel {
             output.writeUTF(key);
             output.close();
             Result<MessageId> result = send(output.toByteArray());
-            if (result instanceof Result.Error<MessageId> error) {
-                return Result.error(error.getThrowable());
+            if (result instanceof Result.Problematic<MessageId> problem) {
+                return Result.problem(problem.getProblem());
             }
         } catch (Exception exception) {
-            return Result.error(exception);
+            return Result.problem(Problem.error(exception));
         }
 
         long start = System.currentTimeMillis();
@@ -38,11 +40,11 @@ public final class PulsarRequestChannel extends PulsarChannel {
             while (true) {
                 if ((System.currentTimeMillis() - start) > timeout) break;
                 Result<Message<byte[]>> result = receive();
-                if (result instanceof Result.Error<Message<byte[]>> error) {
-                    return Result.error(error.getThrowable());
+                if (result instanceof Result.Problematic<Message<byte[]>> problem) {
+                    return Result.problem(problem.getProblem());
                 }
 
-                Message<byte[]> message = result.getValue();
+                Message<byte[]> message = result.get();
                 if (message == null) continue;
 
                 try (InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData())) {
@@ -56,12 +58,12 @@ public final class PulsarRequestChannel extends PulsarChannel {
                     value = JsonParser.parseString(valueString);
                     break;
                 } catch (Exception exception) {
-                    return Result.error(exception);
+                    return Result.problem(Problem.error(exception));
                 }
             }
             return Result.of(value);
         } catch (Exception exception) {
-            return Result.error(exception);
+            return Result.problem(Problem.error(exception));
         }
     }
 
@@ -76,11 +78,11 @@ public final class PulsarRequestChannel extends PulsarChannel {
             key.accept(output);
             output.close();
             Result<MessageId> result = send(output.toByteArray());
-            if (result instanceof Result.Error<MessageId> error) {
-                return Result.error(error.getThrowable());
+            if (result instanceof Result.Problematic<MessageId> problem) {
+                return Result.problem(problem.getProblem());
             }
         } catch (Exception exception) {
-            return Result.error(exception);
+            return Result.problem(Problem.error(exception));
         }
 
         long start = System.currentTimeMillis();
@@ -89,11 +91,12 @@ public final class PulsarRequestChannel extends PulsarChannel {
             while (true) {
                 if ((System.currentTimeMillis() - start) > timeout) break;
                 Result<Message<byte[]>> result = receive();
-                if (result instanceof Result.Error<Message<byte[]>> error) {
-                    return Result.error(error.getThrowable());
+
+                if (result instanceof Result.Problematic<Message<byte[]>> problem) {
+                    return Result.problem(problem.getProblem());
                 }
 
-                Message<byte[]> message = result.getValue();
+                Message<byte[]> message = result.get();
                 if (message == null) continue;
 
                 try (InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(message.getData())) {
@@ -105,12 +108,12 @@ public final class PulsarRequestChannel extends PulsarChannel {
                     value = input;
                     break;
                 } catch (Exception exception) {
-                    return Result.error(exception);
+                    return Result.problem(Problem.error(exception));
                 }
             }
             return Result.of(value);
         } catch (Exception exception) {
-            return Result.error(exception);
+            return Result.problem(Problem.error(exception));
         }
     }
 }

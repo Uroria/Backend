@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.uroria.base.io.InsaneByteArrayInputStream;
+import com.uroria.problemo.result.Result;
 import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -102,7 +103,7 @@ public final class PulsarObject implements AutoCloseable {
         }
 
         Result<JsonElement> result = this.request.request(key, 2000);
-        if (result instanceof Result.Error<JsonElement> error) {
+        if (result instanceof Result.Problematic<JsonElement> error) {
             return error;
         }
 

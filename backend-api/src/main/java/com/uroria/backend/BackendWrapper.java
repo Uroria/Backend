@@ -6,23 +6,23 @@ import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
 import com.uroria.base.event.EventManager;
+import com.uroria.problemo.result.Result;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public interface BackendWrapper {
 
-    Optional<User> getUser(UUID uuid);
+    Result<User> getUser(UUID uuid);
 
-    Optional<User> getUser(String username);
+    Result<User> getUser(String username);
 
-    Optional<Clan> getClan(String tag);
+    Result<Clan> getClan(String tag);
 
-    Optional<Server> getServer(long identifier);
+    Result<Server> getServer(long identifier);
 
-    Optional<ServerGroup> getServerGroup(String name);
+    Result<ServerGroup> getServerGroup(String name);
 
-    Optional<PermGroup> getPermissionGroup(String name);
+    Result<PermGroup> getPermissionGroup(String name);
 
     EventManager getEventManager();
 }

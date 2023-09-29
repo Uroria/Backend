@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.impl.pulsar.PulsarObject;
-import com.uroria.backend.impl.pulsar.Result;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.base.permission.PermState;

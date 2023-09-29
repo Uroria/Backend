@@ -2,6 +2,7 @@ package com.uroria.backend.impl.pulsar;
 
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.base.io.InsaneByteArrayOutputStream;
+import com.uroria.problemo.result.Result;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.Message;

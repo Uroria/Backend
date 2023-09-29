@@ -7,7 +7,6 @@ import com.uroria.backend.Backend;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.pulsar.PulsarObject;
-import com.uroria.backend.impl.pulsar.Result;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.backend.stats.Stat;
@@ -17,6 +16,7 @@ import com.uroria.backend.user.punishment.mute.Mute;
 import com.uroria.base.lang.Language;
 import com.uroria.base.permission.PermState;
 import com.uroria.base.user.UserStatus;
+import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -402,7 +402,7 @@ public final class UserWrapper implements User {
     @Override
     public List<User> getFriends() {
         return getRawFriends().stream()
-                .map(uuid -> Backend.getUser(uuid).orElse(null))
+                .map(uuid -> Backend.getUser(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -420,7 +420,7 @@ public final class UserWrapper implements User {
     @Override
     public List<User> getFriendRequests() {
         return getRawFriendRequests().stream()
-                .map(uuid -> Backend.getUser(uuid).orElse(null))
+                .map(uuid -> Backend.getUser(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -493,15 +493,17 @@ public final class UserWrapper implements User {
     }
 
     @Override
-    public Optional<Clan> getClan() {
-        return getRawClan().flatMap(Backend::getClan);
+    public Result<Clan> getClan() {
+        Result<String> tag = getRawClan();
+        if (tag.isPresent()) return Backend.getClan(tag.get());
+        return Result.none();
     }
 
-    public Optional<String> getRawClan() {
+    public Result<String> getRawClan() {
         Result<JsonElement> result = object.get(prefix + "clan");
         JsonElement element = result.get();
-        if (element == null) return Optional.empty();
-        return Optional.ofNullable(element.getAsString());
+        if (element == null) return Result.none();
+        return Result.of(element.getAsString());
     }
 
     @Override
@@ -519,7 +521,7 @@ public final class UserWrapper implements User {
 
     @Override
     public List<User> getCrew() {
-        return getRawCrew().stream().map(uuid -> Backend.getUser(uuid).orElse(null))
+        return getRawCrew().stream().map(uuid -> Backend.getUser(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }

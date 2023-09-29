@@ -2,7 +2,6 @@ package com.uroria.backend.impl.user;
 
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.impl.pulsar.PulsarRequestChannel;
-import com.uroria.backend.impl.pulsar.Result;
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;

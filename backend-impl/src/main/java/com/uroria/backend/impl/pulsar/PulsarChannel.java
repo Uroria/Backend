@@ -1,5 +1,7 @@
 package com.uroria.backend.impl.pulsar;
 
+import com.uroria.problemo.Problem;
+import com.uroria.problemo.result.Result;
 import lombok.NonNull;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.ConsumerBuilder;
@@ -44,46 +46,42 @@ public class PulsarChannel {
         this.consumer.close();
     }
 
-    public final Result<MessageId> send(byte[] data) throws RuntimeException {
-        return Result.of(() -> {
-            try {
-                return this.producer.send(data);
-            } catch (Exception exception) {
-                throw new RuntimeException("Cannot send message", exception);
-            }
-        });
+    public final Result<MessageId> send(byte[] data) {
+        try {
+            return Result.some(this.producer.send(data));
+        } catch (PulsarClientException.TimeoutException exception) {
+            return Result.problem(Problem.unavailable("Connection timed out"));
+        } catch (PulsarClientException.AlreadyClosedException exception) {
+            return Result.problem(Problem.plain("Connection already closed"));
+        } catch (PulsarClientException exception) {
+            return Result.problem(Problem.unknown("Unknown pulsar exception."));
+        }
     }
 
-    public final Result<Message<byte[]>> receive() throws RuntimeException {
-        return Result.of(() -> {
-            try {
-                return this.consumer.receive(20, TimeUnit.SECONDS);
-            } catch (Exception exception) {
-                throw new RuntimeException("Cannot receive message", exception);
-            }
-        });
+    public final Result<Message<byte[]>> receive() {
+        try {
+            return Result.of(this.consumer.receive(20, TimeUnit.SECONDS));
+        } catch (PulsarClientException.AlreadyClosedException exception) {
+            return Result.problem(Problem.plain("Connection already closed"));
+        } catch (PulsarClientException exception) {
+            return Result.problem(Problem.unknown("Unknown pulsar exception."));
+        }
     }
 
     public final Result<Message<byte[]>> ack(Message<byte[]> message) {
-        return Result.of(() -> {
-            try {
-                this.consumer.acknowledge(message);
-                return message;
-            } catch (Exception exception) {
-                throw new RuntimeException("Cannot acknowledge message", exception);
-            }
-        });
+        try {
+            this.consumer.acknowledge(message);
+            return Result.some(message);
+        } catch (PulsarClientException.AlreadyClosedException exception) {
+            return Result.problem(Problem.plain("Connection already closed"));
+        } catch (PulsarClientException exception) {
+            return Result.problem(Problem.unknown("Unknown pulsar exception."));
+        }
     }
 
     public final Result<Message<byte[]>> nAck(Message<byte[]> message) {
-        return Result.of(() -> {
-            try {
-                this.consumer.negativeAcknowledge(message);
-                return message;
-            } catch (Exception exception) {
-                throw new RuntimeException("Cannot negative acknowledge message", exception);
-            }
-        });
+        this.consumer.negativeAcknowledge(message);
+        return Result.some(message);
     }
 
     private Producer<byte[]> buildProducer() throws RuntimeException {

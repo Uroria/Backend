@@ -5,6 +5,7 @@ import com.uroria.backend.user.crew.CrewHolder;
 import com.uroria.backend.user.punishment.Punishable;
 import com.uroria.base.lang.Language;
 import com.uroria.base.user.UserStatus;
+import com.uroria.problemo.result.Result;
 import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,7 +56,7 @@ public interface User extends Punishable, CrewHolder, Player {
 
     void removeFriend(UUID uuid);
 
-    Optional<Clan> getClan();
+    Result<Clan> getClan();
 
     void joinClan(@NonNull Clan clan);
 
