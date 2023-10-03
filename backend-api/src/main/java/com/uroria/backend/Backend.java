@@ -1,7 +1,9 @@
 package com.uroria.backend;
 
+import com.uroria.annotations.markers.Warning;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.permission.PermGroup;
+import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
@@ -9,6 +11,7 @@ import com.uroria.base.event.EventManager;
 import com.uroria.problemo.result.Result;
 import lombok.experimental.UtilityClass;
 
+import java.util.Collection;
 import java.util.UUID;
 
 @UtilityClass
@@ -29,6 +32,19 @@ public class Backend {
     public Result<Server> getServer(long identifier) {
         return getWrapper().getServer(identifier);
     }
+    @SuppressWarnings("WarningMarkers")
+    @Warning(message = "Ordering a server could take more than 30 seconds. Use this method only if you know what you're doing.", suppress = "Okay, I understand")
+    public Result<Server> createServer(int templateId, ServerGroup group) {
+        return getWrapper().createServer(templateId, group);
+    }
+
+    public Result<Proxy> getProxy(long identifier) {
+        return getWrapper().getProxy(identifier);
+    }
+
+    public Collection<Proxy> getProxies(String name) {
+        return getWrapper().getProxies(name);
+    }
 
     public Result<ServerGroup> getServerGroup(String name) {
         return getWrapper().getServerGroup(name);
@@ -38,11 +54,16 @@ public class Backend {
         return getWrapper().getPermissionGroup(name);
     }
 
+    public Result<PermGroup> createPermissionGroup(String name) {
+        return getWrapper().createPermissionGroup(name);
+    }
+
     public EventManager getEventManager() {
         return getWrapper().getEventManager();
     }
 
     public BackendWrapper getWrapper() {
+        //noinspection WeakWarningMarkers
         return Unsafe.getInstance();
     }
 }

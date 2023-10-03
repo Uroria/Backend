@@ -1,15 +1,20 @@
 package com.uroria.backend.impl.user;
 
+import com.google.gson.JsonElement;
+import com.rabbitmq.client.Connection;
+import com.uroria.backend.Backend;
 import com.uroria.backend.impl.AbstractManager;
-import com.uroria.backend.impl.pulsar.PulsarRequestChannel;
+import com.uroria.backend.impl.communication.CommunicationClient;
+import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
+import com.uroria.backend.impl.communication.request.RequestChannel;
+import com.uroria.backend.user.events.UserDeletedEvent;
+import com.uroria.backend.user.events.UserUpdatedEvent;
+import com.uroria.base.event.EventManager;
 import com.uroria.base.io.InsaneByteArrayInputStream;
+import com.uroria.base.io.InsaneByteArrayOutputStream;
+import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import lombok.NonNull;
-import org.apache.pulsar.client.api.CryptoKeyReader;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,25 +23,53 @@ import java.util.UUID;
 public final class UserManager extends AbstractManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("Users");
 
-    private final PulsarRequestChannel request;
+    private final CommunicationClient client;
+    private final RequestChannel request;
     private final ObjectSet<UserWrapper> users;
 
-    public UserManager(@NonNull PulsarClient pulsar, @Nullable CryptoKeyReader reader) {
-        super(pulsar, LOGGER, "user/request", "user/update", reader);
+    public UserManager(Connection rabbit, Logger logger) {
+        super(rabbit, logger);
         this.users = new ObjectArraySet<>();
-        this.request = new PulsarRequestChannel(pulsar, reader, UUID.randomUUID().toString(), "users/request");
+        EventManager eventManager = Backend.getEventManager();
+        this.client = new CommunicationClient( rabbit, "user-request", "user-update", element -> {
+            JsonElement uuidStringElement = element.get("uuid");
+            if (uuidStringElement == null) return;
+            String uuidString = uuidStringElement.getAsString();
+            UUID uuid;
+            try {
+                uuid = UUID.fromString(uuidString);
+            } catch (Exception exception) {
+                return;
+            }
+            boolean delete = false;
+            for (UserWrapper wrapper : this.users) {
+                if (!wrapper.getUniqueId().equals(uuid)) continue;
+                if (wrapper.isDeleted()) {
+                    delete = true;
+                    eventManager.callAndForget(new UserDeletedEvent(wrapper));
+                } else wrapper.refreshPermissions();
+                eventManager.callAndForget(new UserUpdatedEvent(wrapper));
+                break;
+            }
+            if (delete) delete(uuid);
+        });
+        this.request = new RabbitRequestChannel(rabbit, "user-requests");
     }
 
-
     @Override
-    public void start() throws PulsarClientException {
+    public void start() throws Exception {
 
     }
 
     @Override
-    public void shutdown() throws PulsarClientException {
+    public void shutdown() throws Exception {
         this.request.close();
-        this.object.close();
+        this.client.close();
+    }
+
+    public void delete(UUID uuid) {
+        this.users.removeIf(user -> user.getUniqueId().equals(uuid));
+        this.client.delete(uuid.toString());
     }
 
     public UserWrapper getWrapper(UUID uuid) {
@@ -45,66 +78,83 @@ public final class UserManager extends AbstractManager {
             return wrapper;
         }
 
-        Result<InsaneByteArrayInputStream> result = this.request.request(output -> {
-            try {
-                output.writeShort(0);
-                output.writeUTF(uuid.toString());
-            } catch (Exception exception) {
-                throw new RuntimeException(exception);
-            }
-        }, 2000);
-        if (result instanceof Result.Error<InsaneByteArrayInputStream> error) {
-            LOGGER.error("Cannot request user " + uuid, error.getError());
-            return new UserWrapper(this.object, uuid);
+        byte[] data;
+        try {
+            InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream();
+            output.writeByte(0);
+            output.writeUTF(uuid.toString());
+            output.close();
+            data = output.toByteArray();
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
         }
 
-        InsaneByteArrayInputStream input = result.get();
-        if (input == null) {
-            return new UserWrapper(this.object, uuid);
+        Result<byte[]> result = this.request.requestSync(data, 4000);
+
+        if (result instanceof Result.Problematic<byte[]> problem) {
+            LOGGER.error("Cannot request user " + uuid, problem.getProblem().getError().orElse(new RuntimeException("Unknown error")));
+            return null;
         }
+
+        byte[] bytes = result.get();
+        if (bytes == null) {
+            return null;
+        }
+
         try {
+            InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(bytes);
             String uuidString = input.readUTF();
-            UserWrapper wrapper = new UserWrapper(this.object, UUID.fromString(uuidString));
+            input.close();
+            UserWrapper wrapper = new UserWrapper(this.client, UUID.fromString(uuidString));
+            wrapper.getObject().addProperty("uuid", uuid.toString());
             this.users.add(wrapper);
             return wrapper;
         } catch (Exception exception) {
-            LOGGER.error("Cannot read user " + uuid, exception);
-            return null;
+            throw new RuntimeException(exception);
         }
     }
 
     public UserWrapper getWrapper(String username) {
         for (UserWrapper wrapper : this.users) {
-            if (!wrapper.getUsername().equalsIgnoreCase(username)) continue;
+            if (!wrapper.getUsername().equals(username)) continue;
             return wrapper;
         }
 
-        Result<InsaneByteArrayInputStream> result = this.request.request(output -> {
-            try {
-                output.writeShort(1);
-                output.writeUTF(username);
-            } catch (Exception exception) {
-                throw new RuntimeException(exception);
-            }
-        }, 2000);
-        if (result instanceof Result.Error<InsaneByteArrayInputStream> error) {
-            LOGGER.error("Cannot request user " + username, error.getError());
+        byte[] data;
+        try {
+            InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream();
+            output.writeByte(1);
+            output.writeUTF(username);
+            output.close();
+            data = output.toByteArray();
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
+
+        Result<byte[]> result = this.request.requestSync(data, 4000);
+
+        if (result instanceof Result.Problematic<byte[]> problem) {
+            LOGGER.error("Cannot request user " + username, problem.getProblem().getError().orElse(new RuntimeException("Unknown error")));
             return null;
         }
 
-        InsaneByteArrayInputStream input = result.get();
-        if (input == null) {
+        byte[] bytes = result.get();
+        if (bytes == null) {
             return null;
         }
+
         try {
+            InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(bytes);
             if (!input.readBoolean()) return null;
             String uuidString = input.readUTF();
-            UserWrapper wrapper = new UserWrapper(this.object, UUID.fromString(uuidString));
+            input.close();
+            UUID uuid = UUID.fromString(uuidString);
+            UserWrapper wrapper = new UserWrapper(this.client, uuid);
+            wrapper.getObject().addProperty("uuid", uuid.toString());
             this.users.add(wrapper);
             return wrapper;
         } catch (Exception exception) {
-            LOGGER.error("Cannot read user " + username, exception);
-            return null;
+            throw new RuntimeException(exception);
         }
     }
 }

@@ -1,71 +1,35 @@
 package com.uroria.backend.impl;
 
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import com.uroria.backend.BackendWrapper;
-import com.uroria.backend.impl.configurations.PulsarConfiguration;
+import com.uroria.backend.impl.configurations.RabbitConfiguration;
 import com.uroria.base.event.EventManager;
 import com.uroria.base.event.EventManagerFactory;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import lombok.Getter;
-import org.apache.pulsar.client.api.AutoClusterFailoverBuilder;
-import org.apache.pulsar.client.api.ClientBuilder;
-import org.apache.pulsar.client.api.CryptoKeyReader;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.api.ServiceUrlProvider;
-import org.apache.pulsar.client.impl.AutoClusterFailover;
-import org.apache.pulsar.client.impl.DefaultCryptoKeyReader;
-import org.apache.pulsar.client.impl.DefaultCryptoKeyReaderBuilder;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import lombok.NonNull;
+import org.slf4j.Logger;
 
 public abstract class AbstractBackendWrapper implements BackendWrapper {
-    protected final PulsarClient pulsarClient;
-    @Nullable
-    @Getter
-    protected final CryptoKeyReader cryptoKeyReader;
+    protected final Logger logger;
+    private final Connection connection;
     private final EventManager eventManager;
 
-    protected AbstractBackendWrapper() {
-        ClientBuilder builder = PulsarClient.builder();
-
-        boolean encryption = PulsarConfiguration.isPulsarEncryptionEnabled();
-        if (encryption) {
-            DefaultCryptoKeyReaderBuilder keyReaderBuilder = DefaultCryptoKeyReader.builder();
-            keyReaderBuilder.defaultPublicKey(PulsarConfiguration.getPulsarEncryptionPublicKey());
-            keyReaderBuilder.defaultPrivateKey(PulsarConfiguration.getPulsarEncryptionPrivateKey());
-            this.cryptoKeyReader = keyReaderBuilder.build();
-        } else this.cryptoKeyReader = null;
-
-        AutoClusterFailoverBuilder failOverBuilder = AutoClusterFailover.builder();
-        failOverBuilder.primary(PulsarConfiguration.getPulsarPrimaryUrl());
-
-        List<String> pulsarUrls = new ObjectArrayList<>();
-        pulsarUrls.addAll(Arrays.asList(PulsarConfiguration.getPulsarBackupUrls()));
-
-        if (!pulsarUrls.isEmpty()) failOverBuilder.secondary(pulsarUrls);
-
-        failOverBuilder.failoverDelay(20, TimeUnit.SECONDS);
-        failOverBuilder.switchBackDelay(60, TimeUnit.SECONDS);
-        failOverBuilder.checkInterval(2, TimeUnit.SECONDS);
-
-        ServiceUrlProvider serviceUrlProvider = failOverBuilder.build();
-
-        try {
-            this.pulsarClient = builder.statsInterval(10, TimeUnit.MINUTES)
-                    .serviceUrlProvider(serviceUrlProvider)
-                    .build();
-        } catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
+    protected AbstractBackendWrapper(@NonNull Logger logger, @NonNull Connection connection) {
+        this.logger = logger;
+        this.connection = connection;
         this.eventManager = EventManagerFactory.create("BackendEvents");
     }
 
-    protected AbstractBackendWrapper(PulsarClient pulsarClient, @Nullable CryptoKeyReader cryptoKeyReader) {
-        this.pulsarClient = pulsarClient;
-        this.cryptoKeyReader = cryptoKeyReader;
+    protected AbstractBackendWrapper(@NonNull Logger logger) throws Exception {
+        this.logger = logger;
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setUsername(RabbitConfiguration.getRabbitUsername());
+        factory.setPassword(RabbitConfiguration.getRabbitPassword());
+        factory.setVirtualHost(RabbitConfiguration.getRabbitVirtualhost());
+        factory.setHost(RabbitConfiguration.getRabbitHostname());
+        factory.setPort(RabbitConfiguration.getRabbitPort());
+        if (RabbitConfiguration.isRabbitSslEnabled()) factory.useSslProtocol();
+        this.connection = factory.newConnection();
         this.eventManager = EventManagerFactory.create("BackendEvents");
     }
 
@@ -74,13 +38,17 @@ public abstract class AbstractBackendWrapper implements BackendWrapper {
         return this.eventManager;
     }
 
-    abstract public void start() throws PulsarClientException;
+    abstract public void start() throws Exception;
 
-    public void shutdown() throws PulsarClientException {
-        if (this.pulsarClient != null) this.pulsarClient.shutdown();
+    public void shutdown() throws Exception {
+        this.connection.close();
     }
 
-    public final PulsarClient getPulsarClient() {
-        return this.pulsarClient;
+    public Logger getLogger() {
+        return this.logger;
+    }
+
+    public Connection getRabbit() {
+        return this.connection;
     }
 }

@@ -1,14 +1,14 @@
-package com.uroria.backend.impl.permission;
+package com.uroria.backend.impl.clan;
 
 import com.google.gson.JsonElement;
 import com.rabbitmq.client.Connection;
 import com.uroria.backend.Backend;
+import com.uroria.backend.clan.events.ClanDeletedEvent;
+import com.uroria.backend.clan.events.ClanUpdatedEvent;
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
-import com.uroria.backend.permission.events.GroupDeletedEvent;
-import com.uroria.backend.permission.events.GroupUpdatedEvent;
 import com.uroria.base.event.EventManager;
 import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.base.io.InsaneByteArrayOutputStream;
@@ -18,34 +18,34 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class PermGroupManager extends AbstractManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger("Perms");
+public final class ClanManager extends AbstractManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger("Clans");
 
     private final CommunicationClient client;
     private final RequestChannel request;
-    private final ObjectSet<GroupWrapper> groups;
+    private final ObjectSet<ClanWrapper> clans;
 
-    public PermGroupManager(Connection rabbit, Logger logger) {
+    public ClanManager(Connection rabbit, Logger logger) {
         super(rabbit, logger);
-        this.groups = new ObjectArraySet<>();
+        this.clans = new ObjectArraySet<>();
         EventManager eventManager = Backend.getEventManager();
-        this.client = new CommunicationClient(rabbit, "permgroup-request", "permgroup-update", element -> {
+        this.client = new CommunicationClient(rabbit, "clan-request", "clan-update", element -> {
             JsonElement nameElement = element.get("name");
             if (nameElement == null) return;
             String name = nameElement.getAsString();
             boolean delete = false;
-            for (GroupWrapper wrapper : this.groups) {
+            for (ClanWrapper wrapper : this.clans) {
                 if (!wrapper.getName().equals(name)) continue;
                 if (wrapper.isDeleted()) {
                     delete = true;
-                    eventManager.callAndForget(new GroupDeletedEvent(wrapper));
-                } else wrapper.refreshPermissions();
-                eventManager.callAndForget(new GroupUpdatedEvent(wrapper));
+                    eventManager.callAndForget(new ClanDeletedEvent(wrapper));
+                }
+                eventManager.callAndForget(new ClanUpdatedEvent(wrapper));
                 break;
             }
             if (delete) delete(name);
         });
-        this.request = new RabbitRequestChannel(rabbit, "permgroup-requests");
+        this.request = new RabbitRequestChannel(rabbit, "clan-requests");
     }
 
     @Override
@@ -60,20 +60,20 @@ public final class PermGroupManager extends AbstractManager {
     }
 
     public void delete(String name) {
-        this.groups.removeIf(group -> group.getName().equals(name));
+        this.clans.removeIf(clan -> clan.getName().equals(name));
         this.client.delete(name);
     }
 
-    public GroupWrapper getWrapper(String name, boolean create) {
-        for (GroupWrapper wrapper : this.groups) {
-            if (!wrapper.getName().equals(name)) continue;
+    public ClanWrapper getWrapper(String tag) {
+        for (ClanWrapper wrapper : this.clans) {
+            if (!wrapper.getTag().equals(tag)) continue;
             return wrapper;
         }
 
         byte[] data;
         try {
             InsaneByteArrayOutputStream output = new InsaneByteArrayOutputStream();
-            output.writeUTF(name);
+            output.writeUTF(tag);
             output.close();
             data = output.toByteArray();
         } catch (Exception exception) {
@@ -83,7 +83,7 @@ public final class PermGroupManager extends AbstractManager {
         Result<byte[]> result = this.request.requestSync(data, 4000);
 
         if (result instanceof Result.Problematic<byte[]> problem) {
-            LOGGER.error("Cannot request group " + name, problem.getProblem().getError().orElse(new RuntimeException("Unknown error")));
+            LOGGER.error("Cannot request clan " + tag, problem.getProblem().getError().orElse(new RuntimeException("Unknown error")));
             return null;
         }
 
@@ -94,18 +94,14 @@ public final class PermGroupManager extends AbstractManager {
 
         try {
             InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(bytes);
-            if (!input.readBoolean() && !create) {
-                input.close();
-                return null;
-            }
-            name = input.readUTF();
+            String name = input.readUTF();
             input.close();
-            GroupWrapper wrapper = new GroupWrapper(this.client, name);
+            ClanWrapper wrapper = new ClanWrapper(this.client, name);
             wrapper.getObject().addProperty("name", name);
-            this.groups.add(wrapper);
+            this.clans.add(wrapper);
             return wrapper;
         } catch (Exception exception) {
-            LOGGER.error("Cannot read group " + name, exception);
+            LOGGER.error("Cannot read clan " + tag, exception);
             return null;
         }
     }
