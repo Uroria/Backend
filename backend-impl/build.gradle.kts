@@ -1,9 +1,9 @@
-val pulsarVersion: String by project.extra
+val rabbitMqVersion: String by project.extra
 
 dependencies {
     api(project(":backend-api"))
     annotationProcessor(project(":backend-api"))
 
-    api("org.apache.pulsar:pulsar-client:${pulsarVersion}")
+    api("com.rabbitmq:amqp-client:${rabbitMqVersion}")
 }
 
