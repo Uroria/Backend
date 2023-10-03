@@ -1,42 +1,31 @@
-package com.uroria.backend.impl.pulsar;
+package com.uroria.backend.impl.communication;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.problemo.result.Result;
-import org.apache.pulsar.client.api.CryptoKeyReader;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
+import lombok.Getter;
+import lombok.NonNull;
 
-
-public final class PulsarObject implements AutoCloseable {
-    private final PulsarRequestChannel request;
-    private final PulsarUpdateChannel update;
+public final class CommunicationWrapper implements AutoCloseable {
+    @Getter
+    private final String identifier;
+    private final CommunicationClient client;
 
     private final JsonObject object;
 
-    public PulsarObject(PulsarClient pulsarClient, CryptoKeyReader keyReader, String name, String requestTopic, String updateTopic) {
-        this.request = new PulsarRequestChannel(pulsarClient, keyReader, name, requestTopic);
-        this.update = new PulsarUpdateChannel(pulsarClient, keyReader, name, updateTopic) {
-            @Override
-            public void onUpdate(InsaneByteArrayInputStream input) {
-                try {
-                    String key = input.readUTF();
-                    String object = input.readUTF();
-                    checkObject(key, object);
-                } catch (Exception exception) {
-                    throw new RuntimeException(exception);
-                }
-            }
-        };
-        this.object = new JsonObject();
+    public CommunicationWrapper(@NonNull String identifier, @NonNull CommunicationClient client) {
+        this.identifier = identifier;
+        this.client = client;
+        this.object = client.newObject(identifier);
     }
 
     @Override
-    public void close() throws PulsarClientException {
-        this.request.close();
-        this.update.close();
+    public void close() throws Exception {
+        this.client.removeObject(this.identifier);
+    }
+
+    public JsonObject getObject() {
+        return this.object;
     }
 
     public void remove(String key) {
@@ -44,15 +33,7 @@ public final class PulsarObject implements AutoCloseable {
     }
 
     private void update(String key, JsonElement value) {
-        this.update.update(key, value);
-    }
-
-    private void checkObject(String key, String value) {
-        JsonElement cachedElement = this.object.get(key);
-        if (cachedElement == null) return;
-        JsonElement element = JsonParser.parseString(value);
-        this.object.remove(key);
-        this.object.add(key, element);
+        this.client.update(this, key, value);
     }
 
     public void set(String key, JsonElement value) {
@@ -102,7 +83,7 @@ public final class PulsarObject implements AutoCloseable {
             return Result.some(cachedElement);
         }
 
-        Result<JsonElement> result = this.request.request(key, 2000);
+        Result<JsonElement> result = client.request(this, key, 2000);
         if (result instanceof Result.Problematic<JsonElement> error) {
             return error;
         }

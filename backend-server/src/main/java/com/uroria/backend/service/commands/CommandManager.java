@@ -1,6 +1,5 @@
 package com.uroria.backend.service.commands;
 
-import com.uroria.backend.service.BackendServer;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 
 import java.util.Arrays;
@@ -25,6 +24,6 @@ public final class CommandManager {
             command.run(Arrays.copyOfRange(split, 1, split.length));
             return;
         }
-        BackendServer.getLogger().info("Unknown command. Please type \"help\".");
+        BackendServerOld.getLogger().info("Unknown command. Please type \"help\".");
     }
 }

@@ -2,11 +2,14 @@ package com.uroria.backend.impl.permission;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.uroria.backend.Deletable;
-import com.uroria.backend.impl.pulsar.PulsarObject;
+import com.uroria.backend.impl.communication.CommunicationClient;
+import com.uroria.backend.impl.communication.CommunicationWrapper;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.base.permission.PermState;
+import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
@@ -18,17 +21,19 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public final class GroupWrapper implements PermGroup {
-    private final PulsarObject object;
+    private final CommunicationWrapper object;
     private final String name;
-    private final String prefix;
     private final ObjectSet<Permission> permissions;
     private boolean deleted;
 
-    public GroupWrapper(@NonNull PulsarObject object, @NonNull String name) {
-        this.object = object;
+    public GroupWrapper(@NonNull CommunicationClient client, @NonNull String name) {
+        this.object = new CommunicationWrapper(name, client);
         this.name = name.toLowerCase();
         this.permissions = new ObjectArraySet<>();
-        this.prefix = "group." + name + ".";
+    }
+
+    public JsonObject getObject() {
+        return this.object.getObject();
     }
 
     @Override
@@ -39,7 +44,7 @@ public final class GroupWrapper implements PermGroup {
     @Override
     public int getPriority() {
         Deletable.checkDeleted(this);
-        Result<JsonElement> result = object.get(prefix + "priority");
+        Result<JsonElement> result = object.get("priority");
         JsonElement element = result.get();
         if (element == null) return 999;
         return element.getAsInt();
@@ -48,14 +53,14 @@ public final class GroupWrapper implements PermGroup {
     @Override
     public void delete() {
         if (isDeleted()) return;
-        this.object.set(prefix + "deleted", true);
+        this.object.set("deleted", true);
         this.object.remove("group." + name);
     }
 
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        Result<JsonElement> result = object.get(prefix + "deleted");
+        Result<JsonElement> result = object.get("deleted");
         JsonElement element = result.get();
         if (element == null) return false;
         boolean deleted = element.getAsBoolean();
@@ -70,16 +75,16 @@ public final class GroupWrapper implements PermGroup {
         else state = PermState.FALSE;
         this.permissions.add(getImpl(node, state));
         if (value) {
-            List<String> allowed = getStringArray(prefix + "allowed");
+            List<String> allowed = getStringArray("allowed");
             allowed.removeIf(someNode -> someNode.equals(node));
             allowed.add(node);
-            setStringArray(allowed, prefix + "allowed");
+            setStringArray(allowed, "allowed");
             return;
         }
-        List<String> disallowed = getStringArray(prefix + "disallowed");
+        List<String> disallowed = getStringArray("disallowed");
         disallowed.removeIf(someNode -> someNode.equals(node));
         disallowed.add(node);
-        setStringArray(disallowed, prefix + "disallowed");
+        setStringArray(disallowed, "disallowed");
     }
 
     private void setPermission(String node, PermState state) {
@@ -92,12 +97,12 @@ public final class GroupWrapper implements PermGroup {
     }
 
     private void unsetPermission(String node) {
-        List<String> allowed = getStringArray(prefix + "allowed");
-        List<String> disallowed = getStringArray(prefix + "disallowed");
+        List<String> allowed = getStringArray("allowed");
+        List<String> disallowed = getStringArray("disallowed");
         allowed.remove(node);
         disallowed.remove(node);
-        setStringArray(allowed, prefix + "allowed");
-        setStringArray(disallowed, prefix + "disallowed");
+        setStringArray(allowed, "allowed");
+        setStringArray(disallowed, "disallowed");
     }
 
     @Override
@@ -159,11 +164,11 @@ public final class GroupWrapper implements PermGroup {
     }
 
     private List<String> getRawAllowed() {
-        return getStringArray(prefix + ".allowed");
+        return getStringArray("allowed");
     }
 
     private List<String> getRawDisallowed() {
-        return getStringArray(prefix + ".disallowed");
+        return getStringArray("disallowed");
     }
 
     private List<String> getStringArray(String key) {
@@ -177,7 +182,6 @@ public final class GroupWrapper implements PermGroup {
     }
 
     private void setStringArray(List<String> list, String key) {
-        Result<JsonElement> result = this.object.get(key);
         JsonArray array = new JsonArray();
         list.forEach(array::add);
         this.object.set(key, array);
