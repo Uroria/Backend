@@ -1,29 +1,37 @@
 package com.uroria.backend.stats;
 
+import com.uroria.annotations.safety.TimeConsuming;
 import lombok.NonNull;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface StatHolder {
 
-    List<Stat> getStats(@NonNull UUID holder, int gameId);
+    void addStat(int gameId, @NonNull String scoreKey, float value);
 
-    List<Stat> getStatsWithScoreGreaterThanValue(@NonNull UUID uuid, int gameId, @NonNull String scoreKey, long value);
+    void addStat(int gameId, @NonNull String scoreKey, int value);
 
-    List<Stat> getStatsWithScoreLowerThanValue(@NonNull UUID holder, int gameId, @NonNull String scoreKey, long value);
-
-    List<Stat> getStatsWithScore(@NonNull UUID holder, int gameId, @NonNull String scoreKey, long value);
-
-    List<Stat> getStatsInTimeRangeOf(@NonNull UUID holder, int gameId, long startMs, long endMs);
-
+    @TimeConsuming
     List<Stat> getStats(int gameId);
 
-    List<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NonNull String scoreKey, long value);
+    @TimeConsuming
+    List<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NonNull String scoreKey, int value);
 
-    List<Stat> getStatsWithScoreLowerThanValue(int gameId, @NonNull String scoreKey, long value);
+    @TimeConsuming
+    List<Stat> getStatsWithScoreLowerThanValue(int gameId, @NonNull String scoreKey, int value);
 
-    List<Stat> getStatsWithScore(int gameId, @NonNull String scoreKey, long value);
+    @TimeConsuming
+    List<Stat> getStatsWithScore(int gameId, @NonNull String scoreKey, int value);
 
+    @TimeConsuming
+    List<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NonNull String scoreKey, float value);
+
+    @TimeConsuming
+    List<Stat> getStatsWithScoreLowerThanValue(int gameId, @NonNull String scoreKey, float value);
+
+    @TimeConsuming
+    List<Stat> getStatsWithScore(int gameId, @NonNull String scoreKey, float value);
+
+    @TimeConsuming
     List<Stat> getStatsInTimeRangeOf(int gameId, long startMs, long endMs);
 }

@@ -1,5 +1,8 @@
 package com.uroria.backend;
 
+/**
+ * Represents an Object whose instances can be "deleted" (or better made useless).
+ */
 public interface Deletable {
 
     /**
@@ -13,7 +16,13 @@ public interface Deletable {
      */
     boolean isDeleted();
 
-    static void checkDeleted(Deletable deletable) {
+    /**
+     * You can check if a deletable object has been deleted and if so throw an exception.
+     * Usually used in implementations, but you can use this method if you want to.
+     *
+     * @throws IllegalStateException If the object has been deleted.
+     */
+    static void checkDeleted(Deletable deletable) throws IllegalStateException {
         if (!deletable.isDeleted()) return;
         throw new IllegalStateException("Deletable object has been deleted. Methods are not callable anymore.");
     }

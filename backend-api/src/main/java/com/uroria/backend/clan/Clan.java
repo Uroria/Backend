@@ -1,5 +1,6 @@
 package com.uroria.backend.clan;
 
+import com.uroria.annotations.safety.TimeConsuming;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.user.User;
 import lombok.NonNull;
@@ -17,6 +18,7 @@ public interface Clan extends Deletable {
 
     long getFoundingDate();
 
+    @TimeConsuming
     boolean hasMember(@NonNull User user);
 
     void addMember(@NonNull User user);
@@ -25,6 +27,7 @@ public interface Clan extends Deletable {
 
     void addModerator(@NonNull User user);
 
+    @TimeConsuming
     void removeMember(User user);
 
     void removeModerator(User user);
@@ -37,9 +40,12 @@ public interface Clan extends Deletable {
 
     void removeOperator(UUID uuid);
 
+    @TimeConsuming
     Collection<User> getOperators();
 
+    @TimeConsuming
     Collection<User> getMembers();
 
+    @TimeConsuming
     Collection<User> getModerators();
 }
