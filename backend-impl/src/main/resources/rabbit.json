@@ -1,0 +1,14 @@
+{
+   "rabbit": {
+      "connection": {
+         "hostname": "localhost",
+         "sslEnabled": true,
+         "port": 5671,
+         "virtualhost": "/"
+      },
+      "credentials": {
+         "username": "guest",
+         "password": "guest"
+      }
+   }
+}
