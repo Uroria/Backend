@@ -92,7 +92,11 @@ public class RabbitRequestChannel implements RequestChannel {
 
     @Override
     public final Result<byte[]> requestSync(@NonNull Supplier<byte @NonNull []> data, int timeout) {
-        return requestSync(data.get(), timeout);
+        try {
+            return requestSync(data.get(), timeout);
+        } catch (Exception exception) {
+            return Result.problem(Problem.error(exception));
+        }
     }
 
     @Override

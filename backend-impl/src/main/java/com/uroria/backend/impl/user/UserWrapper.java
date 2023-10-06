@@ -9,6 +9,7 @@ import com.uroria.backend.Deletable;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.backend.proxy.Proxy;
@@ -39,7 +40,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class UserWrapper implements User {
+public final class UserWrapper extends Wrapper implements User {
     private final CommunicationWrapper object;
     private final UUID uuid;
     private final ObjectSet<Permission> permissions;
@@ -51,8 +52,24 @@ public final class UserWrapper implements User {
         this.permissions = new ObjectArraySet<>();
     }
 
+    @Override
+    public void refresh() {
+
+    }
+
+    @Override
     public JsonObject getObject() {
         return this.object.getObject();
+    }
+
+    @Override
+    public String getIdentifierKey() {
+        return "uuid";
+    }
+
+    @Override
+    public String getStringIdentifier() {
+        return this.uuid.toString();
     }
 
     @Override
@@ -521,10 +538,7 @@ public final class UserWrapper implements User {
     }
 
     public Result<String> getRawClan() {
-        Result<JsonElement> result = object.get("clan");
-        JsonElement element = result.get();
-        if (element == null) return Result.none();
-        return Result.of(element.getAsString());
+        return getString("clan");
     }
 
     @SuppressWarnings("SafetyWarnings")

@@ -1,5 +1,6 @@
 package com.uroria.backend.service.modules;
 
+import com.google.gson.JsonElement;
 import com.uroria.backend.service.BackendServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,10 @@ public abstract class BackendModule {
         this.logger = LoggerFactory.getLogger(moduleName);
         this.moduleName = moduleName;
     }
+
+    public abstract JsonElement getPart(Object identifier, String key);
+
+    public abstract void checkPart(Object identifier, String key, JsonElement value);
 
     protected void enable() throws Exception {
 

@@ -2,8 +2,12 @@ package com.uroria.backend.impl.server;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
+import com.uroria.backend.app.ApplicationStatus;
+import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
@@ -16,23 +20,50 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class ServerGroupWrapper implements ServerGroup {
-    private final ServerManager serverManager;
+public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     private final CommunicationWrapper object;
-    private final String type;
+    private final String name;
 
     private boolean deleted;
 
-    public ServerGroupWrapper(@NonNull CommunicationWrapper object, @NonNull ServerManager serverManager, @NonNull String type) {
-        this.serverManager = serverManager;
-        this.object = object;
-        this.type = type;
+    public ServerGroupWrapper(@NonNull CommunicationClient client, String name) {
+        this.object = new CommunicationWrapper(name, client);
+        this.name = name;
+    }
+
+    @Override
+    public void refresh() {
+
+    }
+
+    @Override
+    public JsonObject getObject() {
+        return this.object.getObject();
+    }
+
+    @Override
+    public CommunicationWrapper getObjectWrapper() {
+        return this.object;
+    }
+
+    @Override
+    public String getIdentifierKey() {
+        return "name";
+    }
+
+    @Override
+    public String getStringIdentifier() {
+        return this.name;
     }
 
     @Override
     public void delete() {
         if (isDeleted()) return;
         this.deleted = true;
+        getServers().forEach(server -> {
+            server.setStatus(ApplicationStatus.STOPPED);
+            server.delete();
+        });
         object.set("deleted", true);
     }
 
@@ -49,25 +80,53 @@ public final class ServerGroupWrapper implements ServerGroup {
 
     @Override
     public Optional<Server> getServerByIdentifier(long identifier) {
-
-
-
-        return Optional.empty();
+        return getRawServers().stream()
+                .filter(id -> id == identifier)
+                .findAny()
+                .map(id -> Backend.getServer(identifier).get());
     }
 
     @Override
     public Collection<Server> getServersWithTemplateId(int templateId) {
-        return null;
+        return getRawServers().stream()
+                .map(identifier -> Backend.getServer(identifier).get())
+                .filter(Objects::nonNull)
+                .filter(server -> server.getTemplateId() == templateId)
+                .toList();
     }
 
     @Override
-    public Result<Server> createServer(int templateId) {
+    public Collection<Server> getServers() {
+        return getRawServers().stream()
+                .map(identifier -> Backend.getServer(identifier).get())
+                .filter(Objects::nonNull)
+                .toList();
+    }
 
+    public void removeServer(long identifier) {
+
+    }
+
+    private Collection<Long> getRawServers() {
+        Result<JsonElement> result = this.object.get("servers");
+        JsonElement element = result.get();
+        if (element == null) return ObjectLists.emptyList();
+        JsonArray stringArray = element.getAsJsonArray();
+        return stringArray.asList().stream()
+                .map(JsonElement::getAsLong)
+                .toList();
+    }
+
+
+    @SuppressWarnings("WarningMarkers")
+    @Override
+    public Result<Server> createServer(int templateId) {
+        return Backend.createServer(templateId, this);
     }
 
     @Override
     public String getType() {
-        return this.type;
+        return this.name;
     }
 
     @Override
@@ -75,16 +134,6 @@ public final class ServerGroupWrapper implements ServerGroup {
         return getRawOnlineUsers().stream()
                 .map(uuid -> Backend.getUser(uuid).get())
                 .filter(Objects::nonNull)
-                .toList();
-    }
-
-    private Collection<UUID> getRawOnlineUsers() {
-        Result<JsonElement> result = this.object.get("onlinePlayers");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray uuidArray = element.getAsJsonArray();
-        return uuidArray.asList().stream()
-                .map(el -> UUID.fromString(el.getAsString()))
                 .toList();
     }
 
@@ -102,5 +151,15 @@ public final class ServerGroupWrapper implements ServerGroup {
         JsonElement element = result.get();
         if (element == null) return 0;
         return element.getAsInt();
+    }
+
+    private Collection<UUID> getRawOnlineUsers() {
+        Result<JsonElement> result = this.object.get("onlinePlayers");
+        JsonElement element = result.get();
+        if (element == null) return ObjectLists.emptyList();
+        JsonArray uuidArray = element.getAsJsonArray();
+        return uuidArray.asList().stream()
+                .map(el -> UUID.fromString(el.getAsString()))
+                .toList();
     }
 }

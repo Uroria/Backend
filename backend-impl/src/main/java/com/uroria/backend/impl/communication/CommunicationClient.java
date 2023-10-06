@@ -2,7 +2,6 @@ package com.uroria.backend.impl.communication;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.rabbitmq.client.Connection;
 import com.uroria.backend.impl.communication.broadcast.RabbitUpdateChannel;
 import com.uroria.backend.impl.communication.broadcast.UpdateChannel;
@@ -10,8 +9,6 @@ import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
 import com.uroria.backend.impl.io.BackendInputStream;
 import com.uroria.backend.impl.io.BackendOutputStream;
-import com.uroria.base.io.InsaneByteArrayInputStream;
-import com.uroria.base.io.InsaneByteArrayOutputStream;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;

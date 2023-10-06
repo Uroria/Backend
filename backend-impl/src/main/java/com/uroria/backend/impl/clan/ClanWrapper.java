@@ -7,6 +7,7 @@ import com.uroria.backend.Backend;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class ClanWrapper implements Clan {
+public final class ClanWrapper extends Wrapper implements Clan {
     private final CommunicationWrapper object;
     private final String name;
     private boolean deleted;
@@ -27,8 +28,29 @@ public final class ClanWrapper implements Clan {
         this.name = name;
     }
 
+    @Override
+    public void refresh() {
+
+    }
+
+    @Override
     public JsonObject getObject() {
         return this.object.getObject();
+    }
+
+    @Override
+    public CommunicationWrapper getObjectWrapper() {
+        return this.object;
+    }
+
+    @Override
+    public String getIdentifierKey() {
+        return "name";
+    }
+
+    @Override
+    public String getStringIdentifier() {
+        return this.name;
     }
 
     @Override
@@ -90,6 +112,12 @@ public final class ClanWrapper implements Clan {
     public void addOperator(@NonNull User user) {
         List<UUID> operators = getUUIDArray("operators");
         operators.add(user.getUniqueId());
+        setUUIDArray(operators, "members");
+    }
+
+    public void addOperator(UUID uuid) {
+        List<UUID> operators = getUUIDArray("operators");
+        operators.add(uuid);
         setUUIDArray(operators, "members");
     }
 

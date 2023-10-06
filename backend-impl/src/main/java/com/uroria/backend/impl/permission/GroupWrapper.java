@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.base.permission.PermState;
@@ -20,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public final class GroupWrapper implements PermGroup {
+public final class GroupWrapper extends Wrapper implements PermGroup {
     private final CommunicationWrapper object;
     private final String name;
     private final ObjectSet<Permission> permissions;
@@ -32,8 +33,28 @@ public final class GroupWrapper implements PermGroup {
         this.permissions = new ObjectArraySet<>();
     }
 
+    @Override
+    public void refresh() {
+        refreshPermissions();
+    }
+
     public JsonObject getObject() {
         return this.object.getObject();
+    }
+
+    @Override
+    public CommunicationWrapper getObjectWrapper() {
+        return this.object;
+    }
+
+    @Override
+    public String getIdentifierKey() {
+        return "name";
+    }
+
+    @Override
+    public String getStringIdentifier() {
+        return this.name;
     }
 
     @Override

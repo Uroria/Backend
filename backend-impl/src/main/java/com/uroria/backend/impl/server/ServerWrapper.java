@@ -1,18 +1,16 @@
 package com.uroria.backend.impl.server;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
 import com.uroria.backend.app.ApplicationStatus;
 import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.server.Server;
-import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.result.Result;
-import it.unimi.dsi.fastutil.objects.ObjectLists;
 import lombok.NonNull;
 
 import java.net.InetSocketAddress;
@@ -20,9 +18,10 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class ServerWrapper implements Server {
+public final class ServerWrapper extends Wrapper implements Server {
     private final CommunicationWrapper object;
     private final long identifier;
+    private final ServerGroupWrapper group;
 
     private boolean deleted;
     private String type;
@@ -33,10 +32,34 @@ public final class ServerWrapper implements Server {
         this.object = new CommunicationWrapper(String.valueOf(identifier), client);
         this.identifier = identifier;
         this.templateId = -1;
+        this.group = getGroup();
     }
 
+    public ServerWrapper(@NonNull CommunicationClient client, long identifier, ServerGroupWrapper group) {
+        this.object = new CommunicationWrapper(String.valueOf(identifier), client);
+        this.identifier = identifier;
+        this.templateId = -1;
+        this.group = group;
+    }
+
+    @Override
+    public CommunicationWrapper getObjectWrapper() {
+        return this.object;
+    }
+
+    @Override
+    public void refresh() {
+
+    }
+
+    @Override
     public JsonObject getObject() {
         return this.object.getObject();
+    }
+
+    @Override
+    public String getIdentifierKey() {
+        return String.valueOf(identifier);
     }
 
     @Override
@@ -49,10 +72,7 @@ public final class ServerWrapper implements Server {
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        Result<JsonElement> result = object.get("deleted");
-        JsonElement element = result.get();
-        if (element == null) return false;
-        boolean val = element.getAsBoolean();
+        boolean val = getBoolean("deleted", false);
         if (val) this.deleted = true;
         return val;
     }
@@ -63,58 +83,36 @@ public final class ServerWrapper implements Server {
     }
 
     @Override
+    public String getStringIdentifier() {
+        return String.valueOf(this.identifier);
+    }
+
+    @Override
     public void addProxy(@NonNull Proxy proxy) {
-        Result<JsonElement> result = this.object.get("proxies");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        array.add(proxy.getIdentifier());
-        this.object.set("proxies", element);
+        addToLongList("proxies", proxy.getIdentifier());
     }
 
     @Override
     public void removeProxy(Proxy proxy) {
-        Result<JsonElement> result = this.object.get("proxies");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        for (JsonElement value : array) {
-            if (value.getAsLong() != proxy.getIdentifier()) continue;
-            array.remove(value);
-            break;
-        }
-        this.object.set("proxies", element);
+        removeFromLongList("proxies", proxy.getIdentifier());
     }
 
     @Override
     public Collection<Proxy> getProxies() {
-        return getRawProxies().stream()
+        return getLongs("proxies").stream()
                 .map(identifier -> Backend.getProxy(identifier).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
 
-    private Collection<Long> getRawProxies() {
-        Result<JsonElement> result = this.object.get("proxies");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray stringArray = element.getAsJsonArray();
-        return stringArray.asList().stream()
-                .map(JsonElement::getAsLong)
-                .toList();
-    }
-
     @Override
-    public ServerGroup getGroup() {
-        return Backend.getServerGroup(getType()).get();
+    public ServerGroupWrapper getGroup() {
+        return (ServerGroupWrapper) Backend.getServerGroup(getType()).get();
     }
 
     @Override
     public ApplicationStatus getStatus() {
-        Result<JsonElement> result = object.get("status");
-        JsonElement element = result.get();
-        if (element == null) return ApplicationStatus.EMPTY;
-        return ApplicationStatus.getById(element.getAsInt());
+        return ApplicationStatus.getById(getInt("status"));
     }
 
     @Override
@@ -144,10 +142,7 @@ public final class ServerWrapper implements Server {
     @Override
     public int getTemplateId() {
         if (this.templateId != -1) return this.templateId;
-        Result<JsonElement> result = object.get("templateId");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        int templateId = element.getAsInt();
+        int templateId = getInt("templateId", -1);
         this.templateId = templateId;
         return templateId;
     }
@@ -155,44 +150,27 @@ public final class ServerWrapper implements Server {
     @Override
     public String getType() {
         if (this.type != null) return this.type;
-        JsonElement name = this.object.get("type").get();
-        if (name == null) return String.valueOf(identifier);
-        String type = name.getAsString();
-        this.type = type;
-        return type;
+        Result<String> type = getString("type", String.valueOf(identifier));
+        this.type = type.get();
+        return this.type;
     }
 
     @Override
     public Collection<User> getOnlineUsers() {
-        return getRawOnlineUsers().stream()
+        return getStrings("onlinePlayers").stream()
+                .map(UUID::fromString)
                 .map(uuid -> Backend.getUser(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
 
-    private Collection<UUID> getRawOnlineUsers() {
-        Result<JsonElement> result = this.object.get("onlinePlayers");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray uuidArray = element.getAsJsonArray();
-        return uuidArray.asList().stream()
-                .map(el -> UUID.fromString(el.getAsString()))
-                .toList();
-    }
-
     @Override
     public int getOnlineUserCount() {
-        Result<JsonElement> result = object.get("playerCount");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        return element.getAsInt();
+        return getInt("playerCount");
     }
 
     @Override
     public int getMaxUserCount() {
-        Result<JsonElement> result = object.get("maxPlayerCount");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        return element.getAsInt();
+        return getInt("maxPlayerCount");
     }
 }
