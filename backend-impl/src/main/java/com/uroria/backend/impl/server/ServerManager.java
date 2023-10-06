@@ -24,7 +24,7 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
 
     public ServerManager(Connection rabbit) {
         super(rabbit, LoggerFactory.getLogger("Servers"), "server", "identifier");
-        this.requestAll = new RabbitRequestChannel(rabbit, "server-requestall");
+        this.requestAll = new RabbitRequestChannel(rabbit, "server-requestall") ;
     }
 
     @Override

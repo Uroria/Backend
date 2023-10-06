@@ -18,10 +18,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 
 public final class ServerGroupManager extends WrapperManager<ServerGroupWrapper> {
+    private final ServerManager serverManager;
     private final RequestChannel requestAll;
 
-    public ServerGroupManager(Connection rabbit) {
+    public ServerGroupManager(ServerManager serverManager, Connection rabbit) {
         super(rabbit, LoggerFactory.getLogger("ServerGroups"), "servergroup", "name");
+        this.serverManager = serverManager;
         this.requestAll = new RabbitRequestChannel(rabbit, "servergroup-requestall");
     }
 
@@ -74,7 +76,7 @@ public final class ServerGroupManager extends WrapperManager<ServerGroupWrapper>
     }
 
     public ServerGroupWrapper createGroupWrapper(String identifier, int maxPlayers) {
-        ServerGroupWrapper wrapper = new ServerGroupWrapper(this.client, identifier);
+        ServerGroupWrapper wrapper = new ServerGroupWrapper(serverManager, this.client, identifier);
         this.wrappers.add(wrapper);
         CommunicationWrapper object = wrapper.getObjectWrapper();
         object.set("name", identifier);
@@ -84,6 +86,6 @@ public final class ServerGroupManager extends WrapperManager<ServerGroupWrapper>
 
     @Override
     protected ServerGroupWrapper createWrapper(String identifier) {
-        return new ServerGroupWrapper(client, identifier);
+        return new ServerGroupWrapper(serverManager, client, identifier);
     }
 }

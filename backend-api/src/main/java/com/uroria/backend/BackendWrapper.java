@@ -6,6 +6,7 @@ import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
+import com.uroria.backend.stats.Statistics;
 import com.uroria.backend.user.User;
 import com.uroria.base.event.EventManager;
 import com.uroria.problemo.result.Result;
@@ -57,6 +58,8 @@ public interface BackendWrapper {
     Collection<PermGroup> getPermissionGroups();
 
     Result<PermGroup> createPermissionGroup(String name);
+
+    Statistics getStatistics();
 
     EventManager getEventManager();
 }

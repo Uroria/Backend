@@ -11,6 +11,7 @@ import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
+import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import lombok.NonNull;
@@ -21,12 +22,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
+    private final ServerManager serverManager;
     private final CommunicationWrapper object;
     private final String name;
 
     private boolean deleted;
 
-    public ServerGroupWrapper(@NonNull CommunicationClient client, String name) {
+    public ServerGroupWrapper(ServerManager serverManager, @NonNull CommunicationClient client, String name) {
+        this.serverManager = serverManager;
         this.object = new CommunicationWrapper(name, client);
         this.name = name;
     }
@@ -121,7 +124,11 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     @SuppressWarnings("WarningMarkers")
     @Override
     public Result<Server> createServer(int templateId) {
-        return Backend.createServer(templateId, this);
+        try {
+            return Result.of(this.serverManager.createServerWrapper(templateId, getType(), getMaxUserCount()));
+        } catch (Exception exception) {
+            return Result.problem(Problem.error(exception));
+        }
     }
 
     @Override

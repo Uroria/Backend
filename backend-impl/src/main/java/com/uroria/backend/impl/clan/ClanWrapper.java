@@ -73,9 +73,7 @@ public final class ClanWrapper extends Wrapper implements Clan {
 
     @Override
     public String getTag() {
-        JsonElement tag = this.object.get("tag").get();
-        if (tag == null) return name;
-        return tag.getAsString();
+        return getString("tag", this.name);
     }
 
     @Override
@@ -90,9 +88,7 @@ public final class ClanWrapper extends Wrapper implements Clan {
 
     @Override
     public long getFoundingDate() {
-        JsonElement element = this.object.get("foundingDate").get();
-        if (element == null) return 0;
-        return element.getAsLong();
+        return getLong("foundingDate", 0L);
     }
 
     @Override

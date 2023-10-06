@@ -150,8 +150,7 @@ public final class ServerWrapper extends Wrapper implements Server {
     @Override
     public String getType() {
         if (this.type != null) return this.type;
-        Result<String> type = getString("type", String.valueOf(identifier));
-        this.type = type.get();
+        this.type = getString("type", String.valueOf(identifier));
         return this.type;
     }
 

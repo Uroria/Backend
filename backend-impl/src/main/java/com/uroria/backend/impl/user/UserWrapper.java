@@ -9,6 +9,7 @@ import com.uroria.backend.Deletable;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.impl.stats.StatsManager;
 import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
@@ -42,11 +43,13 @@ import java.util.UUID;
 
 public final class UserWrapper extends Wrapper implements User {
     private final CommunicationWrapper object;
+    private final StatsManager statsManager;
     private final UUID uuid;
     private final ObjectSet<Permission> permissions;
     private boolean deleted;
 
-    public UserWrapper(@NonNull CommunicationClient client, @NonNull UUID uuid) {
+    public UserWrapper(@NonNull CommunicationClient client, @NonNull UUID uuid, StatsManager statsManager) {
+        this.statsManager = statsManager;
         this.object = new CommunicationWrapper(uuid.toString(), client);
         this.uuid = uuid;
         this.permissions = new ObjectArraySet<>();
@@ -54,12 +57,17 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public void refresh() {
-
+        refreshPermissions();
     }
 
     @Override
     public JsonObject getObject() {
         return this.object.getObject();
+    }
+
+    @Override
+    public CommunicationWrapper getObjectWrapper() {
+        return this.object;
     }
 
     @Override
@@ -82,11 +90,8 @@ public final class UserWrapper extends Wrapper implements User {
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        Result<JsonElement> result = object.get("deleted");
-        JsonElement element = result.get();
-        if (element == null) return false;
-        boolean val = element.getAsBoolean();
-        if (val) this.deleted = true;
+        boolean val = getBoolean("deleted");
+        this.deleted = val;
         return val;
     }
 
@@ -278,52 +283,52 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public void addStat(int gameId, @NonNull String scoreKey, float value) {
-
+        this.statsManager.addStat(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public void addStat(int gameId, @NonNull String scoreKey, int value) {
-
+        this.statsManager.addStat(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public List<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NonNull String scoreKey, int value) {
-        return null;
+        return this.statsManager.getStatsWithScoreGreaterThanValue(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public List<Stat> getStatsWithScoreLowerThanValue(int gameId, @NonNull String scoreKey, int value) {
-        return null;
+        return this.statsManager.getStatsWithScoreLowerThanValue(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public List<Stat> getStatsWithScore(int gameId, @NonNull String scoreKey, int value) {
-        return null;
+        return this.statsManager.getStatsWithScore(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public List<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NonNull String scoreKey, float value) {
-        return null;
+        return this.statsManager.getStatsWithScoreGreaterThanValue(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public List<Stat> getStatsWithScoreLowerThanValue(int gameId, @NonNull String scoreKey, float value) {
-        return null;
+        return this.statsManager.getStatsWithScoreLowerThanValue(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public List<Stat> getStatsWithScore(int gameId, @NonNull String scoreKey, float value) {
-        return null;
+        return this.statsManager.getStatsWithScore(this.uuid, gameId, scoreKey, value);
     }
 
     @Override
     public List<Stat> getStats(int gameId) {
-        return null;
+        return this.statsManager.getStats(this.uuid, gameId);
     }
 
     @Override
     public List<Stat> getStatsInTimeRangeOf(int gameId, long startMs, long endMs) {
-        return null;
+        return this.statsManager.getStatsInTimeRangeOf(this.uuid, gameId, startMs, endMs);
     }
 
     @Override
@@ -333,25 +338,30 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public Optional<Proxy> getConnectedProxy() {
-        return Optional.empty();
+        long identifier = getLong("connectedProxy", -1);
+        if (identifier == -1) return Optional.empty();
+        return Optional.ofNullable(Backend.getProxy(identifier).get());
     }
 
     @Override
     public Optional<ServerGroup> getConnectedServerGroup() {
-        return Optional.empty();
+        String serverGroup = getString("connectedServerGroup", null);
+        if (serverGroup == null) return Optional.empty();
+        return Optional.ofNullable(Backend.getServerGroup(serverGroup).get());
     }
 
     @Override
     public Optional<Server> getConnectedServer() {
-        return Optional.empty();
+        long identifier = getLong("connectedServer", -1);
+        if (identifier == -1) return Optional.empty();
+        return Optional.ofNullable(Backend.getServer(identifier).get());
     }
 
     @Override
     public @NotNull String getUsername() {
-        Result<JsonElement> result = object.get("username");
-        JsonElement element = result.get();
-        if (element == null) return "N/A";
-        return element.getAsString();
+        String name = getString("username", null);
+        if (name == null) return "N/A";
+        return name;
     }
 
     @Override
@@ -364,10 +374,7 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public boolean isOnline() {
-        Result<JsonElement> result = object.get("onlineStatus");
-        JsonElement element = result.get();
-        if (element == null) return false;
-        return element.getAsBoolean();
+        return getBoolean("onlineStatus");
     }
 
     @Override
@@ -386,10 +393,7 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public long getPlaytime() {
-        Result<JsonElement> result = object.get("playtime");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        return element.getAsLong();
+        return getLong("playtime", 0);
     }
 
     @Override
@@ -399,10 +403,7 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public long getLastJoin() {
-        Result<JsonElement> result = object.get("lastJoin");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        return element.getAsLong();
+        return getLong("lastJoin", 0);
     }
 
     @Override
@@ -412,10 +413,7 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public long getFirstJoin() {
-        Result<JsonElement> result = object.get("firstJoin");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        return element.getAsLong();
+        return getLong("firstJoin", 0);
     }
 
     public void setFirstJoin(long firstJoin) {

@@ -42,7 +42,7 @@ public final class Wrapper extends AbstractBackendWrapper implements BackendWrap
         this.groupManager = new PermGroupManager(getRabbit());
         this.clanManager = new ClanManager(getRabbit());
         this.serverManager = new ServerManager(getRabbit());
-        this.serverGroupManager = new ServerGroupManager(getRabbit());
+        this.serverGroupManager = new ServerGroupManager(serverManager, getRabbit());
         this.proxyManager = new ProxyManager(getRabbit());
     }
 

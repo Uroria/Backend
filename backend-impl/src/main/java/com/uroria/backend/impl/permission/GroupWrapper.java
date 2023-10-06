@@ -1,7 +1,6 @@
 package com.uroria.backend.impl.permission;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.impl.communication.CommunicationClient;
@@ -10,16 +9,14 @@ import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.base.permission.PermState;
-import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import it.unimi.dsi.fastutil.objects.ObjectLists;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Collection;
 
 public final class GroupWrapper extends Wrapper implements PermGroup {
     private final CommunicationWrapper object;
@@ -65,10 +62,7 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
     @Override
     public int getPriority() {
         Deletable.checkDeleted(this);
-        Result<JsonElement> result = object.get("priority");
-        JsonElement element = result.get();
-        if (element == null) return 999;
-        return element.getAsInt();
+        return getInt("priority", 999);
     }
 
     @Override
@@ -81,11 +75,8 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        Result<JsonElement> result = object.get("deleted");
-        JsonElement element = result.get();
-        if (element == null) return false;
-        boolean deleted = element.getAsBoolean();
-        if (deleted) this.deleted = true;
+        boolean deleted = getBoolean("deleted");
+        this.deleted = deleted;
         return deleted;
     }
 
@@ -96,13 +87,13 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
         else state = PermState.FALSE;
         this.permissions.add(getImpl(node, state));
         if (value) {
-            List<String> allowed = getStringArray("allowed");
+            Collection<String> allowed = getStrings("allowed");
             allowed.removeIf(someNode -> someNode.equals(node));
             allowed.add(node);
             setStringArray(allowed, "allowed");
             return;
         }
-        List<String> disallowed = getStringArray("disallowed");
+        Collection<String> disallowed = getStrings("disallowed");
         disallowed.removeIf(someNode -> someNode.equals(node));
         disallowed.add(node);
         setStringArray(disallowed, "disallowed");
@@ -118,8 +109,8 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
     }
 
     private void unsetPermission(String node) {
-        List<String> allowed = getStringArray("allowed");
-        List<String> disallowed = getStringArray("disallowed");
+        Collection<String> allowed = getStrings("allowed");
+        Collection<String> disallowed = getStrings("disallowed");
         allowed.remove(node);
         disallowed.remove(node);
         setStringArray(allowed, "allowed");
@@ -177,32 +168,22 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
 
     private Object2BooleanMap<String> getRawPermissions() {
         Object2BooleanMap<String> map = new Object2BooleanArrayMap<>();
-        List<String> allowed = getRawAllowed();
-        List<String> disallowed = getRawDisallowed();
+        Collection<String> allowed = getRawAllowed();
+        Collection<String> disallowed = getRawDisallowed();
         allowed.forEach(string -> map.put(string, true));
         disallowed.forEach(string -> map.put(string, false));
         return map;
     }
 
-    private List<String> getRawAllowed() {
-        return getStringArray("allowed");
+    private Collection<String> getRawAllowed() {
+        return getStrings("allowed");
     }
 
-    private List<String> getRawDisallowed() {
-        return getStringArray("disallowed");
+    private Collection<String> getRawDisallowed() {
+        return getStrings("disallowed");
     }
 
-    private List<String> getStringArray(String key) {
-        Result<JsonElement> result = this.object.get(key);
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray stringArray = element.getAsJsonArray();
-        return stringArray.asList().stream()
-                .map(JsonElement::getAsString)
-                .toList();
-    }
-
-    private void setStringArray(List<String> list, String key) {
+    private void setStringArray(Collection<String> list, String key) {
         JsonArray array = new JsonArray();
         list.forEach(array::add);
         this.object.set(key, array);

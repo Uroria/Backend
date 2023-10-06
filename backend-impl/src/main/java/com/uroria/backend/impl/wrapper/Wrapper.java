@@ -87,6 +87,13 @@ public abstract class Wrapper {
         return element.getAsInt();
     }
 
+    public final long getLong(String key, long orElse) {
+        Result<JsonElement> result = getObjectWrapper().get(key);
+        JsonElement element = result.get();
+        if (element == null) return orElse;
+        return element.getAsLong();
+    }
+
     public final Result<String> getString(String key) {
         Result<JsonElement> result = getObjectWrapper().get(key);
         JsonElement element = result.get();
@@ -94,10 +101,10 @@ public abstract class Wrapper {
         return Result.of(element.getAsString());
     }
 
-    public final Result<String> getString(String key, String orElse) {
+    public final String getString(String key, String orElse) {
         Result<JsonElement> result = getObjectWrapper().get(key);
         JsonElement element = result.get();
-        if (element == null) return Result.some(orElse);
-        return Result.of(element.getAsString());
+        if (element == null) return orElse;
+        return element.getAsString();
     }
 }
