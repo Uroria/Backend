@@ -27,6 +27,10 @@ public class Backend {
         return getWrapper().getUser(username);
     }
 
+    public Result<User> getUser(long discordUserId) {
+        return getWrapper().getUser(discordUserId);
+    }
+
     public Result<Clan> getClan(String tag) {
         return getWrapper().getClan(tag);
     }

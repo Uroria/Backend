@@ -29,6 +29,8 @@ public interface BackendWrapper {
      */
     Result<User> getUser(String username);
 
+    Result<User> getUser(long discordUserId);
+
     /**
      * Gets a clan by it's changeable tag.
      */
