@@ -11,6 +11,7 @@ import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -19,6 +20,10 @@ import java.util.UUID;
  * Note: Every method here may trigger a database query. This could cost some time.
  */
 public interface User extends Punishable, CrewHolder, Player {
+
+    Optional<Long> getDiscordUserId();
+
+    void setDiscordUserId(long id);
 
     @NotNull String getUsername();
 

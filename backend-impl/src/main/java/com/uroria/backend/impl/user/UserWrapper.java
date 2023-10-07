@@ -358,6 +358,18 @@ public final class UserWrapper extends Wrapper implements User {
     }
 
     @Override
+    public Optional<Long> getDiscordUserId() {
+        long id = getLong("discordUserId", 0);
+        if (id == 0) return Optional.empty();
+        return Optional.of(id);
+    }
+
+    @Override
+    public void setDiscordUserId(long id) {
+        this.object.set("discordUserId", id);
+    }
+
+    @Override
     public @NotNull String getUsername() {
         String name = getString("username", null);
         if (name == null) return "N/A";
