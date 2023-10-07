@@ -1,63 +1,39 @@
 package com.uroria.backend.stats;
 
-import com.uroria.backend.Backend;
-import com.uroria.backend.BackendObject;
-import com.uroria.base.utils.CollectionUtils;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import lombok.Getter;
+import com.uroria.backend.Deletable;
+import com.uroria.backend.user.User;
 import lombok.NonNull;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
-public final class Stat extends BackendObject<Stat> implements Serializable {
-    @Serial private static final long serialVersionUID = 1;
+public interface Stat extends Deletable {
 
-    private final UUID uuid;
-    private final int gameId;
-    private @Getter final long time;
-    private final Object2IntMap<String> scores;
+    User getUser();
 
-    public Stat(@NonNull UUID uuid, int gameId, long time) {
-        this.uuid = uuid;
-        this.gameId = gameId;
-        this.time = time;
-        this.scores = new Object2IntArrayMap<>();
+    int getGameId();
+
+    long getDate();
+
+    void setScore(@NonNull String key, int score);
+
+    void setScore(@NonNull String key, float score);
+
+    default Optional<Integer> getScoreInt(String key) {
+        int score = getScoreOrElse(key, -1);
+        if (score == -1) return Optional.empty();
+        return Optional.of(score);
     }
 
-    public Optional<Integer> getScore(String key) {
-        if (key == null) return Optional.empty();
-        return Optional.ofNullable(this.scores.get(key));
+    default Optional<Float> getScoreFloat(String key) {
+        float score = getScoreOrElse(key, -1f);
+        if (score == -1) return Optional.empty();
+        return Optional.of(score);
     }
 
-    public void setScore(@NonNull String key, int score) {
-        this.scores.put(key, score);
-    }
+    int getScoreOrElse(String key, int defValue);
 
-    public Map<String, Integer> getScores() {
-        return Collections.unmodifiableMap(this.scores);
-    }
+    float getScoreOrElse(String key, float defValue);
 
-    public UUID getUUID() {
-        return this.uuid;
-    }
-
-    public int getGameID() {
-        return this.gameId;
-    }
-
-    @Override
-    public void modify(Stat stat) {
-        CollectionUtils.overrideMap(this.scores, stat.scores);
-    }
-
-    @Override
-    public void update() {
-        Backend.getAPI().getStatsManager().updateStat(this);
-    }
+    Map<String, Number> getScores();
 }

@@ -1,56 +1,107 @@
 package com.uroria.backend;
 
-import com.uroria.backend.clan.ClanManager;
-import com.uroria.backend.friend.FriendManager;
-import com.uroria.backend.message.MessageManager;
-import com.uroria.backend.permission.PermManager;
-import com.uroria.backend.punishment.PunishmentManager;
-import com.uroria.backend.server.ServerManager;
-import com.uroria.backend.stats.StatsManager;
-import com.uroria.backend.twitch.TwitchManager;
-import com.uroria.backend.user.UserManager;
+import com.uroria.annotations.markers.Warning;
+import com.uroria.backend.clan.Clan;
+import com.uroria.backend.permission.PermGroup;
+import com.uroria.backend.proxy.Proxy;
+import com.uroria.backend.server.Server;
+import com.uroria.backend.server.ServerGroup;
+import com.uroria.backend.stats.Statistics;
+import com.uroria.backend.user.User;
 import com.uroria.base.event.EventManager;
+import com.uroria.problemo.result.Result;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 
-/**
- * The primary api-interface of the Backend.
- */
-public interface Backend {
+import java.util.Collection;
+import java.util.UUID;
 
-    PermManager getPermissionManager();
+@UtilityClass
+public class Backend {
 
-    TwitchManager getTwitchManager();
+    public Result<User> getUser(UUID uuid) {
+        return getWrapper().getUser(uuid);
+    }
 
-    UserManager getUserManager();
+    public Result<User> getUser(String username) {
+        return getWrapper().getUser(username);
+    }
 
-    FriendManager getFriendManager();
+    public Result<Clan> getClan(String tag) {
+        return getWrapper().getClan(tag);
+    }
 
-    ClanManager getClanManager();
+    public Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator) {
+        return getWrapper().createClan(name, tag, operator);
+    }
 
-    StatsManager getStatsManager();
+    public Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator, long foundingDate) {
+        return getWrapper().createClan(name, tag, operator, foundingDate);
+    }
 
-    ServerManager getServerManager();
+    public Result<Server> getServer(long identifier) {
+        return getWrapper().getServer(identifier);
+    }
+    @SuppressWarnings("WarningMarkers")
+    @Warning(message = "Ordering a server could take more than 30 seconds. Use this method only if you know what you're doing.", suppress = "Okay, I understand")
+    public Result<Server> createServer(int templateId, ServerGroup group) {
+        return getWrapper().createServer(templateId, group);
+    }
 
-    PunishmentManager getPunishmentManager();
+    public Collection<Server> getServers() {
+        return getWrapper().getServers();
+    }
 
-    MessageManager getMessageManager();
+    public Result<Proxy> getProxy(long identifier) {
+        return getWrapper().getProxy(identifier);
+    }
 
-    EventManager getEventManager();
+    public Collection<Proxy> getProxies(String name) {
+        return getWrapper().getProxies(name);
+    }
 
-    /**
-     * If you call this method, the whole network will shut down.
-     * Just don't use it, if you don't know what you're doing!
-     */
-    void stopEverything();
+    public Result<Proxy> createProxy(String name, int templateId, int maxPlayers) {
+        return getWrapper().createProxy(name, templateId, maxPlayers);
+    }
 
-    /**
-     * Check if the Backend is online.
-     */
-    boolean isOnline();
+    public Collection<Proxy> getProxies() {
+        return getWrapper().getProxies();
+    }
 
-    /**
-     * Get the API used to interact with the backend.
-     */
-    static Backend getAPI() {
+    public Result<ServerGroup> getServerGroup(String name) {
+        return getWrapper().getServerGroup(name);
+    }
+
+    public Result<ServerGroup> createGroup(String name, int maxPlayers) {
+        return getWrapper().createServerGroup(name, maxPlayers);
+    }
+
+    public Collection<ServerGroup> getServerGroups() {
+        return getWrapper().getServerGroups();
+    }
+
+    public Result<PermGroup> getPermissionGroup(String name) {
+        return getWrapper().getPermissionGroup(name);
+    }
+
+    public Result<PermGroup> createPermissionGroup(String name) {
+        return getWrapper().createPermissionGroup(name);
+    }
+
+    public Collection<PermGroup> getPermissionGroups() {
+        return getWrapper().getPermissionGroups();
+    }
+
+    public EventManager getEventManager() {
+        return getWrapper().getEventManager();
+    }
+
+    public Statistics getStatistics() {
+        return getWrapper().getStatistics();
+    }
+
+    public BackendWrapper getWrapper() {
+        //noinspection WeakWarningMarkers
         return Unsafe.getInstance();
     }
 }

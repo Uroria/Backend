@@ -1,5 +1,6 @@
 plugins {
     application
+    id("org.graalvm.buildtools.native") version "0.9.27"
 }
 
 application {
@@ -28,6 +29,17 @@ dependencies {
 
     runtimeOnly("org.jline:jline-terminal-jansi:${jlineVersion}")
     implementation("net.minecrell:terminalconsoleappender:${terminalConsoleAppenderVersion}")
+}
+
+graalvmNative {
+    toolchainDetection.set(true)
+    binaries {
+        named("main") {
+            javaLauncher.set(javaToolchains.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(20))
+            })
+        }
+    }
 }
 
 tasks {

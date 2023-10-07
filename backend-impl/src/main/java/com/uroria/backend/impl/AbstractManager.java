@@ -1,19 +1,18 @@
 package com.uroria.backend.impl;
 
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
+import com.rabbitmq.client.Connection;
 import org.slf4j.Logger;
 
 public abstract class AbstractManager {
-    protected final PulsarClient pulsarClient;
+    protected final Connection rabbit;
     protected final Logger logger;
 
-    public AbstractManager(PulsarClient pulsarClient, Logger logger) {
-        this.pulsarClient = pulsarClient;
+    public AbstractManager(Connection rabbit, Logger logger) {
+        this.rabbit = rabbit;
         this.logger = logger;
     }
 
-    abstract protected void start(String identifier) throws PulsarClientException;
+    abstract protected void start() throws Exception;
 
-    abstract protected void shutdown() throws PulsarClientException;
+    abstract protected void shutdown() throws Exception;
 }

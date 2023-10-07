@@ -1,139 +1,51 @@
 package com.uroria.backend.clan;
 
-import com.uroria.backend.Backend;
-import com.uroria.backend.BackendObject;
+import com.uroria.annotations.safety.TimeConsuming;
+import com.uroria.backend.Deletable;
 import com.uroria.backend.user.User;
-import com.uroria.base.utils.CollectionUtils;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
-import lombok.Getter;
 import lombok.NonNull;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
 
-public final class Clan extends BackendObject<Clan> implements Serializable {
-    @Serial private static final long serialVersionUID = 1;
+public interface Clan extends Deletable {
 
-    private final ObjectList<UUID> members;
-    private final ObjectList<UUID> moderators;
-    private final long foundingDate;
-    private @Getter final String name;
-    private @Getter String tag;
-    private UUID operator;
+    String getTag();
 
-    public Clan(@NonNull String name, @NonNull String tag, @NonNull UUID operator, long foundingDate) {
-        this.name = name;
-        this.tag = tag;
-        this.operator = operator;
-        this.foundingDate = foundingDate;
-        this.members = new ObjectArrayList<>();
-        this.moderators = new ObjectArrayList<>();
-        this.members.add(operator);
-    }
+    String getName();
 
-    public Clan(@NonNull String name, @NonNull String tag, @NonNull UUID operator) {
-        this(name, tag, operator, System.currentTimeMillis());
-    }
+    void setTag(@NonNull String tag);
 
-    public void addModerator(@NonNull User user) {
-        addMember(user);
-        if (!this.moderators.contains(user.getUniqueId())) this.moderators.add(user.getUniqueId());
-        update();
-    }
+    long getFoundingDate();
 
-    public void removeModerator(User user) {
-        if (user == null) return;
-        this.moderators.remove(user.getUniqueId());
-        update();
-    }
+    @TimeConsuming
+    boolean hasMember(@NonNull User user);
 
-    public boolean isMember(User user) {
-        if (user == null) return false;
-        return this.members.contains(user.getUniqueId());
-    }
+    void addMember(@NonNull User user);
 
-    public void addMember(@NonNull User user) {
-        if (!user.getClanTag().map(tag -> this.tag.equals(tag)).orElse(false)) user.setClan(this);
-        UUID uuid = user.getUniqueId();
-        if (this.members.contains(uuid)) return;
-        this.members.add(uuid);
-        update();
-    }
+    void addOperator(@NonNull User user);
 
-    public void removeMember(UUID uuid) {
-        if (uuid == null) return;
-        this.members.remove(uuid);
-        this.moderators.remove(uuid);
-        if (this.operator.equals(uuid)) {
-            if (moderators.isEmpty()) this.operator = this.members.stream().findAny().orElse(null);
-            else this.operator = this.moderators.stream().findAny().orElse(null);
-            if (this.operator == null) {
-                delete();
-            }
-        }
-        update();
-    }
+    void addModerator(@NonNull User user);
 
-    /**
-     * Sets the clans tag used to search for it.
-     * {@link Clan#update() Required to update!}
-     */
-    public void setTag(@NonNull String tag) {
-        this.tag = tag;
-        this.members.forEach(uuid -> {
-            Backend.getAPI().getUserManager().getUser(uuid).ifPresent(user -> {
-                user.setClan(this);
-            });
-        });
-    }
+    @TimeConsuming
+    void removeMember(User user);
 
-    public long getFoundingDateMs() {
-        return this.foundingDate;
-    }
+    void removeModerator(User user);
 
-    public void setOperator(@NonNull UUID uuid) {
-        if (!this.members.contains(uuid)) this.members.add(uuid);
-        this.operator = uuid;
-        update();
-    }
+    void removeOperator(User user);
 
-    public UUID getOperator() {
-        return this.operator;
-    }
+    void removeMember(UUID uuid);
 
-    public List<UUID> getMembers() {
-        return Collections.unmodifiableList(this.members);
-    }
+    void removeModerator(UUID uuid);
 
-    public List<UUID> getModerators() {
-        return Collections.unmodifiableList(this.moderators);
-    }
+    void removeOperator(UUID uuid);
 
-    @Override
-    public void modify(Clan clan) {
-        CollectionUtils.overrideCollection(this.members, clan.members);
-        CollectionUtils.overrideCollection(this.moderators, clan.moderators);
-        this.tag = clan.tag;
-        this.operator = clan.operator;
-    }
+    @TimeConsuming
+    Collection<User> getOperators();
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Clan clan)) return false;
-        return clan.getName().equals(this.name);
-    }
+    @TimeConsuming
+    Collection<User> getMembers();
 
-    @Override
-    public String toString() {
-        return "Clan{name="+this.name+", tag="+this.tag+"}";
-    }
-
-    @Override
-    public void update() {
-        Backend.getAPI().getClanManager().updateClan(this);
-    }
+    @TimeConsuming
+    Collection<User> getModerators();
 }

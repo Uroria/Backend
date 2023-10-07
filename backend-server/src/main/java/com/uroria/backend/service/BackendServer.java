@@ -1,108 +1,210 @@
 package com.uroria.backend.service;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.uroria.backend.impl.configuration.BackendConfiguration;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.uroria.backend.impl.configurations.RabbitConfiguration;
 import com.uroria.backend.service.commands.CommandManager;
-import com.uroria.backend.service.commands.predefined.HelpCommand;
-import com.uroria.backend.service.commands.predefined.StopCommand;
+import com.uroria.backend.service.configuration.MongoConfiguration;
+import com.uroria.backend.service.configuration.RedisConfiguration;
 import com.uroria.backend.service.console.BackendConsole;
+import com.uroria.backend.service.modules.BackendModule;
+import com.uroria.backend.service.modules.perm.PermModule;
+import com.uroria.backend.service.modules.user.UserModule;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.resource.ClientResources;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.Getter;
-import org.apache.pulsar.client.api.PulsarClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public final class BackendServer {
-    private static @Getter final Logger logger = LoggerFactory.getLogger("Backend");
+    private static final Logger LOGGER = LoggerFactory.getLogger("Backend");
 
-    private @Getter boolean running;
-    private @Getter final CommandManager commandManager;
-    private @Getter final BackendConsole console;
-    private @Getter final PulsarClient pulsarClient;
-    private @Getter final MongoClient mongoClient;
-    private @Getter final MongoDatabase database;
-    private @Getter final RedisClient redisClient;
-    private @Getter final StatefulRedisConnection<String, String> redisConnection;
-    private @Getter final BackendImpl backend;
+    @Getter private boolean running;
+    @Getter private final CommandManager commandManager;
+    @Getter private final BackendConsole console;
+    @Getter private final ObjectSet<BackendModule> modules;
+    @Getter private final Connection rabbit;
+    @Getter private final MongoClient mongo;
+    @Getter private final MongoDatabase database;
+    @Getter private final RedisClient redis;
+    @Getter private final StatefulRedisConnection<String, String> redisCache;
 
     public BackendServer() {
-        logger.info("Initializing...");
+        long start = System.currentTimeMillis();
+        LOGGER.info("Initializing...");
+
         this.commandManager = new CommandManager();
         this.console = new BackendConsole(this);
+        this.modules = new ObjectArraySet<>();
 
-        logger.info("Connecting to pulsar instance...");
-        this.pulsarClient = buildPulsarClient(BackendConfiguration.getPulsarURL());
+        this.rabbit = connectRabbitMq();
+        try {
+            this.mongo = connectMongoClient();
+            this.database = connectMongoDatabase();
+        } catch (Exception exception) {
+            LOGGER.error("Unable to initialize mongo connection", exception);
+            try {
+                shutdownRabbit();
+            } catch (Exception ignored) {}
+            System.exit(1);
+            throw exception;
+        }
+        try {
+            this.redis = connectRedisClient();
+            this.redisCache = connectRedisCache();
+        } catch (Exception exception) {
+            LOGGER.error("Unable initialize redis connection", exception);
+            try {
+                shutdownRabbit();
+                shutdownMongo();
+                shutdownRedis();
+            } catch (Exception ignored) {}
+            System.exit(1);
+            throw exception;
+        }
 
-        logger.info("Connecting to mongo instance...");
-        this.mongoClient = MongoClients.create(BackendConfiguration.getString("mongo.url"));
-        this.database = this.mongoClient.getDatabase(BackendConfiguration.getString("mongo.database"));
+        try {
+            this.modules.add(new UserModule(this));
+            this.modules.add(new PermModule(this));
+        } catch (Exception exception) {
+            LOGGER.error("Unable to initialize some module", exception);
+            try {
+                shutdownRabbit();
+                shutdownMongo();
+                shutdownRedis();
+            } catch (Exception anotherException) {
+                LOGGER.error("Unable to shutdown connections on error", anotherException);
+            }
+            System.exit(1);
+        }
 
-        logger.info("Connecting to redis instance...");
-        this.redisClient = RedisClient.create(BackendConfiguration.getString("redis.url"));
-        this.redisConnection = this.redisClient.connect();
+        LOGGER.info("Initialized in " + (System.currentTimeMillis() - start) + "ms");
+    }
 
-        logger.info("Initializing backend...");
-        this.backend = new BackendImpl(this.pulsarClient, this, database, redisConnection);
+    private Connection connectRabbitMq() {
+        try {
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setUsername(RabbitConfiguration.getRabbitUsername());
+            factory.setPassword(RabbitConfiguration.getRabbitPassword());
+            factory.setVirtualHost(RabbitConfiguration.getRabbitVirtualhost());
+            factory.setHost(RabbitConfiguration.getRabbitHostname());
+            factory.setPort(RabbitConfiguration.getRabbitPort());
+            if (RabbitConfiguration.isRabbitSslEnabled()) factory.useSslProtocol();
+            return factory.newConnection();
+        } catch (Exception exception) {
+            LOGGER.error("Cannot connect to RabbitMQ", exception);
+            System.exit(1);
+            return null;
+        }
+    }
+
+    private MongoClient connectMongoClient() {
+        MongoClientSettings.Builder settings = MongoClientSettings.builder();
+        String url = MongoConfiguration.getMongoUrl();
+        settings.applyConnectionString(new ConnectionString(url));
+        LOGGER.info("Connecting to MongoDB with url " + url);
+        return MongoClients.create(settings.build());
+    }
+
+    private MongoDatabase connectMongoDatabase() {
+        String name = MongoConfiguration.getMongoDatabase();
+        LOGGER.info("Connecting to MongoDB database " + name);
+        return this.mongo.getDatabase(name);
+    }
+
+    private RedisClient connectRedisClient() {
+        ClientResources.Builder builder = ClientResources.builder();
+        String url = RedisConfiguration.getRedisUrl();
+        LOGGER.info("Connecting to Redis with url " + url);
+        return RedisClient.create(builder.build(), url);
+    }
+
+    private StatefulRedisConnection<String, String> connectRedisCache() {
+        LOGGER.info("Connecting to Redis cache");
+        return this.redis.connect();
     }
 
     public void start() {
-        logger.info("Starting...");
-        long start = System.currentTimeMillis();
+        if (this.running) return;
         this.running = true;
+
+        long start = System.currentTimeMillis();
+        LOGGER.info("Starting...");
+
+        for (BackendModule module : this.modules) {
+            module.start();
+        }
+
+        registerCommands();
+        setupConsole();
+
+        LOGGER.info("Started in " + (System.currentTimeMillis() - start) + "ms");
+    }
+
+    private void registerCommands() {
+        LOGGER.info("Registering commands");
+    }
+
+    private void setupConsole() {
+        LOGGER.info("Setting up console");
         this.console.setupStreams();
         CompletableFuture.runAsync(this.console::start);
-        this.commandManager.register(new HelpCommand(), "help");
-        this.commandManager.register(new StopCommand(this), "stop");
-        try {
-            this.backend.start();
-        } catch (Exception exception) {
-            logger.error("Cannot start backend implementation", exception);
+    }
+
+    public void shutdown() throws Exception {
+        if (!this.running) return;
+        this.running = false;
+
+        long start = System.currentTimeMillis();
+        LOGGER.info("Shutting down...");
+
+        for (BackendModule module : this.modules) {
+            module.shutdown();
         }
-        logger.info("Started in " + (System.currentTimeMillis() - start) + "ms.");
+
+        shutdownRabbit();
+        shutdownRedis();
+        shutdownMongo();
+
+        LOGGER.info("Shutdown in " + (System.currentTimeMillis() - start) + "ms");
+    }
+
+    private void shutdownRabbit() throws IOException {
+        LOGGER.info("Shutting down Rabbit connection");
+        this.rabbit.close();
+    }
+
+    private void shutdownMongo() {
+        LOGGER.info("Shutting down MongoDB connection");
+        this.mongo.close();
+    }
+
+    private void shutdownRedis() {
+        LOGGER.info("Shutting down Redis connection");
+        this.redisCache.close();
+        this.redis.shutdown();
     }
 
     public void explicitShutdown() {
-        shutdown();
+        try {
+            shutdown();
+        } catch (Exception exception) {
+            LOGGER.error("Terminating with exit code 1", exception);
+            System.exit(1);
+            return;
+        }
+        LOGGER.info("Terminating with exit code 0");
         System.exit(0);
-    }
-
-    public void shutdown() {
-        if (!this.running) return;
-        this.running = false;
-        this.backend.getRootManager().shutdownAll();
-        logger.info("Shutting down...");
-        try {
-            this.backend.shutdown();
-        } catch (Exception exception) {
-            logger.error("Unhandled exception while shutting down backend implementation", exception);
-        }
-
-        logger.info("Closing redis connection...");
-        this.redisConnection.close();
-
-        logger.info("Closing redis client...");
-        this.redisClient.close();
-
-        logger.info("Closing mongo client...");
-        this.mongoClient.close();
-
-        logger.info("Finished shutting down. Good bye! :D");
-    }
-
-    private PulsarClient buildPulsarClient(String url) {
-        try {
-            return PulsarClient.builder()
-                    .serviceUrl(url)
-                    .statsInterval(10, TimeUnit.MINUTES).build();
-        } catch (Exception exception) {
-            logger.error("Cannot build pulsar instance");
-            return null;
-        }
     }
 }

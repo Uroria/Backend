@@ -1,9 +1,8 @@
 package com.uroria.backend.velocity;
 
 import com.google.inject.Inject;
-import com.uroria.backend.impl.configuration.BackendConfiguration;
 import com.uroria.backend.velocity.listeners.PlayerLogin;
-import com.uroria.backend.wrapper.BackendWrapper;
+import com.uroria.backend.wrapper.Wrapper;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
@@ -22,20 +21,17 @@ import org.slf4j.Logger;
 public final class BackendVelocityPlugin {
     private final Logger logger;
     private final ProxyServer proxyServer;
-    private @Getter final BackendWrapper backend;
+    private @Getter final Wrapper backend;
 
     @Inject
     public BackendVelocityPlugin(Logger logger, ProxyServer proxyServer) {
         this.logger = logger;
         this.proxyServer = proxyServer;
         try {
-            this.backend = new BackendWrapper(BackendConfiguration.getPulsarURL(), this.logger, false, this.proxyServer::shutdown, uuid -> proxyServer.getPlayer(uuid).isPresent());
+            this.backend = new Wrapper(logger);
         } catch (Exception exception) {
             this.proxyServer.shutdown();
             throw new RuntimeException("Unexpected exception", exception);
-        }
-        if (isOffline()) {
-            logger.warn("Running in offline mode!");
         }
     }
 
@@ -58,9 +54,5 @@ public final class BackendVelocityPlugin {
         } catch (Exception exception) {
             this.logger.error("Cannot shutdown backend!", exception);
         }
-    }
-
-    public static boolean isOffline() {
-        return BackendConfiguration.isOffline();
     }
 }
