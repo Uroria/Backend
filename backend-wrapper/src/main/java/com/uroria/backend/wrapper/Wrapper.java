@@ -92,6 +92,16 @@ public final class Wrapper extends AbstractBackendWrapper implements BackendWrap
     }
 
     @Override
+    public Result<User> getUser(long discordUserId) {
+        try {
+            return Result.of(this.userManager.getUserWrapper(discordUserId));
+        } catch (Exception exception) {
+            this.logger.error("Cannot request user with discordUserId " + discordUserId, exception);
+            return Result.problem(Problem.error(exception));
+        }
+    }
+
+    @Override
     public Result<Clan> getClan(String tag) {
         try {
             return Result.of(this.clanManager.getClanWrapper(tag));
