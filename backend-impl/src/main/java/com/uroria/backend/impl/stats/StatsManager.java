@@ -34,11 +34,11 @@ public final class StatsManager extends AbstractManager implements Statistics {
     }
 
     public List<Stat> getStatsWithScoreGreaterThanValue(UUID uuid, int gameId, @NonNull String scoreKey, int value) {
-
+        return null;
     }
 
     public List<Stat> getStatsWithScoreLowerThanValue(UUID uuid, int gameId, @NonNull String scoreKey, int value) {
-
+        return null;
     }
 
     public List<Stat> getStatsWithScore(UUID uuid, int gameId, @NonNull String scoreKey, int value) {

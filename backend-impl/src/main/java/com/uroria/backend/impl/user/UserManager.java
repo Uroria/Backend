@@ -4,6 +4,7 @@ import com.rabbitmq.client.Connection;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
 import com.uroria.backend.impl.io.BackendOutputStream;
+import com.uroria.backend.impl.stats.StatsManager;
 import com.uroria.backend.impl.wrapper.WrapperManager;
 import com.uroria.backend.user.events.UserDeletedEvent;
 import com.uroria.backend.user.events.UserUpdatedEvent;
@@ -14,10 +15,12 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 
 public final class UserManager extends WrapperManager<UserWrapper> {
+    private final StatsManager statsManager;
     private final RequestChannel nameRequest;
 
-    public UserManager(Connection rabbit) {
+    public UserManager(StatsManager statsManager, Connection rabbit) {
         super(rabbit, LoggerFactory.getLogger("Users"), "user", "uuid");
+        this.statsManager = statsManager;
         this.nameRequest = new RabbitRequestChannel(rabbit, "user-name-request");
     }
 

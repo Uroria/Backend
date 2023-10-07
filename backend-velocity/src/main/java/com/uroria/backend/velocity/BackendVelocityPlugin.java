@@ -28,7 +28,7 @@ public final class BackendVelocityPlugin {
         this.logger = logger;
         this.proxyServer = proxyServer;
         try {
-            this.backend = new Wrapper();
+            this.backend = new Wrapper(logger);
         } catch (Exception exception) {
             this.proxyServer.shutdown();
             throw new RuntimeException("Unexpected exception", exception);

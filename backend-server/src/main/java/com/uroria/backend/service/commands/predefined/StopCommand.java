@@ -1,13 +1,14 @@
 package com.uroria.backend.service.commands.predefined;
 
+import com.uroria.backend.service.BackendServer;
 import com.uroria.backend.service.commands.Command;
 
 import java.util.List;
 
 public final class StopCommand extends Command {
-    private final BackendServerOld server;
+    private final BackendServer server;
 
-    public StopCommand(BackendServerOld server) {
+    public StopCommand(BackendServer server) {
         this.server = server;
     }
 

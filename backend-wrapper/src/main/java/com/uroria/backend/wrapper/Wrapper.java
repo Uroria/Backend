@@ -10,11 +10,13 @@ import com.uroria.backend.impl.permission.PermGroupManager;
 import com.uroria.backend.impl.proxy.ProxyManager;
 import com.uroria.backend.impl.server.ServerGroupManager;
 import com.uroria.backend.impl.server.ServerManager;
+import com.uroria.backend.impl.stats.StatsManager;
 import com.uroria.backend.impl.user.UserManager;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
+import com.uroria.backend.stats.Statistics;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
@@ -27,6 +29,7 @@ import java.util.UUID;
 
 public final class Wrapper extends AbstractBackendWrapper implements BackendWrapper {
 
+    private final StatsManager statsManager;
     private final UserManager userManager;
     private final PermGroupManager groupManager;
     private final ClanManager clanManager;
@@ -38,7 +41,8 @@ public final class Wrapper extends AbstractBackendWrapper implements BackendWrap
     public Wrapper(Logger logger) throws Exception {
         super(logger);
         Unsafe.setInstance(this);
-        this.userManager = new UserManager(getRabbit());
+        this.statsManager = new StatsManager(getRabbit());
+        this.userManager = new UserManager(statsManager, getRabbit());
         this.groupManager = new PermGroupManager(getRabbit());
         this.clanManager = new ClanManager(getRabbit());
         this.serverManager = new ServerManager(getRabbit());
@@ -141,7 +145,7 @@ public final class Wrapper extends AbstractBackendWrapper implements BackendWrap
     }
 
     @Override
-    public Result<Proxy> createProxy(String name, int maxPlayers) {
+    public Result<Proxy> createProxy(String name, int templateId, int maxPlayers) {
         return null;
     }
 
@@ -213,5 +217,10 @@ public final class Wrapper extends AbstractBackendWrapper implements BackendWrap
             this.logger.error("Cannot create permission-group with name " + name, exception);
             return Result.problem(Problem.error(exception));
         }
+    }
+
+    @Override
+    public Statistics getStatistics() {
+        return this.statsManager;
     }
 }

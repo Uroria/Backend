@@ -60,6 +60,10 @@ public class Backend {
         return getWrapper().getProxies(name);
     }
 
+    public Result<Proxy> createProxy(String name, int templateId, int maxPlayers) {
+        return getWrapper().createProxy(name, templateId, maxPlayers);
+    }
+
     public Collection<Proxy> getProxies() {
         return getWrapper().getProxies();
     }

@@ -1,6 +1,7 @@
 package com.uroria.backend;
 
 import com.uroria.annotations.markers.Warning;
+import com.uroria.annotations.safety.TimeConsuming;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.proxy.Proxy;
@@ -17,10 +18,20 @@ import java.util.UUID;
 
 public interface BackendWrapper {
 
+    /**
+     * Searches for an existing database entry for the given uuid of a user
+     * and if not exists, create a new one.
+     */
     Result<User> getUser(UUID uuid);
 
+    /**
+     * Looks for a User with the given username.
+     */
     Result<User> getUser(String username);
 
+    /**
+     * Gets a clan by it's changeable tag.
+     */
     Result<Clan> getClan(String tag);
 
     default Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator) {
@@ -29,19 +40,36 @@ public interface BackendWrapper {
 
     Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator, long foundingDate);
 
+    /**
+     * Gets a registered server with the given id.
+     */
     Result<Server> getServer(long identifier);
 
+    /**
+     * Gets all existing servers.
+     */
+    @TimeConsuming
     Collection<Server> getServers();
 
+    /**
+     * Creates and starts a new server.
+     * You need a {@link ServerGroup} for sorting purposes.
+     */
     @SuppressWarnings("WarningMarkers")
     @Warning(message = "Ordering a server could take more than 30 seconds. Use this method only if you know what you're doing.", suppress = "Okay, I understand")
     default Result<Server> createServer(int templateId, @NonNull ServerGroup group) {
         return group.createServer(templateId);
     }
 
+    /**
+     * Gets a registered proxy with the given id.
+     */
     Result<Proxy> getProxy(long identifier);
 
-    Result<Proxy> createProxy(String name, int maxPlayers);
+    /**
+     * 
+     */
+    Result<Proxy> createProxy(String name, int templateId, int maxPlayers);
 
     Collection<Proxy> getProxies(String name);
 

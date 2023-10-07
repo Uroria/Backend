@@ -24,6 +24,5 @@ public final class CommandManager {
             command.run(Arrays.copyOfRange(split, 1, split.length));
             return;
         }
-        BackendServerOld.getLogger().info("Unknown command. Please type \"help\".");
     }
 }
