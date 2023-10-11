@@ -9,6 +9,10 @@
       "credentials": {
          "username": "guest",
          "password": "guest"
+      },
+      "ssl": {
+         "caPath": "/path/to/ca.pem",
+         "keyPath": "/path/to/key.pem"
       }
    }
 }
