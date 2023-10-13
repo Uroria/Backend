@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 public final class UserModule extends SavingModule {
-
     private final UserObjectThread objectThread;
     private final UserPartThread partThread;
     private final UserUpdateThread updateThread;
@@ -22,7 +21,7 @@ public final class UserModule extends SavingModule {
     }
 
     @Override
-    protected void enable() throws Exception {
+    protected void enable() {
         this.objectThread.start();
         this.partThread.start();
         this.updateThread.start();
