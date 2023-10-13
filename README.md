@@ -33,7 +33,7 @@ Furthermore, the standalone backend server utilizes Redis to temporarily store d
 In the event that a cache does not contain certain data, 
 the backend server will query a theoretically arbitrary NoSQL database to retrieve the data.
 
-```marmaid
+```mermaid
 graph LR
     API[Some Wrapper API] --> |Some Request| RABBIT --> SERVER
 
