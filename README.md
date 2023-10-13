@@ -32,3 +32,12 @@ In addition, a cache is integrated into each client, facilitating faster request
 Furthermore, the standalone backend server utilizes Redis to temporarily store data, enhancing data retrieval performance.
 In the event that a cache does not contain certain data, 
 the backend server will query a theoretically arbitrary NoSQL database to retrieve the data.
+
+```marmaid
+graph LR
+    API[Some Wrapper API] --> |Some Request| RABBIT --> SERVER
+
+    SERVER[Standalone Backend Server] --> |Looking in cache| REDIS[Redis]
+    SERVER --> |Query data| DB1[MongoDB]
+    SERVER --> |Query other data| DB2[SurrealDB]
+```
