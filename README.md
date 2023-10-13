@@ -35,7 +35,7 @@ the backend server will query a theoretically arbitrary NoSQL database to retrie
 
 ```mermaid
 graph LR
-    API[Some Wrapper API] --> |Some Request| RABBIT --> SERVER
+    API[Some Wrapper API] --> |Some Request| RABBIT(RabbitMQ) --> SERVER
 
     SERVER[Standalone Backend Server] --> |Looking in cache| REDIS[Redis]
     SERVER --> |Query data| DB1[MongoDB]
