@@ -7,6 +7,8 @@ import com.uroria.backend.Backend;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.impl.AbstractManager;
 import com.uroria.backend.impl.communication.CommunicationClient;
+import com.uroria.backend.impl.communication.broadcast.DeleteChannel;
+import com.uroria.backend.impl.communication.broadcast.RabbitDeleteChannel;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
 import com.uroria.base.event.EventManager;
@@ -15,13 +17,16 @@ import com.uroria.base.io.InsaneByteArrayOutputStream;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import lombok.Getter;
 import org.slf4j.Logger;
 
+@Getter
 public abstract class WrapperManager<T extends Wrapper> extends AbstractManager {
     protected final String name;
     private final String identifierKey;
     protected final CommunicationClient client;
     protected final RequestChannel request;
+    protected final DeleteChannel delete;
     protected final ObjectSet<T> wrappers;
     protected final EventManager eventManager;
 
@@ -29,8 +34,9 @@ public abstract class WrapperManager<T extends Wrapper> extends AbstractManager 
         super(rabbit, logger);
         this.name = name;
         this.identifierKey = identifierKey;
-        this.client = new CommunicationClient(rabbit, name + "-send", name + "-update", this::update);
+        this.client = new CommunicationClient(rabbit, name + "-send", name + "-update");
         this.request = new RabbitRequestChannel(rabbit, name + "-request");
+        this.delete = new RabbitDeleteChannel(rabbit, name + "-delete");
         this.wrappers = new ObjectArraySet<>();
         this.eventManager = Backend.getEventManager();
     }

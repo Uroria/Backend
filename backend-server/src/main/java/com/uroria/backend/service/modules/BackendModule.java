@@ -16,9 +16,9 @@ public abstract class BackendModule {
         this.moduleName = moduleName;
     }
 
-    public abstract JsonElement getPart(Object identifier, String key);
+    public abstract JsonElement getPart(String identifierKey, Object identifier, String key);
 
-    public abstract void checkPart(Object identifier, String key, JsonElement value);
+    public abstract void checkPart(String identifierKey, Object identifier, String key, JsonElement value);
 
     protected void enable() throws Exception {
 

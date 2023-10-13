@@ -104,6 +104,6 @@ public final class UserManager extends WrapperManager<UserWrapper> {
 
     @Override
     protected UserWrapper createWrapper(String identifier) {
-        return new UserWrapper(client, UUID.fromString(identifier), statsManager);
+        return new UserWrapper(this, UUID.fromString(identifier), statsManager);
     }
 }

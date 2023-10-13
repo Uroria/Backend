@@ -42,15 +42,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class UserWrapper extends Wrapper implements User {
+    private final UserManager userManager;
     private final CommunicationWrapper object;
     private final StatsManager statsManager;
     private final UUID uuid;
     private final ObjectSet<Permission> permissions;
     private boolean deleted;
 
-    public UserWrapper(@NonNull CommunicationClient client, @NonNull UUID uuid, StatsManager statsManager) {
+    public UserWrapper(UserManager userManager, @NonNull UUID uuid, StatsManager statsManager) {
+        this.userManager = userManager;
         this.statsManager = statsManager;
-        this.object = new CommunicationWrapper(uuid.toString(), client);
+        this.object = new CommunicationWrapper(uuid.toString(), userManager.getClient());
         this.uuid = uuid;
         this.permissions = new ObjectArraySet<>();
     }
@@ -85,6 +87,7 @@ public final class UserWrapper extends Wrapper implements User {
         if (isDeleted()) return;
         this.deleted = true;
         object.set("deleted", true);
+        this.userManager.getDelete().deleteSync("uuid", uuid.toString());
     }
 
     @Override
