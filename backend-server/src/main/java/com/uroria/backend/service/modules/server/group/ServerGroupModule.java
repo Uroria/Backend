@@ -15,7 +15,7 @@ public final class ServerGroupModule extends SavingModule {
     private final ServerGroupUpdateThread updateThread;
 
     public ServerGroupModule(BackendServer server) {
-        super(server, "ServerModule", "servergroups");
+        super(server, "ServerGroupModule", "servergroups");
         this.objectThread = new ServerGroupObjectThread(this);
         this.updateThread = new ServerGroupUpdateThread(this);
         this.partThread = new ServerGroupPartThread(this);
