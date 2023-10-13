@@ -16,7 +16,7 @@ public final class PermGroupObjectThread extends ResponseThread {
     @Override
     protected void request(BackendInputStream input, BackendOutputStream output) throws Exception {
         String name = input.readUTF();
-        JsonElement element = this.module.getPart(name, "uuid");
+        JsonElement element = this.module.getPart("name", name, "name");
         if (element.isJsonNull()) output.writeBoolean(false);
         else {
             output.writeBoolean(true);

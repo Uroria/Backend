@@ -16,6 +16,6 @@ public final class PermGroupPartThread extends ResponseThread {
     protected void request(BackendInputStream input, BackendOutputStream output) throws Exception {
         String name = input.readUTF();
         String key = input.readUTF();
-        output.writeJsonElement(module.getPart(name, key));
+        output.writeJsonElement(module.getPart("name", name, key));
     }
 }

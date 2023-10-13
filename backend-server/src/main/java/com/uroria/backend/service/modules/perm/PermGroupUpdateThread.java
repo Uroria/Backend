@@ -17,6 +17,6 @@ public final class PermGroupUpdateThread extends UpdateThread {
         String name = input.readUTF();
         String key = input.readUTF();
         JsonElement element = input.readJsonElement();
-        this.module.checkPart(name, key, element);
+        this.module.checkPart("name", name, key, element);
     }
 }

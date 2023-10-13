@@ -18,7 +18,7 @@ public final class UserPartThread extends ResponseThread {
     protected void request(BackendInputStream input, BackendOutputStream output) throws Exception {
         UUID uuid = UUID.fromString(input.readUTF());
         String key = input.readUTF();
-        output.writeJsonElement(module.getPart(uuid, key));
+        output.writeJsonElement(module.getPart("uuid", uuid, key));
         output.close();
     }
 }

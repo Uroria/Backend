@@ -19,6 +19,6 @@ public final class UserUpdateThread extends UpdateThread {
         UUID uuid = UUID.fromString(input.readUTF());
         String key = input.readUTF();
         JsonElement element = input.readJsonElement();
-        this.module.checkPart(uuid, key, element);
+        this.module.checkPart("uuid", uuid, key, element);
     }
 }
