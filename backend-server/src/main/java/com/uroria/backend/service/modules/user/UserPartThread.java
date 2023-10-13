@@ -19,6 +19,5 @@ public final class UserPartThread extends ResponseThread {
         UUID uuid = UUID.fromString(input.readUTF());
         String key = input.readUTF();
         output.writeJsonElement(module.getPart("uuid", uuid, key));
-        output.close();
     }
 }

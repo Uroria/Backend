@@ -121,7 +121,6 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     }
 
 
-    @SuppressWarnings("WarningMarkers")
     @Override
     public Result<Server> createServer(int templateId) {
         try {

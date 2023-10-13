@@ -9,6 +9,8 @@ import java.util.Collection;
 
 public interface Database {
 
+    Result<Collection<JsonObject>> getAll();
+
     Result<Void> set(@NonNull String targetKey, @NonNull Number targetKeyValue, @NonNull String key, @NonNull JsonElement value);
 
     Result<Void> set(@NonNull String targetKey, @NonNull String targetKeyValue, @NonNull String key, @NonNull JsonElement value);
