@@ -2,13 +2,14 @@ package com.uroria.backend.server;
 
 import com.uroria.backend.app.ApplicationStatus;
 import com.uroria.backend.proxy.Proxy;
+import com.uroria.base.property.PropertyObject;
 import com.uroria.problemo.result.Result;
 import lombok.NonNull;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
-public interface Server extends ServerGroupTarget {
+public interface Server extends ServerGroupTarget, PropertyObject {
 
     long getIdentifier();
 

@@ -12,9 +12,11 @@ import com.uroria.backend.server.Server;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.result.Result;
 import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -171,5 +173,80 @@ public final class ServerWrapper extends Wrapper implements Server {
     @Override
     public int getMaxUserCount() {
         return getInt("maxPlayerCount");
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return null;
+    }
+
+    @Override
+    public void unsetProperty(@NonNull String key) {
+
+    }
+
+    @Override
+    public void setProperties(@NonNull Map<String, Object> properties) {
+
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, @NonNull String value) {
+
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, int value) {
+
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, long value) {
+
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, double value) {
+
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, float value) {
+
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, boolean value) {
+
+    }
+
+    @Override
+    public String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
+        return null;
+    }
+
+    @Override
+    public int getPropertyIntOrElse(@NonNull String key, int defValue) {
+        return 0;
+    }
+
+    @Override
+    public long getPropertyLongOrElse(@NonNull String key, long defValue) {
+        return 0;
+    }
+
+    @Override
+    public double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
+        return 0;
+    }
+
+    @Override
+    public float getPropertyFloatOrElse(@NonNull String key, float defValue) {
+        return 0;
+    }
+
+    @Override
+    public boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
+        return false;
     }
 }
