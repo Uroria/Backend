@@ -5,6 +5,7 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
+import com.uroria.are.Application;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import lombok.NonNull;
@@ -28,6 +29,11 @@ public class RabbitUpdateChannel implements UpdateChannel {
         this.topic = topic;
         this.identifier = UUID.randomUUID().toString();
         try {
+            if (Application.isOffline() || Application.isTest()) {
+                this.channel = null;
+                this.updateQueue = null;
+                return;
+            }
             this.channel = connection.createChannel();
             this.channel.exchangeDeclare("update", BuiltinExchangeType.DIRECT);
             this.updateQueue = this.channel.queueDeclare("update:" + topic, false, false, true, Map.of()).getQueue();
@@ -39,6 +45,9 @@ public class RabbitUpdateChannel implements UpdateChannel {
     @Override
     public final Result<Void> updateSync(byte @NonNull [] data) {
         try {
+            if (this.channel == null || this.updateQueue == null) {
+                return Result.none();
+            }
             AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .appId(this.identifier)
                     .build();
@@ -66,6 +75,9 @@ public class RabbitUpdateChannel implements UpdateChannel {
 
     @Override
     public final Result<byte[]> awaitUpdate() {
+        if (this.channel == null) {
+            return Result.none();
+        }
         BlockingQueue<byte[]> updateQueue = new ArrayBlockingQueue<>(1);
         DeliverCallback callback = (consumerTag, message) -> {
             if (message.getProperties().getAppId().equals(this.identifier)) return;
@@ -85,6 +97,9 @@ public class RabbitUpdateChannel implements UpdateChannel {
 
     @Override
     public final Result<byte[]> awaitUpdate(int timeoutMs) {
+        if (this.channel == null) {
+            return Result.none();
+        }
         BlockingQueue<byte[]> updateQueue = new ArrayBlockingQueue<>(1);
         DeliverCallback callback = (consumerTag, message) -> {
             if (message.getProperties().getAppId().equals(this.identifier)) return;
@@ -110,7 +125,7 @@ public class RabbitUpdateChannel implements UpdateChannel {
     @Override
     public void close() {
         try {
-            this.channel.close();
+            if (this.channel != null) this.channel.close();
         } catch (Exception ignored) {}
     }
 }

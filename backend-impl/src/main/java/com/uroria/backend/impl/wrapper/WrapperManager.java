@@ -3,6 +3,7 @@ package com.uroria.backend.impl.wrapper;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.rabbitmq.client.Connection;
+import com.uroria.are.Application;
 import com.uroria.backend.Backend;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.impl.AbstractManager;
@@ -68,6 +69,7 @@ public abstract class WrapperManager<T extends Wrapper> extends AbstractManager 
 
     @Override
     public void shutdown() throws Exception {
+        if (Application.isOffline() || Application.isTest()) return;
         this.client.close();
         this.request.close();
         this.wrappers.clear();
@@ -75,6 +77,7 @@ public abstract class WrapperManager<T extends Wrapper> extends AbstractManager 
 
     public final void delete(String identifier) {
         this.wrappers.removeIf(wrapper -> wrapper.getStringIdentifier().equals(identifier));
+        if (Application.isOffline() || Application.isTest()) return;
         this.client.delete(identifier);
     }
 
@@ -84,6 +87,15 @@ public abstract class WrapperManager<T extends Wrapper> extends AbstractManager 
         for (T wrapper : this.wrappers) {
             if (!wrapper.getStringIdentifier().equals(identifier)) continue;
             return wrapper;
+        }
+
+        if (Application.isOffline() || Application.isTest()) {
+            if (autoCreate) {
+                T wrapper = createWrapper(identifier);
+                this.wrappers.add(wrapper);
+                return wrapper;
+            }
+            return null;
         }
 
         byte[] data;

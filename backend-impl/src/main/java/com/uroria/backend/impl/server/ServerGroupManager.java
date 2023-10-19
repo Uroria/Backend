@@ -1,6 +1,7 @@
 package com.uroria.backend.impl.server;
 
 import com.rabbitmq.client.Connection;
+import com.uroria.are.Application;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
@@ -36,6 +37,9 @@ public final class ServerGroupManager extends WrapperManager<ServerGroupWrapper>
     }
 
     public Collection<ServerGroup> getGroups() {
+        if (Application.isOffline() || Application.isTest()) {
+            return ObjectSets.emptySet();
+        }
         Result<byte[]> result = this.requestAll.requestSync(() -> {
             try {
                 BackendOutputStream output = new BackendOutputStream();

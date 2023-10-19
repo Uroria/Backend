@@ -1,6 +1,7 @@
 package com.uroria.backend.impl.permission;
 
 import com.rabbitmq.client.Connection;
+import com.uroria.are.Application;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
 import com.uroria.backend.impl.io.BackendOutputStream;
@@ -33,6 +34,9 @@ public final class PermGroupManager extends WrapperManager<GroupWrapper> {
     }
 
     public Collection<PermGroup> getGroups() {
+        if (Application.isTest() || Application.isOffline()) {
+            return ObjectSets.emptySet();
+        }
         Result<byte[]> result = this.requestAll.requestSync(() -> {
             try {
                 BackendOutputStream output = new BackendOutputStream();
@@ -69,10 +73,15 @@ public final class PermGroupManager extends WrapperManager<GroupWrapper> {
     }
 
     public GroupWrapper getGroup(String name) {
+        name = name.toLowerCase();
+        if (name.equals("default")) {
+            return getWrapper(name, true);
+        }
         return getWrapper(name, false);
     }
 
     public GroupWrapper createGroup(String name) {
+        name = name.toLowerCase();
         return getWrapper(name, true);
     }
 

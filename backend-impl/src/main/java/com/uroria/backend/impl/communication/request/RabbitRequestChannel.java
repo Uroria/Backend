@@ -7,6 +7,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import com.uroria.are.Application;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
@@ -32,6 +33,13 @@ public class RabbitRequestChannel implements RequestChannel {
 
     public RabbitRequestChannel(@NonNull Connection connection, String topic) throws RuntimeException {
         this.topic = topic;
+        this.openedRequests = new ObjectArraySet<>();
+        if (Application.isTest() || Application.isOffline()) {
+            this.channel = null;
+            this.requestQueue = null;
+            this.replyQueue = null;
+            return;
+        }
         try {
             this.channel = connection.createChannel();
             this.channel.exchangeDeclare("request", BuiltinExchangeType.TOPIC);
@@ -40,12 +48,14 @@ public class RabbitRequestChannel implements RequestChannel {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
-        this.openedRequests = new ObjectArraySet<>();
     }
 
     @Override
     public final Result<byte[]> requestSync(byte @NonNull [] data, int timeout) {
         try {
+            if (this.channel == null || requestQueue == null || replyQueue == null) {
+                return Result.none();
+            }
             String correlationId = UUID.randomUUID().toString();
 
             AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
@@ -117,7 +127,7 @@ public class RabbitRequestChannel implements RequestChannel {
     @Override
     public void close() {
         try {
-            this.channel.close();
+            if (this.channel != null) this.channel.close();
         } catch (Exception ignored) {}
     }
 }

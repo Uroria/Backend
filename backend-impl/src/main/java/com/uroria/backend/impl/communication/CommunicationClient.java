@@ -3,6 +3,7 @@ package com.uroria.backend.impl.communication;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.rabbitmq.client.Connection;
+import com.uroria.are.Application;
 import com.uroria.backend.impl.communication.broadcast.RabbitUpdateChannel;
 import com.uroria.backend.impl.communication.broadcast.UpdateChannel;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
@@ -33,10 +34,15 @@ public final class CommunicationClient implements Closeable {
     private final Consumer<JsonObject> updateConsumer;
 
     public CommunicationClient(@NonNull Connection rabbit, @NonNull String requestTopic, @NonNull String updateTopic, Consumer<JsonObject> updateConsumer) {
-        this.update = new RabbitUpdateChannel(rabbit, updateTopic);
-        this.request = new RabbitRequestChannel(rabbit, requestTopic);
         this.objects = new Object2ObjectArrayMap<>();
         this.updateConsumer = updateConsumer;
+        if (Application.isOffline() || Application.isTest()) {
+            this.update = null;
+            this.request = null;
+            return;
+        }
+        this.update = new RabbitUpdateChannel(rabbit, updateTopic);
+        this.request = new RabbitRequestChannel(rabbit, requestTopic);
         UpdateThread updateThread = new UpdateThread(this);
         updateThread.start();
     }
@@ -63,6 +69,9 @@ public final class CommunicationClient implements Closeable {
     }
 
     Result<JsonElement> request(CommunicationWrapper wrapper, String key, int timeout) {
+        if (this.request == null) {
+            return Result.none();
+        }
         byte[] data;
         try {
             BackendOutputStream output = new BackendOutputStream();
@@ -90,6 +99,9 @@ public final class CommunicationClient implements Closeable {
     }
 
     void update(CommunicationWrapper wrapper, String key, JsonElement value) {
+        if (this.update == null) {
+            return;
+        }
         String identifier = wrapper.getIdentifier();
         try {
             BackendOutputStream output = new BackendOutputStream();
@@ -123,6 +135,9 @@ public final class CommunicationClient implements Closeable {
 
         @Override
         public void run() {
+            if (client.update == null) {
+                return;
+            }
             try {
                 while (isAlive()) {
                     try {
@@ -165,7 +180,7 @@ public final class CommunicationClient implements Closeable {
 
     @Override
     public void close() throws IOException {
-        this.request.close();
-        this.update.close();
+        if (this.request != null) this.request.close();
+        if (this.update != null) this.update.close();
     }
 }

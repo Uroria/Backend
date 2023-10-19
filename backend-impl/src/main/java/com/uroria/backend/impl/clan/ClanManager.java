@@ -33,7 +33,6 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
         return getWrapper(tag, false);
     }
 
-
     @Override
     protected ClanWrapper createWrapper(String identifier) {
         return new ClanWrapper(this.client, identifier);

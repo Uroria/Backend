@@ -1,6 +1,7 @@
 package com.uroria.backend.impl.user;
 
 import com.rabbitmq.client.Connection;
+import com.uroria.are.Application;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
 import com.uroria.backend.impl.io.BackendOutputStream;
@@ -37,6 +38,13 @@ public final class UserManager extends WrapperManager<UserWrapper> {
     }
 
     public UserWrapper getUserWrapper(String username) {
+        for (UserWrapper wrapper : this.wrappers) {
+            if (!wrapper.getUsername().equals(username)) continue;
+            return wrapper;
+        }
+        if (Application.isTest() || Application.isOffline()) {
+            return null;
+        }
         Result<byte[]> result = this.nameRequest.requestSync(() -> {
             try {
                 BackendOutputStream output = new BackendOutputStream();
@@ -70,6 +78,15 @@ public final class UserManager extends WrapperManager<UserWrapper> {
     }
 
     public UserWrapper getUserWrapper(long discordId) {
+        for (UserWrapper wrapper : this.wrappers) {
+            long id = wrapper.getDiscordUserId().orElse(-1L);
+            if (id == -1) continue;
+            if (id != discordId) continue;
+            return wrapper;
+        }
+        if (Application.isOffline() || Application.isTest()) {
+            return null;
+        }
         Result<byte[]> result = this.nameRequest.requestSync(() -> {
             try {
                 BackendOutputStream output = new BackendOutputStream();
