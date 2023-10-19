@@ -20,16 +20,9 @@ public abstract class AbstractBackendWrapper implements BackendWrapper {
         this.eventManager = EventManagerFactory.create("BackendEvents");
     }
 
-    protected AbstractBackendWrapper(@NonNull Logger logger) throws Exception {
+    protected AbstractBackendWrapper(@NonNull Logger logger) {
         this.logger = logger;
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setUsername(RabbitConfiguration.getRabbitUsername());
-        factory.setPassword(RabbitConfiguration.getRabbitPassword());
-        factory.setVirtualHost(RabbitConfiguration.getRabbitVirtualhost());
-        factory.setHost(RabbitConfiguration.getRabbitHostname());
-        factory.setPort(RabbitConfiguration.getRabbitPort());
-        if (RabbitConfiguration.isRabbitSslEnabled()) factory.useSslProtocol();
-        this.connection = factory.newConnection();
+        this.connection = RabbitUtils.buildConnection(logger);
         this.eventManager = EventManagerFactory.create("BackendEvents");
     }
 
