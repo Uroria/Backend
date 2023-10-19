@@ -39,6 +39,23 @@ public class MongoDatabase implements Database {
     }
 
     @Override
+    public Result<Collection<JsonObject>> getAll() {
+        try {
+            Collection<JsonObject> objects = new ObjectArraySet<>();
+            MongoCursor<Document> iterator = this.db.find().iterator();
+            while (iterator.hasNext()) {
+                Document document = iterator.next();
+                JsonElement element = JsonParser.parseString(document.toJson());
+                objects.add(element.getAsJsonObject());
+            }
+            iterator.close();
+            return Result.some(objects);
+        } catch (Exception exception) {
+            return Result.problem(Problem.error(exception));
+        }
+    }
+
+    @Override
     public final Result<Void> set(@NonNull String targetKey, @NonNull Number targetKeyValue, @NonNull String key, @NonNull JsonElement value) {
         return set(targetKey, new JsonPrimitive(targetKeyValue), key, value);
     }
