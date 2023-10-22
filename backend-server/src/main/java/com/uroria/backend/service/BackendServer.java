@@ -15,6 +15,8 @@ import com.uroria.backend.service.configuration.RedisConfiguration;
 import com.uroria.backend.service.console.BackendConsole;
 import com.uroria.backend.service.modules.BackendModule;
 import com.uroria.backend.service.modules.perm.PermModule;
+import com.uroria.backend.service.modules.server.ServerModule;
+import com.uroria.backend.service.modules.server.group.ServerGroupModule;
 import com.uroria.backend.service.modules.user.UserModule;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -90,6 +92,8 @@ public final class BackendServer {
         try {
             this.modules.add(new UserModule(this));
             this.modules.add(new PermModule(this));
+            this.modules.add(new ServerGroupModule(this));
+            this.modules.add(new ServerModule(this));
         } catch (Exception exception) {
             LOGGER.error("Unable to initialize some module", exception);
             try {
@@ -100,6 +104,7 @@ public final class BackendServer {
                 LOGGER.error("Unable to shutdown connections on error", anotherException);
             }
             System.exit(1);
+            throw exception;
         }
 
         LOGGER.info("Initialized in " + (System.currentTimeMillis() - start) + "ms");

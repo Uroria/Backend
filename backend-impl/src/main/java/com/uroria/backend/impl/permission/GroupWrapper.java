@@ -1,6 +1,8 @@
 package com.uroria.backend.impl.permission;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.uroria.backend.Deletable;
 import com.uroria.backend.impl.communication.CommunicationClient;
@@ -11,12 +13,15 @@ import com.uroria.backend.permission.Permission;
 import com.uroria.base.permission.PermState;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Map;
 
 public final class GroupWrapper extends Wrapper implements PermGroup {
     private final CommunicationWrapper object;
@@ -240,5 +245,119 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
     public ObjectSet<Permission> getSetPermissions() {
         Deletable.checkDeleted(this);
         return this.permissions;
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return Object2ObjectMaps.emptyMap();
+    }
+
+    @Override
+    public void unsetProperty(@NonNull String key) {
+        this.object.set("property." + key, JsonNull.INSTANCE);
+    }
+
+    @Override
+    public void setProperties(@NonNull Map<String, Object> properties) {
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof Integer n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Long n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Double n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Float n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Boolean b) {
+                setProperty("property." + key, b);
+                return;
+            }
+            if (value instanceof String s) {
+                setProperty("property." + key, s);
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, @NonNull String value) {
+        this.object.set("property." + key, value);
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, int value) {
+        this.object.set("property." + key, value);
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, long value) {
+        this.object.set("property." + key, value);
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, double value) {
+        this.object.set("property." + key, value);
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, float value) {
+        this.object.set("property." + key, value);
+    }
+
+    @Override
+    public void setProperty(@NonNull String key, boolean value) {
+        this.object.set("property." + key, value);
+    }
+
+    @Override
+    public String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsString();
+    }
+
+    @Override
+    public int getPropertyIntOrElse(@NonNull String key, int defValue) {
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsInt();
+    }
+
+    @Override
+    public long getPropertyLongOrElse(@NonNull String key, long defValue) {
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsLong();
+    }
+
+    @Override
+    public double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsDouble();
+    }
+
+    @Override
+    public float getPropertyFloatOrElse(@NonNull String key, float defValue) {
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsFloat();
+    }
+
+    @Override
+    public boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsBoolean();
     }
 }

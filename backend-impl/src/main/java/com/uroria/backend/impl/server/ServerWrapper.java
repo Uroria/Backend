@@ -1,6 +1,7 @@
 package com.uroria.backend.impl.server;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
 import com.uroria.backend.app.ApplicationStatus;
@@ -11,6 +12,7 @@ import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.result.Result;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -177,76 +179,115 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public Map<String, Object> getProperties() {
-        return null;
+        return Object2ObjectMaps.emptyMap();
     }
 
     @Override
     public void unsetProperty(@NonNull String key) {
-
+        this.object.set("property." + key, JsonNull.INSTANCE);
     }
 
     @Override
     public void setProperties(@NonNull Map<String, Object> properties) {
-
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof Integer n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Long n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Double n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Float n) {
+                setProperty("property." + key, n);
+                return;
+            }
+            if (value instanceof Boolean b) {
+                setProperty("property." + key, b);
+                return;
+            }
+            if (value instanceof String s) {
+                setProperty("property." + key, s);
+                return;
+            }
+        }
     }
 
     @Override
     public void setProperty(@NonNull String key, @NonNull String value) {
-
+        this.object.set("property." + key, value);
     }
 
     @Override
     public void setProperty(@NonNull String key, int value) {
-
+        this.object.set("property." + key, value);
     }
 
     @Override
     public void setProperty(@NonNull String key, long value) {
-
+        this.object.set("property." + key, value);
     }
 
     @Override
     public void setProperty(@NonNull String key, double value) {
-
+        this.object.set("property." + key, value);
     }
 
     @Override
     public void setProperty(@NonNull String key, float value) {
-
+        this.object.set("property." + key, value);
     }
 
     @Override
     public void setProperty(@NonNull String key, boolean value) {
-
+        this.object.set("property." + key, value);
     }
 
     @Override
     public String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
-        return null;
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsString();
     }
 
     @Override
     public int getPropertyIntOrElse(@NonNull String key, int defValue) {
-        return 0;
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsInt();
     }
 
     @Override
     public long getPropertyLongOrElse(@NonNull String key, long defValue) {
-        return 0;
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsLong();
     }
 
     @Override
     public double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
-        return 0;
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsDouble();
     }
 
     @Override
     public float getPropertyFloatOrElse(@NonNull String key, float defValue) {
-        return 0;
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsFloat();
     }
 
     @Override
     public boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
-        return false;
+        JsonElement element = this.object.get("property." + key).get();
+        if (element == null) return defValue;
+        return element.getAsBoolean();
     }
 }
