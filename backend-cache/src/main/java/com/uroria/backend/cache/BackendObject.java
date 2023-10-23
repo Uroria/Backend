@@ -9,11 +9,13 @@ import com.uroria.backend.cache.communication.PartRequest;
 import com.uroria.backend.cache.communication.PartResponse;
 import com.uroria.backend.cache.communication.UpdateBroadcast;
 import com.uroria.backend.cache.utils.GsonUtils;
+import com.uroria.backend.communication.Communicator;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
@@ -21,6 +23,7 @@ import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,6 +51,9 @@ public final class BackendObject<T extends Wrapper> {
     }
 
     private JsonElement getElement(String key) {
+        if (wrapper.isDeleted()) {
+            return null;
+        }
         Result<JsonElement> result = request(key);
         JsonElement element = result.get();
         this.cachedKeys.add(key);
@@ -73,16 +79,37 @@ public final class BackendObject<T extends Wrapper> {
     @SuppressWarnings("unchecked")
     public <O> ObjectSet<O> getSet(@NonNull String key, Class<O> tClass) {
         try {
-            if (cachedKeys.contains(key)) return (ObjectSet<O>) sets.get(key);
+            if (cachedKeys.contains(key)) return new ObjectArraySet<>((ObjectSet<O>) sets.get(key));
             JsonElement element = getElement(key);
             if (element == null) return ObjectSets.emptySet();
             JsonArray array = element.getAsJsonArray();
             ObjectSet<Object> set = GsonUtils.toSet(array);
             this.sets.put(key, set);
-            return (ObjectSet<O>) set;
+            return new ObjectArraySet<>((ObjectSet<O>) set);
         } catch (Exception exception) {
             this.logger.error("Cannot get set " + key + " with type " + tClass.getName(), exception);
             return ObjectSets.emptySet();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <V> Object2ObjectMap<String, V> getMap(String key, Class<V> valueClass) {
+        try {
+            if (this.cachedKeys.contains(key)) return new Object2ObjectArrayMap<>(((Object2ObjectMap<String, V>) this.maps.get(key)));
+            JsonElement element = getElement(key);
+            if (element == null) return Object2ObjectMaps.emptyMap();
+            Object2ObjectMap<String, V> map = new Object2ObjectArrayMap<>();
+            JsonObject jsonObject = element.getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                String valueKey = entry.getKey();
+                JsonElement value = entry.getValue();
+                map.put(valueKey, (V) GsonUtils.toObject(value));
+            }
+            this.maps.put(key, map);
+            return map;
+        } catch (Exception exception) {
+            this.logger.error("Cannot get map " + key + " with value-type " + valueClass.getName(), exception);
+            return Object2ObjectMaps.emptyMap();
         }
     }
 
@@ -203,22 +230,14 @@ public final class BackendObject<T extends Wrapper> {
         set(key, new JsonPrimitive(value));
     }
 
-    public void setStringSet(@NonNull String key, Set<String> set) {
-        JsonArray array = new JsonArray();
-        set.forEach(array::add);
-        set(key, array);
+    public void set(@NonNull String key, Set<?> set) {
+        JsonElement element = Communicator.getGson().toJsonTree(new ArrayList<>(set));
+        set(key, element);
     }
 
-    public void setNumberSet(@NonNull String key, Set<Number> set) {
-        JsonArray array = new JsonArray();
-        set.forEach(array::add);
-        set(key, array);
-    }
-
-    public void setBooleanSet(@NonNull String key, Set<Boolean> set) {
-        JsonArray array = new JsonArray();
-        set.forEach(array::add);
-        set(key, array);
+    public void set(@NonNull String key, Map<String, ?> map) {
+        JsonElement element = Communicator.getGson().toJsonTree(map);
+        set(key, element);
     }
 
     public void unset(@NonNull String key) {
@@ -234,6 +253,7 @@ public final class BackendObject<T extends Wrapper> {
 
     void updateObject(@NonNull String key, @NonNull JsonElement value) {
         if (!this.cachedKeys.contains(key)) return;
+        this.wrapperManager.update(this.wrapper);
         if (value.isJsonPrimitive()) {
             JsonPrimitive primitive = value.getAsJsonPrimitive();
             if (primitive.isBoolean()) {
