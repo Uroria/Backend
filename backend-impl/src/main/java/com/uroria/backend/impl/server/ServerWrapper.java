@@ -1,18 +1,17 @@
 package com.uroria.backend.impl.server;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
 import com.uroria.backend.app.ApplicationStatus;
-import com.uroria.backend.impl.communication.CommunicationClient;
-import com.uroria.backend.impl.communication.CommunicationWrapper;
-import com.uroria.backend.impl.wrapper.Wrapper;
+import com.uroria.backend.cache.Wrapper;
+import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.impl.server.group.ServerGroupWrapper;
 import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.result.Result;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,89 +22,66 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class ServerWrapper extends Wrapper implements Server {
-    private final CommunicationWrapper object;
     private final long identifier;
-    private final ServerGroupWrapper group;
-
     private boolean deleted;
-    private String type;
-    private int templateId;
     private InetSocketAddress address;
 
-    public ServerWrapper(@NonNull CommunicationClient client, long identifier) {
-        this.object = new CommunicationWrapper(String.valueOf(identifier), client);
+    public ServerWrapper(WrapperManager<? extends Wrapper> wrapperManager, long identifier) {
+        super(wrapperManager);
         this.identifier = identifier;
-        this.templateId = -1;
-        this.group = getGroup();
-    }
-
-    public ServerWrapper(@NonNull CommunicationClient client, long identifier, ServerGroupWrapper group) {
-        this.object = new CommunicationWrapper(String.valueOf(identifier), client);
-        this.identifier = identifier;
-        this.templateId = -1;
-        this.group = group;
-    }
-
-    @Override
-    public CommunicationWrapper getObjectWrapper() {
-        return this.object;
-    }
-
-    @Override
-    public void refresh() {
-
-    }
-
-    @Override
-    public JsonObject getObject() {
-        return this.object.getObject();
-    }
-
-    @Override
-    public String getIdentifierKey() {
-        return String.valueOf(identifier);
     }
 
     @Override
     public void delete() {
         if (isDeleted()) return;
         this.deleted = true;
-        object.set("deleted", true);
+        this.object.set("deleted", true);
     }
 
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        boolean val = getBoolean("deleted", false);
-        if (val) this.deleted = true;
-        return val;
+        boolean deleted = this.object.getBooleanOrElse("deleted", false);
+        this.deleted = deleted;
+        return deleted;
     }
 
+
     @Override
-    public long getIdentifier() {
+    public long getId() {
         return this.identifier;
     }
 
     @Override
-    public String getStringIdentifier() {
-        return String.valueOf(this.identifier);
-    }
-
-    @Override
     public void addProxy(@NonNull Proxy proxy) {
-        addToLongList("proxies", proxy.getIdentifier());
+        Collection<Long> proxies = getRawProxies();
+        proxies.add(proxy.getId());
+        this.object.set("proxies", new ObjectArraySet<>(proxies));
+        if (proxy.getServers().stream().noneMatch(server -> server.getId() == this.identifier)) {
+            proxy.registerServer(this);
+        }
     }
 
     @Override
     public void removeProxy(Proxy proxy) {
-        removeFromLongList("proxies", proxy.getIdentifier());
+        Collection<Long> proxies = getRawProxies();
+        proxies.remove(proxy.getId());
+        this.object.set("proxies", new ObjectArraySet<>(proxies));
+        if (proxy.getServers().stream().anyMatch(server -> server.getId() == this.identifier)) {
+            proxy.unregisterServer(this);
+        }
     }
 
     @Override
     public Collection<Proxy> getProxies() {
-        return getLongs("proxies").stream()
-                .map(identifier -> Backend.getProxy(identifier).get())
-                .filter(Objects::nonNull)
+        return getRawProxies().stream()
+                .map(identifier -> {
+                    try {
+                        return Backend.getProxy(identifier).get();
+                    } catch (Exception exception) {
+                        return null;
+                    }
+                }).filter(Objects::nonNull)
                 .toList();
     }
 
@@ -116,7 +92,7 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public ApplicationStatus getStatus() {
-        return ApplicationStatus.getById(getInt("status"));
+        return ApplicationStatus.getById(this.object.getIntOrElse("status", ApplicationStatus.EMPTY.getID()));
     }
 
     @Override
@@ -126,15 +102,17 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public Result<InetSocketAddress> getAddress() {
-        if (this.address != null) return Result.some(this.address);
-        Result<JsonElement> hostResult = object.get("host");
-        Result<JsonElement> portResult = object.get("port");
-        JsonElement hostElement = hostResult.get();
-        JsonElement portElement = portResult.get();
-        if (hostElement == null || portElement == null) return Result.none();
-        InetSocketAddress address = new InetSocketAddress(hostElement.getAsString(), portElement.getAsInt());
-        this.address = address;
-        return Result.some(address);
+        try {
+            if (this.address != null) return Result.some(this.address);
+            String host = this.object.getStringOrElse("host", null);
+            int port = this.object.getIntOrElse("port", 0);
+            if (host == null || port == 0) return Result.none();
+            InetSocketAddress address = new InetSocketAddress(host, port);
+            this.address = address;
+            return Result.some(address);
+        } catch (Exception exception) {
+            return Result.none();
+        }
     }
 
     public void setAddress(InetSocketAddress address) {
@@ -145,149 +123,139 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public int getTemplateId() {
-        if (this.templateId != -1) return this.templateId;
-        int templateId = getInt("templateId", -1);
-        this.templateId = templateId;
-        return templateId;
+        return this.object.getIntOrElse("templateId", 0);
     }
 
     @Override
     public String getType() {
-        if (this.type != null) return this.type;
-        this.type = getString("type", String.valueOf(identifier));
-        return this.type;
+        return getGroup().getType();
     }
 
     @Override
     public Collection<User> getOnlineUsers() {
-        return getStrings("onlinePlayers").stream()
-                .map(UUID::fromString)
-                .map(uuid -> Backend.getUser(uuid).get())
+        return this.object.getSet("onlineUsers", String.class).stream()
+                .map(uuidString -> {
+                    try {
+                        return Backend.getUser(UUID.fromString(uuidString)).get();
+                    } catch (Exception exception) {
+                        return null;
+                    }
+                })
                 .filter(Objects::nonNull)
                 .toList();
     }
 
+    private Collection<Long> getRawProxies() {
+        return this.object.getSet("proxies", Long.class);
+    }
+
     @Override
     public int getOnlineUserCount() {
-        return getInt("playerCount");
+        return this.object.getIntOrElse("playerCount", 0);
     }
 
     @Override
     public int getMaxUserCount() {
-        return getInt("maxPlayerCount");
+        return this.object.getIntOrElse("maxPlayerCount", 0);
     }
 
     @Override
     public Map<String, Object> getProperties() {
-        return Object2ObjectMaps.emptyMap();
+        return this.object.getMap("properties", Object.class);
     }
 
     @Override
     public void unsetProperty(@NonNull String key) {
-        this.object.set("property." + key, JsonNull.INSTANCE);
+        Map<String, Object> properties = getProperties();
+        properties.remove(key);
+        this.object.set("properties", properties);
+    }
+
+    public void setProperty(String key, Object value) {
+        Map<String, Object> properties = getProperties();
+        properties.put(key, value);
+        this.object.set("properties", properties);
     }
 
     @Override
     public void setProperties(@NonNull Map<String, Object> properties) {
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof Integer n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Long n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Double n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Float n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Boolean b) {
-                setProperty("property." + key, b);
-                return;
-            }
-            if (value instanceof String s) {
-                setProperty("property." + key, s);
-                return;
-            }
-        }
+        this.object.set("properties", new Object2ObjectArrayMap<>(properties));
     }
 
     @Override
     public void setProperty(@NonNull String key, @NonNull String value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, int value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, long value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, double value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, float value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, boolean value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsString();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (String) obj;
     }
 
     @Override
     public int getPropertyIntOrElse(@NonNull String key, int defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsInt();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (int) obj;
     }
 
     @Override
     public long getPropertyLongOrElse(@NonNull String key, long defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsLong();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (long) obj;
     }
 
     @Override
     public double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsDouble();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (double) obj;
     }
 
     @Override
     public float getPropertyFloatOrElse(@NonNull String key, float defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsFloat();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (float) obj;
     }
 
     @Override
     public boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsBoolean();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (boolean) obj;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return String.valueOf(this.identifier);
     }
 }

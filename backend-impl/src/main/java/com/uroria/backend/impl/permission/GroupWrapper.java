@@ -1,19 +1,14 @@
 package com.uroria.backend.impl.permission;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.uroria.backend.Deletable;
-import com.uroria.backend.impl.communication.CommunicationClient;
-import com.uroria.backend.impl.communication.CommunicationWrapper;
-import com.uroria.backend.impl.wrapper.Wrapper;
+import com.uroria.backend.cache.Wrapper;
+import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.base.permission.PermState;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
@@ -24,39 +19,14 @@ import java.util.Collection;
 import java.util.Map;
 
 public final class GroupWrapper extends Wrapper implements PermGroup {
-    private final CommunicationWrapper object;
     private final String name;
     private final ObjectSet<Permission> permissions;
     private boolean deleted;
 
-    public GroupWrapper(@NonNull CommunicationClient client, @NonNull String name) {
-        this.object = new CommunicationWrapper(name, client);
+    public GroupWrapper(WrapperManager<? extends Wrapper> wrapperManager, @NonNull String name) {
+        super(wrapperManager);
         this.name = name.toLowerCase();
         this.permissions = new ObjectArraySet<>();
-    }
-
-    @Override
-    public void refresh() {
-        refreshPermissions();
-    }
-
-    public JsonObject getObject() {
-        return this.object.getObject();
-    }
-
-    @Override
-    public CommunicationWrapper getObjectWrapper() {
-        return this.object;
-    }
-
-    @Override
-    public String getIdentifierKey() {
-        return "name";
-    }
-
-    @Override
-    public String getStringIdentifier() {
-        return this.name;
     }
 
     @Override
@@ -66,21 +36,26 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
 
     @Override
     public int getPriority() {
-        Deletable.checkDeleted(this);
-        return getInt("priority", 999);
+        return this.object.getIntOrElse("priority", 999);
+    }
+
+    @Override
+    public void setPriority(int priority) {
+        if (isDeleted()) return;
+        this.object.set("priority", priority);
     }
 
     @Override
     public void delete() {
         if (isDeleted()) return;
+        this.deleted = true;
         this.object.set("deleted", true);
-        this.object.remove("group." + name);
     }
 
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        boolean deleted = getBoolean("deleted");
+        boolean deleted = this.object.getBooleanOrElse("deleted", false);
         this.deleted = deleted;
         return deleted;
     }
@@ -92,16 +67,16 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
         else state = PermState.FALSE;
         this.permissions.add(getImpl(node, state));
         if (value) {
-            Collection<String> allowed = getStrings("allowed");
+            ObjectSet<String> allowed = this.object.getSet("allowed", String.class);
             allowed.removeIf(someNode -> someNode.equals(node));
             allowed.add(node);
-            setStringArray(allowed, "allowed");
+            this.object.set("allowed", allowed);
             return;
         }
-        Collection<String> disallowed = getStrings("disallowed");
+        ObjectSet<String> disallowed = this.object.getSet("disallowed", String.class);
         disallowed.removeIf(someNode -> someNode.equals(node));
         disallowed.add(node);
-        setStringArray(disallowed, "disallowed");
+        this.object.set("disallowed", disallowed);
     }
 
     private void setPermission(String node, PermState state) {
@@ -114,17 +89,16 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
     }
 
     private void unsetPermission(String node) {
-        Collection<String> allowed = getStrings("allowed");
-        Collection<String> disallowed = getStrings("disallowed");
+        ObjectSet<String> allowed = getRawAllowed();
+        ObjectSet<String> disallowed = getRawDisallowed();
         allowed.remove(node);
         disallowed.remove(node);
-        setStringArray(allowed, "allowed");
-        setStringArray(disallowed, "disallowed");
+        this.object.set("allowed", allowed);
+        this.object.set("disallowed", disallowed);
     }
 
     @Override
     public @NotNull Permission getPermission(String node) {
-        Deletable.checkDeleted(this);
         Permission permission = getRootPermission(node);
         if (permission != null) return permission;
 
@@ -180,23 +154,16 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
         return map;
     }
 
-    private Collection<String> getRawAllowed() {
-        return getStrings("allowed");
+    private ObjectSet<String> getRawAllowed() {
+        return object.getSet("allowed", String.class);
     }
 
-    private Collection<String> getRawDisallowed() {
-        return getStrings("disallowed");
-    }
-
-    private void setStringArray(Collection<String> list, String key) {
-        JsonArray array = new JsonArray();
-        list.forEach(array::add);
-        this.object.set(key, array);
+    private ObjectSet<String> getRawDisallowed() {
+        return object.getSet("disallowed", String.class);
     }
 
     @Override
     public synchronized void refreshPermissions() {
-        Deletable.checkDeleted(this);
         Object2BooleanMap<String> raw = getRawPermissions();
         this.permissions.removeIf(perm -> !raw.containsKey(perm.getNode()));
         for (Permission perm : this.permissions) {
@@ -243,121 +210,106 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
 
     @Override
     public ObjectSet<Permission> getSetPermissions() {
-        Deletable.checkDeleted(this);
         return this.permissions;
     }
 
     @Override
     public Map<String, Object> getProperties() {
-        return Object2ObjectMaps.emptyMap();
+        return this.object.getMap("properties", Object.class);
     }
 
     @Override
     public void unsetProperty(@NonNull String key) {
-        this.object.set("property." + key, JsonNull.INSTANCE);
+        Map<String, Object> properties = getProperties();
+        properties.remove(key);
+        this.object.set("properties", properties);
+    }
+
+    public void setProperty(String key, Object value) {
+        Map<String, Object> properties = getProperties();
+        properties.put(key, value);
+        this.object.set("properties", properties);
     }
 
     @Override
     public void setProperties(@NonNull Map<String, Object> properties) {
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof Integer n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Long n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Double n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Float n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Boolean b) {
-                setProperty("property." + key, b);
-                return;
-            }
-            if (value instanceof String s) {
-                setProperty("property." + key, s);
-                return;
-            }
-        }
+        this.object.set("properties", new Object2ObjectArrayMap<>(properties));
     }
 
     @Override
     public void setProperty(@NonNull String key, @NonNull String value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, int value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, long value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, double value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, float value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, boolean value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsString();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (String) obj;
     }
 
     @Override
     public int getPropertyIntOrElse(@NonNull String key, int defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsInt();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (int) obj;
     }
 
     @Override
     public long getPropertyLongOrElse(@NonNull String key, long defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsLong();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (long) obj;
     }
 
     @Override
     public double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsDouble();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (double) obj;
     }
 
     @Override
     public float getPropertyFloatOrElse(@NonNull String key, float defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsFloat();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (float) obj;
     }
 
     @Override
     public boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsBoolean();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (boolean) obj;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return this.name;
     }
 }

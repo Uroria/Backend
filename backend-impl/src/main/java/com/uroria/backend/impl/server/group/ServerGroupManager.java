@@ -1,4 +1,4 @@
-package com.uroria.backend.impl.server;
+package com.uroria.backend.impl.server.group;
 
 import com.rabbitmq.client.Connection;
 import com.uroria.are.Application;
@@ -6,6 +6,7 @@ import com.uroria.backend.impl.communication.CommunicationWrapper;
 import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
 import com.uroria.backend.impl.communication.request.RequestChannel;
 import com.uroria.backend.impl.io.BackendOutputStream;
+import com.uroria.backend.impl.server.ServerManager;
 import com.uroria.backend.impl.wrapper.WrapperManager;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.server.events.ServerGroupDeletedEvent;

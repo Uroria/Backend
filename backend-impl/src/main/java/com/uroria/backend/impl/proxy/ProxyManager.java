@@ -1,46 +1,62 @@
 package com.uroria.backend.impl.proxy;
 
-import com.rabbitmq.client.Connection;
 import com.uroria.backend.app.ApplicationStatus;
-import com.uroria.backend.impl.communication.CommunicationWrapper;
-import com.uroria.backend.impl.wrapper.WrapperManager;
+import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.proxy.GetProxyRequest;
+import com.uroria.backend.cache.communication.proxy.GetProxyResponse;
+import com.uroria.backend.communication.Communicator;
+import com.uroria.backend.communication.request.Requester;
 import com.uroria.backend.proxy.events.ProxyDeletedEvent;
 import com.uroria.backend.proxy.events.ProxyUpdatedEvent;
+import com.uroria.problemo.result.Result;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Random;
-
 public final class ProxyManager extends WrapperManager<ProxyWrapper> {
-    public ProxyManager(Connection rabbit) {
-        super(rabbit, LoggerFactory.getLogger("Proxies"), "proxy", "identifier");
+    private static final Logger logger = LoggerFactory.getLogger("Proxies");
+
+    private final Requester<GetProxyRequest, GetProxyResponse> idCheck;
+
+    public ProxyManager(Communicator communicator) {
+        super(logger, communicator, "proxies", "proxies", "proxies");
+        this.idCheck = requestPoint.registerRequester(GetProxyRequest.class, GetProxyResponse.class, "CheckId");
+    }
+
+    public ProxyWrapper getProxyWrapper(long id) {
+        for (ProxyWrapper wrapper : this.wrappers) {
+            if (wrapper.getId() == id) return wrapper;
+        }
+
+        Result<GetProxyResponse> result = this.idCheck.request(new GetProxyRequest(id, false), 2000);
+        GetProxyResponse response = result.get();
+        if (response == null) return null;
+        if (!response.isExistent()) return null;
+        ProxyWrapper wrapper = new ProxyWrapper(this, id);
+        this.wrappers.add(wrapper);
+        return wrapper;
+    }
+
+    public ProxyWrapper createProxyWrapper(long id) {
+        for (ProxyWrapper wrapper : this.wrappers) {
+            if (wrapper.getId() == id) return wrapper;
+        }
+
+        Result<GetProxyResponse> result = this.idCheck.request(new GetProxyRequest(id, true), 5000);
+        GetProxyResponse response = result.get();
+        if (response == null) return null;
+        if (!response.isExistent()) return null;
+        ProxyWrapper wrapper = new ProxyWrapper(this, id);
+        wrapper.setStatus(ApplicationStatus.EMPTY);
+        this.wrappers.add(wrapper);
+        return wrapper;
     }
 
     @Override
     protected void onUpdate(ProxyWrapper wrapper) {
         if (wrapper.isDeleted()) {
-            eventManager.callAndForget(new ProxyDeletedEvent(wrapper));
+            this.eventManager.callAndForget(new ProxyDeletedEvent(wrapper));
+            this.wrappers.remove(wrapper);
         }
-        eventManager.callAndForget(new ProxyUpdatedEvent(wrapper));
-    }
-
-    public ProxyWrapper getProxyWrapper(long identifier) {
-        return getWrapper(String.valueOf(identifier), false);
-    }
-
-    public ProxyWrapper createProxyWrapper(String name, int maxPlayers) {
-        long identifier = new Random().nextLong() + System.currentTimeMillis();
-        ProxyWrapper wrapper = new ProxyWrapper(this.client, identifier);
-        this.wrappers.add(wrapper);
-        CommunicationWrapper object = wrapper.getObjectWrapper();
-        object.set("identifier", identifier);
-        object.set("name", name);
-        object.set("maxPlayers", maxPlayers);
-        object.set("status", ApplicationStatus.EMPTY.getID());
-        return getWrapper(String.valueOf(identifier), true);
-    }
-
-    @Override
-    protected ProxyWrapper createWrapper(String identifier) {
-        return new ProxyWrapper(this.client, Long.parseLong(identifier));
+        else this.eventManager.callAndForget(new ProxyUpdatedEvent(wrapper));
     }
 }

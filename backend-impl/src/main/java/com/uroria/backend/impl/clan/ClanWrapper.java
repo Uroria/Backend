@@ -14,6 +14,7 @@ import java.util.UUID;
 
 public final class ClanWrapper extends Wrapper implements Clan {
     private final String name;
+    private boolean deleted;
 
     ClanWrapper(WrapperManager<ClanWrapper> wrapperManager, String name) {
         super(wrapperManager);
@@ -23,12 +24,17 @@ public final class ClanWrapper extends Wrapper implements Clan {
 
     @Override
     public void delete() {
+        if (isDeleted()) return;
+        this.deleted = true;
         this.object.set("deleted", true);
     }
 
     @Override
     public boolean isDeleted() {
-        return this.object.getBooleanOrElse("deleted", false);
+        if (this.deleted) return true;
+        boolean deleted = this.object.getBooleanOrElse("deleted", false);
+        this.deleted = deleted;
+        return deleted;
     }
 
     @Override
@@ -43,6 +49,7 @@ public final class ClanWrapper extends Wrapper implements Clan {
 
     @Override
     public void setTag(@NonNull String tag) {
+        if (isDeleted()) return;
         this.object.set("tag", tag);
     }
 
@@ -59,49 +66,56 @@ public final class ClanWrapper extends Wrapper implements Clan {
 
     @Override
     public void addMember(@NonNull User user) {
+        if (isDeleted()) return;
         if (hasMember(user)) return;
         ObjectSet<String> moderators = this.object.getSet("moderators", String.class);
         moderators.add(user.getUniqueId().toString());
-        this.object.setStringSet("members", moderators);
+        this.object.set("members", moderators);
     }
 
     @Override
     public void addOperator(@NonNull User user) {
+        if (isDeleted()) return;
         addMember(user);
         ObjectSet<String> moderators = this.object.getSet("moderators", String.class);
         moderators.add(user.getUniqueId().toString());
-        this.object.setStringSet("operators", moderators);
+        this.object.set("operators", moderators);
     }
 
     @Override
     public void addModerator(@NonNull User user) {
+        if (isDeleted()) return;
         addMember(user);
         ObjectSet<String> moderators = this.object.getSet("moderators", String.class);
         moderators.add(user.getUniqueId().toString());
-        this.object.setStringSet("moderators", moderators);
+        this.object.set("moderators", moderators);
     }
 
     @Override
     public void removeMember(User user) {
         if (user == null) return;
+        if (isDeleted()) return;
         removeMember(user.getUniqueId());
     }
 
     @Override
     public void removeModerator(User user) {
         if (user == null) return;
+        if (isDeleted()) return;
         removeModerator(user.getUniqueId());
     }
 
     @Override
     public void removeOperator(User user) {
         if (user == null) return;
+        if (isDeleted()) return;
         removeOperator(user.getUniqueId());
     }
 
     @Override
     public void removeMember(UUID uuid) {
         if (uuid == null) return;
+        if (isDeleted()) return;
         removeModerator(uuid);
         removeOperator(uuid);
         object.getSet("members").remove(uuid.toString());
@@ -110,11 +124,13 @@ public final class ClanWrapper extends Wrapper implements Clan {
     @Override
     public void removeModerator(UUID uuid) {
         if (uuid == null) return;
+        if (isDeleted()) return;
         object.getSet("moderators").remove(uuid.toString());
     }
 
     @Override
     public void removeOperator(UUID uuid) {
+        if (isDeleted()) return;
         if (uuid == null) return;
         object.getSet("operators").remove(uuid.toString());
     }

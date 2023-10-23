@@ -1,6 +1,8 @@
 package com.uroria.backend.cache;
 
-public abstract class Wrapper {
+import com.uroria.backend.Deletable;
+
+public abstract class Wrapper implements Deletable {
     private final WrapperManager<? extends Wrapper> wrapperManager;
     protected final BackendObject<? extends Wrapper> object;
 

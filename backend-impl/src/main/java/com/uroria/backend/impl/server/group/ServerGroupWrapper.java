@@ -1,4 +1,4 @@
-package com.uroria.backend.impl.server;
+package com.uroria.backend.impl.server.group;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -7,6 +7,7 @@ import com.uroria.backend.Backend;
 import com.uroria.backend.app.ApplicationStatus;
 import com.uroria.backend.impl.communication.CommunicationClient;
 import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.impl.server.ServerManager;
 import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
