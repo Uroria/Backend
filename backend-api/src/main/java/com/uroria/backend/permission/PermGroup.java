@@ -8,4 +8,6 @@ public interface PermGroup extends Permissible, Deletable, PropertyObject {
     String getName();
 
     int getPriority();
+
+    void setPriority(int priority);
 }

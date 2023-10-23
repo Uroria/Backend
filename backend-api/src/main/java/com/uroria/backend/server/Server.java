@@ -11,7 +11,7 @@ import java.util.Collection;
 
 public interface Server extends ServerGroupTarget, PropertyObject {
 
-    long getIdentifier();
+    long getId();
 
     void addProxy(@NonNull Proxy proxy);
 
@@ -20,6 +20,29 @@ public interface Server extends ServerGroupTarget, PropertyObject {
     Collection<Proxy> getProxies();
 
     ServerGroup getGroup();
+
+    default void start() {
+        if (getStatus() != ApplicationStatus.EMPTY) return;
+        setStatus(ApplicationStatus.STARTING);
+    }
+
+    default void stop() {
+        switch (getStatus()) {
+            case ONLINE, CLOSED, STARTING -> {
+                setStatus(ApplicationStatus.STOPPED);
+            }
+        }
+    }
+
+    default void lock() {
+        if (getStatus() != ApplicationStatus.ONLINE) return;
+        setStatus(ApplicationStatus.CLOSED);
+    }
+
+    default void unlock() {
+        if (getStatus() != ApplicationStatus.CLOSED) return;
+        setStatus(ApplicationStatus.ONLINE);
+    }
 
     ApplicationStatus getStatus();
 
