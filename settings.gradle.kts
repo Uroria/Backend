@@ -1,14 +1,13 @@
 rootProject.name = "backend"
 
 val projects = listOf(
-        "backend-impl",
         "backend-api",
+        "backend-cache",
+        "backend-communication",
+        "backend-impl",
         "backend-server",
         "backend-velocity",
-        "backend-bukkit",
-        "backend-wrapper",
-        "backend-communication",
-        "backend-cache"
+        "backend-bukkit"
 )
 
 include(projects)

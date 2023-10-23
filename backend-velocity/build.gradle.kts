@@ -5,8 +5,8 @@ repositories {
 val velocityVersion: String by project.extra
 
 dependencies {
-    api(project(":backend-wrapper"))
-    annotationProcessor(project(":backend-wrapper"))
+    api(project(":backend-impl"))
+    annotationProcessor(project(":backend-impl"))
 
     compileOnly("com.velocitypowered:velocity-api:${velocityVersion}")
     annotationProcessor("com.velocitypowered:velocity-api:${velocityVersion}")
