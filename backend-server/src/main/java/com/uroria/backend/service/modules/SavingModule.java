@@ -2,12 +2,11 @@ package com.uroria.backend.service.modules;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.broadcast.BroadcastPoint;
 import com.uroria.backend.communication.response.ResponsePoint;
 import com.uroria.backend.service.BackendServer;
-import com.uroria.backend.service.communication.database.Database;
-import com.uroria.backend.service.communication.database.MongoDatabase;
+import com.uroria.backend.service.store.database.Database;
+import com.uroria.backend.service.store.database.MongoDatabase;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 

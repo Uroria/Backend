@@ -13,6 +13,8 @@ public interface Proxy extends Deletable {
 
     String getName();
 
+    int getTemplateId();
+
     Collection<User> getOnlineUsers();
 
     Collection<Server> getServers();

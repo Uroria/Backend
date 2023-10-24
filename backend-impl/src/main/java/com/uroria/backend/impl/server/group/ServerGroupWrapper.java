@@ -5,10 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
 import com.uroria.backend.app.ApplicationStatus;
-import com.uroria.backend.impl.communication.CommunicationClient;
-import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.impl.server.ServerManager;
-import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
@@ -24,7 +22,6 @@ import java.util.UUID;
 
 public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     private final ServerManager serverManager;
-    private final CommunicationWrapper object;
     private final String name;
 
     private boolean deleted;
@@ -125,14 +122,14 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     @Override
     public Result<Server> createServer(int templateId) {
         try {
-            return Result.of(this.serverManager.createServerWrapper(templateId, getType(), getMaxUserCount()));
+            return Result.of(this.serverManager.createServerWrapper(templateId, getName(), getMaxUserCount()));
         } catch (Exception exception) {
             return Result.problem(Problem.error(exception));
         }
     }
 
     @Override
-    public String getType() {
+    public String getName() {
         return this.name;
     }
 

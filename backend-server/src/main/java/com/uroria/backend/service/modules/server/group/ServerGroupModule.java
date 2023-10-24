@@ -1,6 +1,10 @@
 package com.uroria.backend.service.modules.server.group;
 
 import com.google.gson.JsonObject;
+import com.uroria.backend.cache.communication.DeleteBroadcast;
+import com.uroria.backend.cache.communication.PartRequest;
+import com.uroria.backend.cache.communication.PartResponse;
+import com.uroria.backend.cache.communication.UpdateBroadcast;
 import com.uroria.backend.service.BackendServer;
 import com.uroria.backend.service.modules.SavingModule;
 import com.uroria.problemo.result.Result;
@@ -8,31 +12,12 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public final class ServerGroupModule extends SavingModule {
-    private final ServerGroupObjectThread objectThread;
-    private final ServerGroupPartThread partThread;
-    private final ServerGroupUpdateThread updateThread;
 
     public ServerGroupModule(BackendServer server) {
-        super(server, "ServerGroupModule", "servergroups");
-        this.objectThread = new ServerGroupObjectThread(this);
-        this.updateThread = new ServerGroupUpdateThread(this);
-        this.partThread = new ServerGroupPartThread(this);
-    }
-
-    @Override
-    protected void enable() {
-        this.objectThread.start();
-        this.updateThread.start();
-        this.partThread.start();
-    }
-
-    @Override
-    protected void disable() throws Exception {
-        this.objectThread.getResponseChannel().close();
-        this.updateThread.getUpdateChannel().close();
-        this.partThread.getResponseChannel().close();
+        super(server, "server_group", "ServerGroupModule", "servergroup", "servergroups");
     }
 
     public Collection<String> getAll() {
@@ -48,5 +33,20 @@ public final class ServerGroupModule extends SavingModule {
             } catch (Exception ignored) {}
         }
         return names;
+    }
+
+    @Override
+    protected Optional<PartResponse> request(PartRequest request) {
+        return Optional.empty();
+    }
+
+    @Override
+    protected void update(UpdateBroadcast broadcast) {
+
+    }
+
+    @Override
+    protected void delete(DeleteBroadcast broadcast) {
+
     }
 }

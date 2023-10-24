@@ -21,7 +21,7 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
     private final Requester<GetClanRequest, GetClanResponse> nameCheck;
 
     public ClanManager(Communicator communicator) {
-        super(logger, communicator, "clans", "clans", "clans");
+        super(logger, communicator, "clan", "clan", "clan");
         this.tagCheck = requestPoint.registerRequester(CheckClanRequest.class, CheckClanResponse.class, "CheckTag");
         this.nameCheck = requestPoint.registerRequester(GetClanRequest.class, GetClanResponse.class, "CheckName");
     }
@@ -52,7 +52,7 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
         return wrapper;
     }
 
-    public ClanWrapper createClanWrapper(String name, String tag, User operator) {
+    public ClanWrapper createClanWrapper(String name, String tag, User operator, long foundingDate) {
         for (ClanWrapper wrapper : this.wrappers) {
             if (wrapper.getTag().equals(tag)) return wrapper;
             if (wrapper.getName().equals(name)) return wrapper;
@@ -65,6 +65,7 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
         ClanWrapper wrapper = new ClanWrapper(this, name);
         wrapper.setTag(tag);
         wrapper.addOperator(operator);
+        wrapper.getBackendObject().set("foundingDate", foundingDate);
         this.wrappers.add(wrapper);
         return wrapper;
     }

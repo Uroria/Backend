@@ -1,4 +1,4 @@
-package com.uroria.backend.service.communication.database;
+package com.uroria.backend.service.store.database;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

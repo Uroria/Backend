@@ -1,6 +1,5 @@
 package com.uroria.backend.impl.server;
 
-import com.google.gson.JsonElement;
 import com.uroria.backend.Backend;
 import com.uroria.backend.app.ApplicationStatus;
 import com.uroria.backend.cache.Wrapper;
@@ -87,7 +86,7 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public ServerGroupWrapper getGroup() {
-        return (ServerGroupWrapper) Backend.getServerGroup(getType()).get();
+        return (ServerGroupWrapper) Backend.getServerGroup(getName()).get();
     }
 
     @Override
@@ -127,8 +126,8 @@ public final class ServerWrapper extends Wrapper implements Server {
     }
 
     @Override
-    public String getType() {
-        return getGroup().getType();
+    public String getName() {
+        return getGroup().getName();
     }
 
     @Override

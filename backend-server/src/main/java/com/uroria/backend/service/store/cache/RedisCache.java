@@ -1,4 +1,4 @@
-package com.uroria.backend.service.communication.cache;
+package com.uroria.backend.service.store.cache;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

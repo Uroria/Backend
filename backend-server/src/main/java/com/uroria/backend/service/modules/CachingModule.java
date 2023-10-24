@@ -4,8 +4,8 @@ import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.broadcast.BroadcastPoint;
 import com.uroria.backend.communication.response.ResponsePoint;
 import com.uroria.backend.service.BackendServer;
-import com.uroria.backend.service.communication.cache.Cache;
-import com.uroria.backend.service.communication.cache.RedisCache;
+import com.uroria.backend.service.store.cache.Cache;
+import com.uroria.backend.service.store.cache.RedisCache;
 
 public abstract class CachingModule extends BackendModule {
     protected final Cache cache;

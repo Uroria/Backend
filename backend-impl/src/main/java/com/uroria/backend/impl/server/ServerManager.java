@@ -9,6 +9,7 @@ import com.uroria.backend.cache.communication.server.GetServerRequest;
 import com.uroria.backend.cache.communication.server.GetServerResponse;
 import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.server.Server;
 import com.uroria.backend.server.events.ServerDeletedEvent;
 import com.uroria.backend.server.events.ServerUpdatedEvent;
 import com.uroria.problemo.result.Result;
@@ -61,11 +62,11 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
         return wrapper;
     }
 
-    public Collection<ServerWrapper> getAll() {
+    public Collection<Server> getAll() {
         Result<GetAllServersResponse> result = this.allGet.request(new GetAllServersRequest(true), 5000);
         GetAllServersResponse response = result.get();
         if (response == null) return ObjectSets.emptySet();
-        ObjectSet<ServerWrapper> wrappers = new ObjectArraySet<>();
+        ObjectSet<Server> wrappers = new ObjectArraySet<>();
         response.getServers().forEach(id -> {
             ServerWrapper wrapper = getServerWrapper(id);
             if (wrapper == null) return;

@@ -96,6 +96,11 @@ public final class ProxyWrapper extends Wrapper implements Proxy {
     }
 
     @Override
+    public int getTemplateId() {
+        return this.object.getIntOrElse("templateId", 0);
+    }
+
+    @Override
     public int getOnlineUserCount() {
         return this.object.getIntOrElse("playerCount", 0);
     }

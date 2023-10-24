@@ -1,4 +1,4 @@
-package com.uroria.backend.service.communication.database;
+package com.uroria.backend.service.store.database;
 
 public enum Operator {
     BUT_NOT,

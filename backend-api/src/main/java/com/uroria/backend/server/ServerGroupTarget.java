@@ -8,7 +8,7 @@ import java.util.Collection;
 
 public interface ServerGroupTarget extends Deletable {
 
-    String getType();
+    String getName();
 
     @TimeConsuming
     Collection<User> getOnlineUsers();
