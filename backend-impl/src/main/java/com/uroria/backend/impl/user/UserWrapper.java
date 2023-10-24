@@ -6,10 +6,11 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
 import com.uroria.backend.Deletable;
+import com.uroria.backend.cache.Wrapper;
+import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.clan.Clan;
-import com.uroria.backend.impl.communication.CommunicationWrapper;
+import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.impl.stats.StatsManager;
-import com.uroria.backend.impl.wrapper.Wrapper;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
 import com.uroria.backend.proxy.Proxy;
@@ -25,6 +26,7 @@ import com.uroria.base.user.UserStatus;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
@@ -34,6 +36,7 @@ import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -42,85 +45,83 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class UserWrapper extends Wrapper implements User {
-    private final UserManager userManager;
-    private final CommunicationWrapper object;
     private final StatsManager statsManager;
     private final UUID uuid;
     private final ObjectSet<Permission> permissions;
     private boolean deleted;
 
-    public UserWrapper(UserManager userManager, @NonNull UUID uuid, StatsManager statsManager) {
-        this.userManager = userManager;
+    public UserWrapper(WrapperManager<UserWrapper> wrapperManager, @NonNull UUID uuid, StatsManager statsManager) {
+        super(wrapperManager);
         this.statsManager = statsManager;
-        this.object = new CommunicationWrapper(uuid.toString(), userManager.getClient());
         this.uuid = uuid;
         this.permissions = new ObjectArraySet<>();
     }
 
-    @Override
-    public void refresh() {
-        refreshPermissions();
-    }
-
-    @Override
-    public JsonObject getObject() {
-        return this.object.getObject();
-    }
-
-    @Override
-    public CommunicationWrapper getObjectWrapper() {
-        return this.object;
-    }
-
-    @Override
-    public String getIdentifierKey() {
-        return "uuid";
-    }
-
-    @Override
-    public String getStringIdentifier() {
-        return this.uuid.toString();
-    }
 
     @Override
     public void delete() {
         if (isDeleted()) return;
         this.deleted = true;
-        object.set("deleted", true);
-        this.userManager.getDelete().deleteSync("uuid", uuid.toString());
+        this.object.set("deleted", true);
     }
 
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        boolean val = getBoolean("deleted");
-        this.deleted = val;
-        return val;
+        boolean deleted = this.object.getBooleanOrElse("deleted", false);
+        this.deleted = deleted;
+        return deleted;
     }
 
     @Override
     public List<PermGroup> getPermGroups() {
-        return new ObjectArrayList<>();
+        return this.object.getSet("groups", String.class).stream()
+                .map(name -> Backend.getPermissionGroup(name).get())
+                .filter(Objects::nonNull)
+                .toList();
     }
 
-    @SuppressWarnings("WeakWarningMarkers")
-    @Override
-    public Permission getPermission(String node) {
-        Deletable.checkDeleted(this);
-        Permission savedPermission = getRootPermission(node);
-        if (savedPermission != null) return savedPermission;
-
-        Permission groups = getPermGroups().stream().filter(group -> {
-                    Permission permission = group.getPermission(node);
-                    return permission.getState() != PermState.NOT_SET;
-                }).max(Comparator.comparing(PermGroup::getPriority))
-                .map(group -> group.getPermission(node))
-                .orElse(null);
-
-        if (groups != null) {
-            this.permissions.add(groups);
-            return groups;
+    private void setPermission(String node, boolean value) {
+        this.permissions.removeIf(perm -> perm.getNode().equals(node));
+        PermState state;
+        if (value) state = PermState.TRUE;
+        else state = PermState.FALSE;
+        this.permissions.add(getImpl(node, state));
+        if (value) {
+            ObjectSet<String> allowed = this.object.getSet("allowed", String.class);
+            allowed.removeIf(someNode -> someNode.equals(node));
+            allowed.add(node);
+            this.object.set("allowed", allowed);
+            return;
         }
+        ObjectSet<String> disallowed = this.object.getSet("disallowed", String.class);
+        disallowed.removeIf(someNode -> someNode.equals(node));
+        disallowed.add(node);
+        this.object.set("disallowed", disallowed);
+    }
+
+    private void setPermission(String node, PermState state) {
+        node = node.toLowerCase();
+        switch (state) {
+            case TRUE -> setPermission(node, true);
+            case FALSE -> setPermission(node, false);
+            case NOT_SET -> unsetPermission(node);
+        }
+    }
+
+    private void unsetPermission(String node) {
+        ObjectSet<String> allowed = getRawAllowed();
+        ObjectSet<String> disallowed = getRawDisallowed();
+        allowed.remove(node);
+        disallowed.remove(node);
+        this.object.set("allowed", allowed);
+        this.object.set("disallowed", disallowed);
+    }
+
+    @Override
+    public @NotNull Permission getPermission(String node) {
+        Permission permission = getRootPermission(node);
+        if (permission != null) return permission;
 
         final String[] nodeParts = node.split("\\.");
         final StringBuilder currentNode = new StringBuilder();
@@ -149,9 +150,58 @@ public final class UserWrapper extends Wrapper implements User {
             i++;
         }
 
-        Permission impl = getImpl(node, PermState.NOT_SET);
-        this.permissions.add(impl);
-        return impl;
+        Permission rootPermission = getRootPermission("*");
+        if (rootPermission != null) {
+            return rootPermission;
+        }
+
+        return getImpl(node, PermState.NOT_SET);
+    }
+
+    private Permission getRootPermission(String node) {
+        final String finalNode = node.toLowerCase();
+        return this.permissions.stream()
+                .filter(perm -> perm.getNode().equals(finalNode))
+                .findAny()
+                .orElse(null);
+    }
+
+    private Object2BooleanMap<String> getRawPermissions() {
+        Object2BooleanMap<String> map = new Object2BooleanArrayMap<>();
+        Collection<String> allowed = getRawAllowed();
+        Collection<String> disallowed = getRawDisallowed();
+        allowed.forEach(string -> map.put(string, true));
+        disallowed.forEach(string -> map.put(string, false));
+        return map;
+    }
+
+    private ObjectSet<String> getRawAllowed() {
+        return object.getSet("allowed", String.class);
+    }
+
+    private ObjectSet<String> getRawDisallowed() {
+        return object.getSet("disallowed", String.class);
+    }
+
+    @Override
+    public synchronized void refreshPermissions() {
+        Object2BooleanMap<String> raw = getRawPermissions();
+        this.permissions.removeIf(perm -> !raw.containsKey(perm.getNode()));
+        for (Permission perm : this.permissions) {
+            String node = perm.getNode();
+            boolean allowed = raw.getBoolean(node);
+            if (perm.isGiven() == allowed) continue;
+            this.permissions.remove(perm);
+            PermState state;
+            if (allowed) state = PermState.TRUE;
+            else state = PermState.FALSE;
+            this.permissions.add(getImpl(node, state));
+        }
+    }
+
+    @Override
+    public ObjectSet<Permission> getSetPermissions() {
+        return this.permissions;
     }
 
     private Permission getImpl(final String node, final PermState finalState) {
@@ -184,154 +234,54 @@ public final class UserWrapper extends Wrapper implements User {
         };
     }
 
-    private void setPermission(String node, boolean value) {
-        this.permissions.removeIf(perm -> perm.getNode().equals(node));
-        PermState state;
-        if (value) state = PermState.TRUE;
-        else state = PermState.FALSE;
-        this.permissions.add(getImpl(node, state));
-        if (value) {
-            List<String> allowed = getStringArray("allowed");
-            allowed.removeIf(someNode -> someNode.equals(node));
-            allowed.add(node);
-            setStringArray(allowed, "allowed");
-            return;
-        }
-        List<String> disallowed = getStringArray("disallowed");
-        disallowed.removeIf(someNode -> someNode.equals(node));
-        disallowed.add(node);
-        setStringArray(disallowed, "disallowed");
-    }
-
-    private void setPermission(String node, PermState state) {
-        node = node.toLowerCase();
-        switch (state) {
-            case TRUE -> setPermission(node, true);
-            case FALSE -> setPermission(node, false);
-            case NOT_SET -> unsetPermission(node);
-        }
-    }
-
-    private void unsetPermission(String node) {
-        List<String> allowed = getStringArray("allowed");
-        List<String> disallowed = getStringArray("disallowed");
-        allowed.remove(node);
-        disallowed.remove(node);
-        setStringArray(allowed, "allowed");
-        setStringArray(disallowed, "disallowed");
-    }
-
-    private List<String> getRawAllowed() {
-        return getStringArray(".allowed");
-    }
-
-    private List<String> getRawDisallowed() {
-        return getStringArray(".disallowed");
-    }
-
-    private List<String> getStringArray(String key) {
-        Result<JsonElement> result = this.object.get(key);
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray stringArray = element.getAsJsonArray();
-        return stringArray.asList().stream()
-                .map(JsonElement::getAsString)
-                .toList();
-    }
-
-    private void setStringArray(List<String> list, String key) {
-        JsonArray array = new JsonArray();
-        list.forEach(array::add);
-        this.object.set(key, array);
-    }
-
-    private Object2BooleanMap<String> getRawPermissions() {
-        Object2BooleanMap<String> map = new Object2BooleanArrayMap<>();
-        List<String> allowed = getRawAllowed();
-        List<String> disallowed = getRawDisallowed();
-        allowed.forEach(string -> map.put(string, true));
-        disallowed.forEach(string -> map.put(string, false));
-        return map;
-    }
-
-    private Permission getRootPermission(String node) {
-        final String finalNode = node.toLowerCase();
-        return this.permissions.stream()
-                .filter(perm -> perm.getNode().equals(finalNode))
-                .findAny()
-                .orElse(null);
-    }
-
-    @Override
-    public void refreshPermissions() {
-        Deletable.checkDeleted(this);
-        Object2BooleanMap<String> raw = getRawPermissions();
-        this.permissions.removeIf(perm -> !raw.containsKey(perm.getNode()));
-        for (Permission perm : this.permissions) {
-            String node = perm.getNode();
-            boolean allowed = raw.getBoolean(node);
-            if (perm.isGiven() == allowed) continue;
-            this.permissions.remove(perm);
-            PermState state;
-            if (allowed) state = PermState.TRUE;
-            else state = PermState.FALSE;
-            this.permissions.add(getImpl(node, state));
-        }
-    }
-
-    @Override
-    public ObjectSet<Permission> getSetPermissions() {
-        return this.permissions;
-    }
-
     @Override
     public void addStat(int gameId, @NonNull String scoreKey, float value) {
-        this.statsManager.addStat(this.uuid, gameId, scoreKey, value);
+
     }
 
     @Override
     public void addStat(int gameId, @NonNull String scoreKey, int value) {
-        this.statsManager.addStat(this.uuid, gameId, scoreKey, value);
+
     }
 
     @Override
     public List<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NonNull String scoreKey, int value) {
-        return this.statsManager.getStatsWithScoreGreaterThanValue(this.uuid, gameId, scoreKey, value);
+        return ObjectLists.emptyList();
     }
 
     @Override
     public List<Stat> getStatsWithScoreLowerThanValue(int gameId, @NonNull String scoreKey, int value) {
-        return this.statsManager.getStatsWithScoreLowerThanValue(this.uuid, gameId, scoreKey, value);
+        return ObjectLists.emptyList();
     }
 
     @Override
     public List<Stat> getStatsWithScore(int gameId, @NonNull String scoreKey, int value) {
-        return this.statsManager.getStatsWithScore(this.uuid, gameId, scoreKey, value);
+        return ObjectLists.emptyList();
     }
 
     @Override
     public List<Stat> getStatsWithScoreGreaterThanValue(int gameId, @NonNull String scoreKey, float value) {
-        return this.statsManager.getStatsWithScoreGreaterThanValue(this.uuid, gameId, scoreKey, value);
+        return ObjectLists.emptyList();
     }
 
     @Override
     public List<Stat> getStatsWithScoreLowerThanValue(int gameId, @NonNull String scoreKey, float value) {
-        return this.statsManager.getStatsWithScoreLowerThanValue(this.uuid, gameId, scoreKey, value);
+        return ObjectLists.emptyList();
     }
 
     @Override
     public List<Stat> getStatsWithScore(int gameId, @NonNull String scoreKey, float value) {
-        return this.statsManager.getStatsWithScore(this.uuid, gameId, scoreKey, value);
+        return ObjectLists.emptyList();
     }
 
     @Override
     public List<Stat> getStats(int gameId) {
-        return this.statsManager.getStats(this.uuid, gameId);
+        return ObjectLists.emptyList();
     }
 
     @Override
     public List<Stat> getStatsInTimeRangeOf(int gameId, long startMs, long endMs) {
-        return this.statsManager.getStatsInTimeRangeOf(this.uuid, gameId, startMs, endMs);
+        return ObjectLists.emptyList();
     }
 
     @Override
@@ -341,28 +291,28 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public Optional<Proxy> getConnectedProxy() {
-        long identifier = getLong("connectedProxy", -1);
+        long identifier = this.object.getLongOrElse("connectedProxy", -1);
         if (identifier == -1) return Optional.empty();
         return Optional.ofNullable(Backend.getProxy(identifier).get());
     }
 
     @Override
     public Optional<ServerGroup> getConnectedServerGroup() {
-        String serverGroup = getString("connectedServerGroup", null);
+        String serverGroup = this.object.getStringOrElse("connectedServerGroup", null);
         if (serverGroup == null) return Optional.empty();
         return Optional.ofNullable(Backend.getServerGroup(serverGroup).get());
     }
 
     @Override
     public Optional<Server> getConnectedServer() {
-        long identifier = getLong("connectedServer", -1);
+        long identifier = this.object.getLongOrElse("connectedServer", -1);
         if (identifier == -1) return Optional.empty();
         return Optional.ofNullable(Backend.getServer(identifier).get());
     }
 
     @Override
     public Optional<Long> getDiscordUserId() {
-        long id = getLong("discordUserId", 0);
+        long id = this.object.getLongOrElse("discordUserId", 0);
         if (id == 0) return Optional.empty();
         return Optional.of(id);
     }
@@ -374,22 +324,19 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public @NotNull String getUsername() {
-        String name = getString("username", null);
-        if (name == null) return "N/A";
-        return name;
+        return this.object.getStringOrElse("username", this.uuid.toString());
     }
 
     @Override
     public @NotNull Language getLanguage() {
-        Result<JsonElement> result = object.get("lang");
-        JsonElement element = result.get();
-        if (element == null) return Language.DEFAULT;
-        return Language.fromTag(element.getAsString());
+        String lang = this.object.getStringOrElse("lang", null);
+        if (lang == null) return Language.DEFAULT;
+        return Language.fromTag(lang);
     }
 
     @Override
     public boolean isOnline() {
-        return getBoolean("onlineStatus");
+        return this.object.getBooleanOrElse("online", false);
     }
 
     @Override
@@ -400,15 +347,12 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public UserStatus getRealStatus() {
-        Result<JsonElement> result = object.get("status");
-        JsonElement element = result.get();
-        if (element == null) return UserStatus.INVISIBLE;
-        return UserStatus.fromCode(element.getAsInt());
+        return UserStatus.fromCode(this.object.getIntOrElse("status", UserStatus.DEFAULT.toCode()));
     }
 
     @Override
     public long getPlaytime() {
-        return getLong("playtime", 0);
+        return this.object.getLongOrElse("playtime", 0);
     }
 
     @Override
@@ -418,7 +362,7 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public long getLastJoin() {
-        return getLong("lastJoin", 0);
+        return this.object.getLongOrElse("lastJoin", 0);
     }
 
     @Override
@@ -428,7 +372,7 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public long getFirstJoin() {
-        return getLong("firstJoin", 0);
+        return this.object.getLongOrElse("firstJoin", 0);
     }
 
     public void setFirstJoin(long firstJoin) {
@@ -459,12 +403,9 @@ public final class UserWrapper extends Wrapper implements User {
     }
 
     private List<UUID> getRawFriends() {
-        Result<JsonElement> result = this.object.get("friends");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray uuidArray = element.getAsJsonArray();
-        return uuidArray.asList().stream()
-                .map(el -> UUID.fromString(el.getAsString()))
+        return this.object.getSet("friends", String.class).stream()
+                .map(this::stringToUuid)
+                .filter(Objects::nonNull)
                 .toList();
     }
 
@@ -477,22 +418,17 @@ public final class UserWrapper extends Wrapper implements User {
     }
 
     private List<UUID> getRawFriendRequests() {
-        Result<JsonElement> result = this.object.get("friendRequests");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        return element.getAsJsonArray().asList().stream()
-                .map(el -> UUID.fromString(el.getAsString()))
+        return this.object.getSet("friendRequests", String.class).stream()
+                .map(this::stringToUuid)
+                .filter(Objects::nonNull)
                 .toList();
     }
 
     @Override
     public void addFriendRequest(@NonNull User user) {
-        Result<JsonElement> result = this.object.get("friendRequests");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        array.add(user.getUniqueId().toString());
-        this.object.set("friendRequests", element);
+        ObjectSet<String> friendRequests = this.object.getSet("friendRequests", String.class);
+        friendRequests.add(user.getUniqueId().toString());
+        this.object.set("friendRequests", friendRequests);
     }
 
     @Override
@@ -502,26 +438,16 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public void removeFriendRequest(UUID uuid) {
-        Result<JsonElement> result = this.object.get("friendRequests");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        for (JsonElement value : array) {
-            if (!value.getAsString().equals(uuid.toString())) continue;
-            array.remove(value);
-            break;
-        }
-        this.object.set("friendRequests", element);
+        ObjectSet<String> friendRequests = this.object.getSet("friendRequests", String.class);
+        friendRequests.remove(uuid.toString());
+        this.object.set("friendRequests", friendRequests);
     }
 
     @Override
     public void addFriend(@NonNull User user) {
-        Result<JsonElement> result = this.object.get("friends");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        array.add(user.getUniqueId().toString());
-        this.object.set("friends", element);
+        ObjectSet<String> friends = this.object.getSet("friends", String.class);
+        friends.add(user.getUniqueId().toString());
+        this.object.set("friends", friends);
     }
 
     @Override
@@ -531,27 +457,16 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public void removeFriend(UUID uuid) {
-        Result<JsonElement> result = this.object.get("friends");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        for (JsonElement value : array) {
-            if (!value.getAsString().equals(uuid.toString())) continue;
-            array.remove(value);
-            break;
-        }
-        this.object.set("friends", element);
+        ObjectSet<String> friends = this.object.getSet("friends", String.class);
+        friends.remove(uuid.toString());
+        this.object.set("friends", friends);
     }
 
     @Override
     public Result<Clan> getClan() {
-        Result<String> tag = getRawClan();
-        if (tag.isPresent()) return Backend.getClan(tag.get());
+        String tag = this.object.getStringOrElse("clan", null);
+        if (tag != null) return Backend.getClan(tag);
         return Result.none();
-    }
-
-    public Result<String> getRawClan() {
-        return getString("clan");
     }
 
     @SuppressWarnings("SafetyWarnings")
@@ -566,7 +481,7 @@ public final class UserWrapper extends Wrapper implements User {
     @Override
     public void leaveClan() {
         getClan().ifPresent(clan -> clan.removeMember(this));
-        this.object.set("clan", JsonNull.INSTANCE);
+        this.object.unset("clan");
     }
 
     @Override
@@ -577,23 +492,17 @@ public final class UserWrapper extends Wrapper implements User {
     }
 
     private List<UUID> getRawCrew() {
-        Result<JsonElement> result = this.object.get("crew");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray uuidArray = element.getAsJsonArray();
-        return uuidArray.asList().stream()
-                .map(el -> UUID.fromString(el.getAsString()))
+        return this.object.getSet("crew", String.class).stream()
+                .map(this::stringToUuid)
+                .filter(Objects::nonNull)
                 .toList();
     }
 
     @Override
     public void addCrewMember(@NonNull User user) {
-        Result<JsonElement> result = this.object.get("crew");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        array.add(user.getUniqueId().toString());
-        this.object.set("crew", element);
+        ObjectSet<String> crew = this.object.getSet("crew", String.class);
+        crew.add(user.getUniqueId().toString());
+        this.object.set("crew", crew);
     }
 
     @Override
@@ -603,16 +512,9 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public void removeCrewMember(UUID uuid) {
-        Result<JsonElement> result = this.object.get("crew");
-        JsonElement element = result.get();
-        if (element == null) return;
-        JsonArray array = element.getAsJsonArray();
-        for (JsonElement value : array) {
-            if (!value.getAsString().equals(uuid.toString())) continue;
-            array.remove(value);
-            break;
-        }
-        this.object.set("crew", element);
+        ObjectSet<String> crew = this.object.getSet("crew", String.class);
+        crew.remove(uuid.toString());
+        this.object.set("crew", crew);
     }
 
     @Override
@@ -637,116 +539,97 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public Map<String, Object> getProperties() {
-        return Object2ObjectMaps.emptyMap();
+        return this.object.getMap("properties", Object.class);
     }
 
     @Override
     public void unsetProperty(@NonNull String key) {
-        this.object.set("property." + key, JsonNull.INSTANCE);
+        Map<String, Object> properties = getProperties();
+        properties.remove(key);
+        this.object.set("properties", properties);
+    }
+
+    public void setProperty(String key, Object value) {
+        Map<String, Object> properties = getProperties();
+        properties.put(key, value);
+        this.object.set("properties", properties);
     }
 
     @Override
     public void setProperties(@NonNull Map<String, Object> properties) {
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof Integer n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Long n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Double n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Float n) {
-                setProperty("property." + key, n);
-                return;
-            }
-            if (value instanceof Boolean b) {
-                setProperty("property." + key, b);
-                return;
-            }
-            if (value instanceof String s) {
-                setProperty("property." + key, s);
-                return;
-            }
-        }
+        this.object.set("properties", new Object2ObjectArrayMap<>(properties));
     }
 
     @Override
     public void setProperty(@NonNull String key, @NonNull String value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, int value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, long value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, double value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, float value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public void setProperty(@NonNull String key, boolean value) {
-        this.object.set("property." + key, value);
+        setProperty(key, (Object) value);
     }
 
     @Override
     public String getPropertyStringOrElse(@NonNull String key, @Nullable String defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsString();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (String) obj;
     }
 
     @Override
     public int getPropertyIntOrElse(@NonNull String key, int defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsInt();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (int) obj;
     }
 
     @Override
     public long getPropertyLongOrElse(@NonNull String key, long defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsLong();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (long) obj;
     }
 
     @Override
     public double getPropertyDoubleOrElse(@NonNull String key, double defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsDouble();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (double) obj;
     }
 
     @Override
     public float getPropertyFloatOrElse(@NonNull String key, float defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsFloat();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (float) obj;
     }
 
     @Override
     public boolean getPropertyBooleanOrElse(@NonNull String key, boolean defValue) {
-        JsonElement element = this.object.get("property." + key).get();
-        if (element == null) return defValue;
-        return element.getAsBoolean();
+        Object obj = getProperties().get(key);
+        if (obj == null) return defValue;
+        return (boolean) obj;
     }
 
     @Override
@@ -755,5 +638,10 @@ public final class UserWrapper extends Wrapper implements User {
             return wrapper.uuid.equals(this.uuid);
         }
         return false;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return this.uuid.toString();
     }
 }

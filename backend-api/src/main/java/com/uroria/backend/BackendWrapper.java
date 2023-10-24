@@ -12,6 +12,7 @@ import com.uroria.backend.user.User;
 import com.uroria.base.event.EventManager;
 import com.uroria.problemo.result.Result;
 import lombok.NonNull;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -54,7 +55,7 @@ public interface BackendWrapper {
     Collection<Server> getServers();
 
     /**
-     * Creates and starts a new server.
+     * Creates a server instance.
      * You need a {@link ServerGroup} for sorting purposes.
      */
     @SuppressWarnings("WarningMarkers")
@@ -69,8 +70,9 @@ public interface BackendWrapper {
     Result<Proxy> getProxy(long identifier);
 
     /**
-     * 
+     * Creates a proxy instance.
      */
+    @ApiStatus.Experimental
     Result<Proxy> createProxy(String name, int templateId, int maxPlayers);
 
     Collection<Proxy> getProxies(String name);

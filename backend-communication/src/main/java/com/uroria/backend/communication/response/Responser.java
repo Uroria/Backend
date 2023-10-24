@@ -9,7 +9,7 @@ public final class Responser<REQ extends Request, RES extends Response> {
     private final Class<REQ> requestClass;
     private final Class<RES> responseClass;
 
-    public Responser(ResponsePoint point, String messageType, Class<REQ> requestClass, Class<RES> responseClass, RequestListener<REQ, RES> listener) {
+    Responser(ResponsePoint point, String messageType, Class<REQ> requestClass, Class<RES> responseClass, RequestListener<REQ, RES> listener) {
         this.point = point;
         this.messageType = messageType;
         this.requestClass = requestClass;

@@ -1,126 +1,61 @@
 package com.uroria.backend.impl.user;
 
-import com.rabbitmq.client.Connection;
-import com.uroria.are.Application;
-import com.uroria.backend.impl.communication.request.RabbitRequestChannel;
-import com.uroria.backend.impl.communication.request.RequestChannel;
-import com.uroria.backend.impl.io.BackendOutputStream;
+import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.user.GetUserRequest;
+import com.uroria.backend.cache.communication.user.GetUserResponse;
+import com.uroria.backend.communication.Communicator;
+import com.uroria.backend.communication.request.Requester;
 import com.uroria.backend.impl.stats.StatsManager;
-import com.uroria.backend.impl.wrapper.WrapperManager;
 import com.uroria.backend.user.events.UserDeletedEvent;
 import com.uroria.backend.user.events.UserUpdatedEvent;
-import com.uroria.base.io.InsaneByteArrayInputStream;
 import com.uroria.problemo.result.Result;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 public final class UserManager extends WrapperManager<UserWrapper> {
+    private static final Logger logger = LoggerFactory.getLogger("Users");
+
     private final StatsManager statsManager;
-    private final RequestChannel nameRequest;
+    private final Requester<GetUserRequest, GetUserResponse> check;
 
-    public UserManager(StatsManager statsManager, Connection rabbit) {
-        super(rabbit, LoggerFactory.getLogger("Users"), "user", "uuid");
+    public UserManager(StatsManager statsManager, Communicator communicator) {
+        super(logger, communicator, "user", "user", "user");
         this.statsManager = statsManager;
-        this.nameRequest = new RabbitRequestChannel(rabbit, "user-name-request");
-    }
-
-    @Override
-    protected void onUpdate(UserWrapper wrapper) {
-        if (wrapper.isDeleted()) {
-            eventManager.callAndForget(new UserDeletedEvent(wrapper));
-        }
-        eventManager.callAndForget(new UserUpdatedEvent(wrapper));
+        this.check = requestPoint.registerRequester(GetUserRequest.class, GetUserResponse.class, "Check");
     }
 
     public UserWrapper getUserWrapper(UUID uuid) {
-        return getWrapper(uuid.toString(), true);
+        for (UserWrapper wrapper : this.wrappers) {
+            if (wrapper.getUniqueId().equals(uuid)) return wrapper;
+        }
+
+        Result<GetUserResponse> result = this.check.request(new GetUserRequest(uuid, null, true), 5000);
+        GetUserResponse response = result.get();
+        if (response == null || !response.isExistent()) return null;
+        UserWrapper wrapper = new UserWrapper(this, uuid, this.statsManager);
+        this.wrappers.add(wrapper);
+        return wrapper;
     }
 
     public UserWrapper getUserWrapper(String username) {
         for (UserWrapper wrapper : this.wrappers) {
-            if (!wrapper.getUsername().equals(username)) continue;
-            return wrapper;
+            if (wrapper.getUsername().equals(username)) return wrapper;
         }
-        if (Application.isTest() || Application.isOffline()) {
-            return null;
-        }
-        Result<byte[]> result = this.nameRequest.requestSync(() -> {
-            try {
-                BackendOutputStream output = new BackendOutputStream();
-                output.writeByte(0);
-                output.writeUTF(username);
-                output.close();
-                return output.toByteArray();
-            } catch (Exception exception) {
-                throw new RuntimeException(exception);
-            }
-        }, 2000);
-        if (result instanceof Result.Problematic<byte[]> problematic) {
-            logger.error("Cannot request users uuid by name " + username, problematic.getProblem().getError().orElse(new RuntimeException("Unknown Exception")));
-            return null;
-        }
-        try {
-            byte[] bytes = result.get();
-            if (bytes == null) return null;
-            InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(bytes);
-            if (!input.readBoolean()) {
-                input.close();
-                return null;
-            }
-            String uuidString = input.readUTF();
-            input.close();
-            return getWrapper(uuidString, false);
-        } catch (Exception exception) {
-            logger.error("Cannot read uuid response for username " + username, exception);
-            return null;
-        }
-    }
 
-    public UserWrapper getUserWrapper(long discordId) {
-        for (UserWrapper wrapper : this.wrappers) {
-            long id = wrapper.getDiscordUserId().orElse(-1L);
-            if (id == -1) continue;
-            if (id != discordId) continue;
-            return wrapper;
-        }
-        if (Application.isOffline() || Application.isTest()) {
-            return null;
-        }
-        Result<byte[]> result = this.nameRequest.requestSync(() -> {
-            try {
-                BackendOutputStream output = new BackendOutputStream();
-                output.writeByte(1);
-                output.writeLong(discordId);
-                output.close();
-                return output.toByteArray();
-            } catch (Exception exception) {
-                throw new RuntimeException(exception);
-            }
-        }, 2000);
-        if (result instanceof Result.Problematic<byte[]> problematic) {
-            logger.error("Cannot request users uuid by discordId " + discordId, problematic.getProblem().getError().orElse(new RuntimeException("Unknown Exception")));
-            return null;
-        }
-        try {
-            byte[] bytes = result.get();
-            if (bytes == null) return null;
-            InsaneByteArrayInputStream input = new InsaneByteArrayInputStream(bytes);
-            if (!input.readBoolean()) {
-                input.close();
-                return null;
-            }
-            String uuidString = input.readUTF();
-            input.close();
-            return getWrapper(uuidString, false);
-        } catch (Exception exception) {
-            logger.error("Cannot read uuid response for discordId " + discordId, exception);
-            return null;
-        }
+        Result<GetUserResponse> result = this.check.request(new GetUserRequest(null, username, false), 5000);
+        GetUserResponse response = result.get();
+        if (response == null || !response.isExistent()) return null;
+        UserWrapper wrapper = new UserWrapper(this, response.getUuid(), this.statsManager);
+        wrapper.setUsername(username);
+        this.wrappers.add(wrapper);
+        return wrapper;
     }
 
     @Override
-    protected UserWrapper createWrapper(String identifier) {
-        return new UserWrapper(this, UUID.fromString(identifier), statsManager);
+    protected void onUpdate(UserWrapper wrapper) {
+        if (wrapper.isDeleted()) this.eventManager.callAndForget(new UserDeletedEvent(wrapper));
+        else this.eventManager.callAndForget(new UserUpdatedEvent(wrapper));
     }
 }

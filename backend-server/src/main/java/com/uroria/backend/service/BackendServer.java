@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.SslContextFactory;
+import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.impl.configurations.RabbitConfiguration;
 import com.uroria.backend.service.commands.CommandManager;
 import com.uroria.backend.service.configuration.MongoConfiguration;
@@ -49,7 +50,7 @@ public final class BackendServer {
     @Getter private final CommandManager commandManager;
     @Getter private final BackendConsole console;
     @Getter private final ObjectSet<BackendModule> modules;
-    @Getter private final Connection rabbit;
+    @Getter private final Communicator communicator;
     @Getter private final MongoClient mongo;
     @Getter private final MongoDatabase database;
     @Getter private final RedisClient redis;
@@ -63,7 +64,8 @@ public final class BackendServer {
         this.console = new BackendConsole(this);
         this.modules = new ObjectArraySet<>();
 
-        this.rabbit = connectRabbitMq();
+        this.communicator = new Communicator(LOGGER);
+
         try {
             this.mongo = connectMongoClient();
             this.database = connectMongoDatabase();
@@ -108,41 +110,6 @@ public final class BackendServer {
         }
 
         LOGGER.info("Initialized in " + (System.currentTimeMillis() - start) + "ms");
-    }
-
-    private Connection connectRabbitMq() {
-        try {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setUsername(RabbitConfiguration.getUsername());
-            factory.setPassword(RabbitConfiguration.getPassword());
-            factory.setVirtualHost(RabbitConfiguration.getVirtualHost());
-            factory.setHost(RabbitConfiguration.getHostname());
-            factory.setPort(RabbitConfiguration.getPort());
-            if (RabbitConfiguration.isSslEnabled()) {
-                KeyStore ks = KeyStore.getInstance("PKCS12");
-                ks.load(new FileInputStream(RabbitConfiguration.getSslCertPath()), RabbitConfiguration.getSslCertPassword().toCharArray());
-
-                KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-                kmf.init(ks, RabbitConfiguration.getSslCertPassword().toCharArray());
-
-                KeyStore tks = KeyStore.getInstance("JKS");
-                tks.load(new FileInputStream(RabbitConfiguration.getSslKeyStorePath()), RabbitConfiguration.getSslKeyStorePassword().toCharArray());
-
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-                tmf.init(tks);
-
-                SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-                sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
-
-                factory.useSslProtocol(sslContext);
-                factory.enableHostnameVerification();
-            }
-            return factory.newConnection();
-        } catch (Exception exception) {
-            LOGGER.error("Cannot connect to RabbitMQ", exception);
-            System.exit(1);
-            return null;
-        }
     }
 
     private MongoClient connectMongoClient() {
@@ -218,7 +185,7 @@ public final class BackendServer {
 
     private void shutdownRabbit() throws IOException {
         LOGGER.info("Shutting down Rabbit connection");
-        this.rabbit.close();
+        this.communicator.close();
     }
 
     private void shutdownMongo() {

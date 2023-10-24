@@ -12,6 +12,7 @@ import com.uroria.base.event.EventManager;
 import com.uroria.problemo.result.Result;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -52,6 +53,7 @@ public class Backend {
         return getWrapper().createServer(templateId, group);
     }
 
+    @SuppressWarnings("SafetyWarnings")
     public Collection<Server> getServers() {
         return getWrapper().getServers();
     }
@@ -64,6 +66,7 @@ public class Backend {
         return getWrapper().getProxies(name);
     }
 
+    @ApiStatus.Experimental
     public Result<Proxy> createProxy(String name, int templateId, int maxPlayers) {
         return getWrapper().createProxy(name, templateId, maxPlayers);
     }

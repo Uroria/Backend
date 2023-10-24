@@ -17,7 +17,7 @@ public final class PermGroupManager extends WrapperManager<GroupWrapper> {
     private final Requester<GetGroupRequest, GetGroupResponse> nameCheck;
 
     public PermGroupManager(Communicator communicator) {
-        super(logger, communicator, "perm_groups", "perm_groups", "perm_groups");
+        super(logger, communicator, "perm_group", "perm_group", "perm_group");
         this.nameCheck = requestPoint.registerRequester(GetGroupRequest.class, GetGroupResponse.class, "CheckName");
     }
 

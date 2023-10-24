@@ -200,17 +200,17 @@ public class MongoDatabase implements Database {
 
     @Override
     public Result<Void> delete(@NonNull String key, @NonNull Number keyValue) {
-        return delete(key, new JsonPrimitive(keyValue));
+        return delete(key, (Object) keyValue);
     }
 
     @Override
     public Result<Void> delete(@NonNull String key, boolean keyValue) {
-        return delete(key, new JsonPrimitive(keyValue));
+        return delete(key, (Object) keyValue);
     }
 
     @Override
     public Result<Void> delete(@NonNull String key, @NonNull String keyValue) {
-        return delete(key, new JsonPrimitive(keyValue));
+        return delete(key, (Object) keyValue);
     }
 
     public Result<JsonObject> get(@NonNull String key, @NonNull JsonPrimitive keyValue) {
@@ -291,7 +291,7 @@ public class MongoDatabase implements Database {
         return Result.some(objects);
     }
 
-    public final Result<Void> delete(@NonNull String key, @NonNull JsonPrimitive keyValue) {
+    public final Result<Void> delete(@NonNull String key, @NonNull Object keyValue) {
         if (this.db.deleteOne(Filters.eq(key, keyValue)).wasAcknowledged()) {
             return Result.none();
         }

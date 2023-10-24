@@ -15,4 +15,6 @@ public interface Cache {
     void delete(String key);
 
     void delete(String... keys);
+
+    void clear();
 }

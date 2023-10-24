@@ -14,10 +14,10 @@ import java.time.Duration;
 
 public abstract class LocalCachingModule extends CachingModule {
     protected final ObjectSet<Object> allIdentifiers;
-    private final Object2ObjectMap<String, JsonElement> localCache;
+    protected final Object2ObjectMap<String, JsonElement> localCache;
 
-    public LocalCachingModule(BackendServer server, String moduleName, String prefix) {
-        super(server, moduleName, prefix);
+    public LocalCachingModule(BackendServer server, String responseTopic, String broadcastTopic, String topic, String moduleName, String prefix) {
+        super(server, responseTopic, broadcastTopic, topic, moduleName, prefix);
         this.allIdentifiers = new ObjectArraySet<>();
         this.localCache = new Object2ObjectArrayMap<>();
     }

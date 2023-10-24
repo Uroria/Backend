@@ -1,37 +1,81 @@
 package com.uroria.backend.service.modules.user;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.uroria.backend.cache.communication.DeleteBroadcast;
+import com.uroria.backend.cache.communication.PartRequest;
+import com.uroria.backend.cache.communication.PartResponse;
+import com.uroria.backend.cache.communication.UpdateBroadcast;
+import com.uroria.backend.cache.communication.user.GetUserRequest;
+import com.uroria.backend.cache.communication.user.GetUserResponse;
+import com.uroria.backend.communication.response.RequestListener;
 import com.uroria.backend.service.BackendServer;
 import com.uroria.backend.service.modules.SavingModule;
 import com.uroria.problemo.result.Result;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class UserModule extends SavingModule {
-    private final UserObjectThread objectThread;
-    private final UserPartThread partThread;
-    private final UserUpdateThread updateThread;
 
     public UserModule(BackendServer server) {
-        super(server, "UserModule", "users");
-        this.objectThread = new UserObjectThread(this);
-        this.partThread = new UserPartThread(this);
-        this.updateThread = new UserUpdateThread(this);
+        super(server, "user", "UserModule", "user", "users");
+        responsePoint.registerResponser(GetUserRequest.class, GetUserResponse.class, "Check", new RequestListener<>() {
+            @Override
+            protected Optional<GetUserResponse> onRequest(GetUserRequest request) {
+                String name = request.getName();
+                UUID uuid = request.getUuid();
+                if (name == null && uuid == null) return Optional.empty();
+                if (name != null && uuid == null) {
+                    UUID savedUuid = getUUID(name);
+                    if (savedUuid == null) return Optional.empty();
+                    return Optional.of(new GetUserResponse(true, savedUuid));
+                }
+                if (name == null) {
+                    JsonElement element = cache.get(prefix + ":" + uuid).get();
+                    if (element == null) return Optional.of(new GetUserResponse(false, uuid));
+                    return Optional.of(new GetUserResponse(true, uuid));
+                }
+                return Optional.empty();
+            }
+        });
     }
 
     @Override
-    protected void enable() {
-        this.objectThread.start();
-        this.partThread.start();
-        this.updateThread.start();
+    protected Optional<PartResponse> request(PartRequest request) {
+        String identifier = request.getIdentifier();
+        this.cache.set(prefix + ":" + identifier, new JsonPrimitive(identifier), Duration.ofDays(5));
+        String key = request.getKey();
+        JsonElement part = getPart("uuid", identifier, key);
+        if (part.isJsonNull()) return Optional.empty();
+        return Optional.of(new PartResponse(identifier, key, part));
     }
 
     @Override
-    protected void disable() throws Exception {
-        this.partThread.getResponseChannel().close();
-        this.objectThread.getResponseChannel().close();
-        this.updateThread.getUpdateChannel().close();
+    protected void update(UpdateBroadcast broadcast) {
+        checkPart("uuid", broadcast.getIdentifier(), broadcast.getKey(), broadcast.getElement());
+    }
+
+    @Override
+    protected void delete(DeleteBroadcast broadcast) {
+        String identifier = broadcast.getIdentifier();
+        this.cache.delete(prefix + ":" + identifier);
+        try {
+            String username = getUsername(UUID.fromString(identifier));
+            if (username != null) this.cache.delete("username" + username);
+        } catch (Exception exception) {
+            logger.error("Cannot delete old username from cache of " + identifier);
+        }
+        this.cache.delete(prefix + ":" + identifier);
+        this.db.delete("uuid", identifier);
+    }
+
+    public @Nullable String getUsername(UUID uuid) {
+        JsonElement part = getPart("uuid", uuid, "username");
+        if (part.isJsonNull()) return null;
+        return part.getAsString();
     }
 
     public @Nullable UUID getUUID(String username) {

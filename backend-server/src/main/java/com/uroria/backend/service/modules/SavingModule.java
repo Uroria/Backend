@@ -2,6 +2,9 @@ package com.uroria.backend.service.modules;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
+import com.uroria.backend.communication.Communicator;
+import com.uroria.backend.communication.broadcast.BroadcastPoint;
+import com.uroria.backend.communication.response.ResponsePoint;
 import com.uroria.backend.service.BackendServer;
 import com.uroria.backend.service.communication.database.Database;
 import com.uroria.backend.service.communication.database.MongoDatabase;
@@ -13,9 +16,18 @@ import java.time.Duration;
 public abstract class SavingModule extends CachingModule {
     protected final Database db;
 
-    public SavingModule(BackendServer server, String moduleName, String database) {
-        super(server, moduleName, database);
+    public SavingModule(BackendServer server, ResponsePoint responsePoint, BroadcastPoint broadcastPoint, String topic, String moduleName, String prefix, String database) {
+        super(server, responsePoint, broadcastPoint, topic, moduleName, prefix);
         this.db = new MongoDatabase(server.getDatabase().getCollection(database));
+    }
+
+    public SavingModule(BackendServer server, String responseTopic, String broadcastTopic, String topic, String moduleName, String prefix, String database) {
+        super(server, server.getCommunicator(), responseTopic, broadcastTopic, topic, moduleName, prefix);
+        this.db = new MongoDatabase(server.getDatabase().getCollection(database));
+    }
+
+    public SavingModule(BackendServer server, String topic, String moduleName, String prefix, String database) {
+        this(server, topic, topic, topic, moduleName, prefix, database); // fuck me
     }
 
     @Override

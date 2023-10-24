@@ -51,4 +51,9 @@ public class RedisCache implements Cache {
         if (keys == null) return;
         this.cache.del(keys);
     }
+
+    @Override
+    public void clear() {
+        this.cache.flushdb();
+    }
 }

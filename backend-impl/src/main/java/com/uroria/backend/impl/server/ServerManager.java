@@ -3,6 +3,8 @@ package com.uroria.backend.impl.server;
 import com.uroria.backend.cache.BackendObject;
 import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.server.GetAllServersRequest;
+import com.uroria.backend.cache.communication.server.GetAllServersResponse;
 import com.uroria.backend.cache.communication.server.GetServerRequest;
 import com.uroria.backend.cache.communication.server.GetServerResponse;
 import com.uroria.backend.communication.Communicator;
@@ -10,19 +12,25 @@ import com.uroria.backend.communication.request.Requester;
 import com.uroria.backend.server.events.ServerDeletedEvent;
 import com.uroria.backend.server.events.ServerUpdatedEvent;
 import com.uroria.problemo.result.Result;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.ObjectSets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Random;
 
 public final class ServerManager extends WrapperManager<ServerWrapper> {
     private static final Logger logger = LoggerFactory.getLogger("Servers");
 
     private final Requester<GetServerRequest, GetServerResponse> idCheck;
+    private final Requester<GetAllServersRequest, GetAllServersResponse> allGet;
 
     public ServerManager(Communicator communicator) {
         super(logger, communicator, "servers", "servers", "servers");
         this.idCheck = requestPoint.registerRequester(GetServerRequest.class, GetServerResponse.class, "CheckId");
+        this.allGet = requestPoint.registerRequester(GetAllServersRequest.class, GetAllServersResponse.class, "GetAll");
     }
 
     public ServerWrapper getServerWrapper(long id) {
@@ -51,6 +59,19 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
         object.set("group", groupId);
         this.wrappers.add(wrapper);
         return wrapper;
+    }
+
+    public Collection<ServerWrapper> getAll() {
+        Result<GetAllServersResponse> result = this.allGet.request(new GetAllServersRequest(true), 5000);
+        GetAllServersResponse response = result.get();
+        if (response == null) return ObjectSets.emptySet();
+        ObjectSet<ServerWrapper> wrappers = new ObjectArraySet<>();
+        response.getServers().forEach(id -> {
+            ServerWrapper wrapper = getServerWrapper(id);
+            if (wrapper == null) return;
+            wrappers.add(wrapper);
+        });
+        return wrappers;
     }
 
     @Override
