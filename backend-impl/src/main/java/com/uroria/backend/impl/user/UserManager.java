@@ -1,5 +1,7 @@
 package com.uroria.backend.impl.user;
 
+import com.uroria.backend.cache.BackendObject;
+import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.cache.communication.user.GetUserRequest;
 import com.uroria.backend.cache.communication.user.GetUserResponse;

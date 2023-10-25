@@ -34,9 +34,14 @@ public final class UserModule extends SavingModule {
                     return Optional.of(new GetUserResponse(true, savedUuid));
                 }
                 if (name == null) {
-                    if (request.isAutoCreate()) return Optional.of(new GetUserResponse(true, uuid));
+                    if (request.isAutoCreate()) {
+                        db.set("uuid", new JsonPrimitive(uuid.toString()));
+                        return Optional.of(new GetUserResponse(true, uuid));
+                    }
                     JsonElement element = cache.get(prefix + ":" + uuid).get();
-                    if (element == null) return Optional.of(new GetUserResponse(false, uuid));
+                    if (element == null) {
+                        if (!db.get("uuid", uuid.toString()).isPresent()) return Optional.of(new GetUserResponse(false, uuid));
+                    }
                     return Optional.of(new GetUserResponse(true, uuid));
                 }
                 return Optional.empty();

@@ -56,6 +56,16 @@ public class MongoDatabase implements Database {
     }
 
     @Override
+    public Result<Void> set(@NonNull String key, @NonNull JsonElement value) {
+        JsonObject object = new JsonObject();
+        object.add(key, value);
+        if (this.db.insertOne(Document.parse(object.toString())).wasAcknowledged()) {
+            return Result.none();
+        }
+        return Result.problem(Problem.plain("Cannot insert :/"));
+    }
+
+    @Override
     public final Result<Void> set(@NonNull String targetKey, @NonNull Number targetKeyValue, @NonNull String key, @NonNull JsonElement value) {
         return set(targetKey, new JsonPrimitive(targetKeyValue), key, value);
     }

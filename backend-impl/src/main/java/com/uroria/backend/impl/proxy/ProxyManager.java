@@ -94,6 +94,7 @@ public final class ProxyManager extends WrapperManager<ProxyWrapper> {
         if (!response.isExistent()) return null;
         ProxyWrapper wrapper = new ProxyWrapper(this, id);
         BackendObject<? extends Wrapper> object = wrapper.getBackendObject();
+        object.set("id", id);
         object.set("maxPlayers", maxPlayers);
         object.set("templateId", templateId);
         object.set("name", name);

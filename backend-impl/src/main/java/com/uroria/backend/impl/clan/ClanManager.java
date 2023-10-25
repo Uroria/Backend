@@ -1,5 +1,7 @@
 package com.uroria.backend.impl.clan;
 
+import com.uroria.backend.cache.BackendObject;
+import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.cache.communication.clan.CheckClanRequest;
 import com.uroria.backend.cache.communication.clan.CheckClanResponse;
@@ -63,6 +65,8 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
         if (response == null) return null;
         if (!response.isExistent()) return null;
         ClanWrapper wrapper = new ClanWrapper(this, name);
+        BackendObject<? extends Wrapper> object = wrapper.getBackendObject();
+        object.set("name", name);
         wrapper.setTag(tag);
         wrapper.addOperator(operator);
         wrapper.getBackendObject().set("foundingDate", foundingDate);

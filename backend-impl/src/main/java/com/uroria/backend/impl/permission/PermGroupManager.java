@@ -1,5 +1,7 @@
 package com.uroria.backend.impl.permission;
 
+import com.uroria.backend.cache.BackendObject;
+import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.cache.communication.permgroup.GetAllGroupRequest;
 import com.uroria.backend.cache.communication.permgroup.GetAllGroupResponse;
@@ -74,6 +76,8 @@ public final class PermGroupManager extends WrapperManager<GroupWrapper> {
         if (response == null) return null;
         if (!(response.isExistent())) return null;
         GroupWrapper wrapper = new GroupWrapper(this, name);
+        BackendObject<? extends Wrapper> object = wrapper.getBackendObject();
+        object.set("name", name);
         wrapper.setPriority(priority);
         this.wrappers.add(wrapper);
         return wrapper;
