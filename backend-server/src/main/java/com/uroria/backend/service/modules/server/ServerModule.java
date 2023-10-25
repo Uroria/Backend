@@ -27,14 +27,14 @@ public final class ServerModule extends LocalCachingModule {
             protected Optional<GetServerResponse> onRequest(GetServerRequest request) {
                 for (long id : getAll()) {
                     if (id == request.getId()) {
-                        if (request.isAutoCreate()) return Optional.empty();
+                        if (request.isAutoCreate()) return Optional.of(new GetServerResponse(false));
                         return Optional.of(new GetServerResponse(true));
                     }
                 }
                 if (request.isAutoCreate()) {
                     return Optional.of(new GetServerResponse(true));
                 }
-                return Optional.empty();
+                return Optional.of(new GetServerResponse(false));
             }
         });
         responsePoint.registerResponser(GetAllServersRequest.class, GetAllServersResponse.class, "GetAll", new RequestListener<>() {

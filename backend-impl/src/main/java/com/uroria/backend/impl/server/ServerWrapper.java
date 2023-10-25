@@ -258,4 +258,12 @@ public final class ServerWrapper extends Wrapper implements Server {
     public String getIdentifier() {
         return String.valueOf(this.identifier);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ServerWrapper wrapper) {
+            return wrapper.identifier == identifier;
+        }
+        return false;
+    }
 }

@@ -182,13 +182,21 @@ public class BackendWrapperImpl extends AbstractBackendWrapper {
     public Collection<Proxy> getProxies(String name) {
         try {
             if (name == null) return ObjectSets.emptySet();
-
+            return this.proxyManager.getAllWithName(name);
+        } catch (Exception exception) {
+            this.logger.error("Unable to get all proxies with name " + name, exception);
+            return ObjectSets.emptySet();
         }
     }
 
     @Override
     public Collection<Proxy> getProxies() {
-        return null;
+        try {
+            return this.proxyManager.getAll();
+        } catch (Exception exception) {
+            this.logger.error("Unable to get all proxies", exception);
+            return ObjectSets.emptySet();
+        }
     }
 
     @Override

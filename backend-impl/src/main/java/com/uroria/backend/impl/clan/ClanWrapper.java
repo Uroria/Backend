@@ -169,4 +169,12 @@ public final class ClanWrapper extends Wrapper implements Clan {
     public String getIdentifier() {
         return this.name;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ClanWrapper wrapper) {
+            return wrapper.name.equals(this.name);
+        }
+        return false;
+    }
 }

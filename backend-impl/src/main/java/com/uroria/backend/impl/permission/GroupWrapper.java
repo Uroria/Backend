@@ -312,4 +312,12 @@ public final class GroupWrapper extends Wrapper implements PermGroup {
     public String getIdentifier() {
         return this.name;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof GroupWrapper wrapper) {
+            return wrapper.name.equals(this.name);
+        }
+        return false;
+    }
 }

@@ -129,4 +129,12 @@ public final class ProxyWrapper extends Wrapper implements Proxy {
     public String getIdentifier() {
         return String.valueOf(identifier);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ProxyWrapper wrapper) {
+            return wrapper.identifier == identifier;
+        }
+        return false;
+    }
 }
