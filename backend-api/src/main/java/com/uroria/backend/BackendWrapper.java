@@ -30,6 +30,7 @@ public interface BackendWrapper {
      */
     Result<User> getUser(String username);
 
+    @ApiStatus.Experimental
     Result<User> getUser(long discordUserId);
 
     /**

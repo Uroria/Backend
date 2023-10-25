@@ -31,10 +31,10 @@ public final class UserModule extends SavingModule {
                 if (name != null && uuid == null) {
                     UUID savedUuid = getUUID(name);
                     if (savedUuid == null) return Optional.empty();
-                    if (!request.isAutoCreate()) return Optional.empty();
                     return Optional.of(new GetUserResponse(true, savedUuid));
                 }
                 if (name == null) {
+                    if (request.isAutoCreate()) return Optional.of(new GetUserResponse(true, uuid));
                     JsonElement element = cache.get(prefix + ":" + uuid).get();
                     if (element == null) return Optional.of(new GetUserResponse(false, uuid));
                     return Optional.of(new GetUserResponse(true, uuid));

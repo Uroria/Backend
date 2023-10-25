@@ -33,6 +33,7 @@ public final class ServerWrapper extends Wrapper implements Server {
     @Override
     public void delete() {
         if (isDeleted()) return;
+        getGroup().removeServer(this.identifier);
         this.deleted = true;
         this.object.set("deleted", true);
     }
@@ -44,7 +45,6 @@ public final class ServerWrapper extends Wrapper implements Server {
         this.deleted = deleted;
         return deleted;
     }
-
 
     @Override
     public long getId() {
@@ -80,7 +80,8 @@ public final class ServerWrapper extends Wrapper implements Server {
                     } catch (Exception exception) {
                         return null;
                     }
-                }).filter(Objects::nonNull)
+                })
+                .filter(this::nullCheck)
                 .toList();
     }
 
@@ -140,7 +141,7 @@ public final class ServerWrapper extends Wrapper implements Server {
                         return null;
                     }
                 })
-                .filter(Objects::nonNull)
+                .filter(this::nullCheck)
                 .toList();
     }
 

@@ -10,6 +10,7 @@ import com.uroria.backend.impl.proxy.ProxyWrapper;
 import com.uroria.backend.impl.server.ServerManager;
 import com.uroria.backend.impl.server.ServerWrapper;
 import com.uroria.backend.impl.server.group.ServerGroupManager;
+import com.uroria.backend.impl.server.group.ServerGroupWrapper;
 import com.uroria.backend.impl.stats.StatsManager;
 import com.uroria.backend.impl.user.UserManager;
 import com.uroria.backend.impl.user.UserWrapper;
@@ -193,18 +194,36 @@ public class BackendWrapperImpl extends AbstractBackendWrapper {
     @Override
     public Result<ServerGroup> getServerGroup(String type) {
         try {
-
+            ServerGroupWrapper wrapper = this.serverGroupManager.getServerGroupWrapper(type);
+            if (wrapper == null) return Result.none();
+            return Result.some(wrapper);
+        } catch (Exception exception) {
+            this.logger.error("Unable to get server-group " + type, exception);
+            return Result.problem(Problem.error("Unable to get server-group", exception));
         }
     }
 
     @Override
     public Collection<ServerGroup> getServerGroups() {
-        return null;
+        try {
+            return this.serverGroupManager.getAll();
+        } catch (Exception exception) {
+            this.logger.error("Unable to get all server-groups", exception);
+            return ObjectSets.emptySet();
+        }
     }
 
     @Override
     public Result<ServerGroup> createServerGroup(String name, int maxPlayers) {
-        return null;
+        try {
+            if (name == null) return Result.none();
+            ServerGroupWrapper wrapper = this.serverGroupManager.createServerGroupWrapper(name, maxPlayers);
+            if (wrapper == null) return Result.none();
+            return Result.some(wrapper);
+        } catch (Exception exception) {
+            this.logger.error("Unable to create server-group " + name + " with max players " + maxPlayers, exception);
+            return Result.problem(Problem.error("Unable to create server-group", exception));
+        }
     }
 
     @Override
@@ -223,9 +242,10 @@ public class BackendWrapperImpl extends AbstractBackendWrapper {
     @Override
     public Collection<PermGroup> getPermissionGroups() {
         try {
-
+            return this.permGroupManager.getAll();
         } catch (Exception exception) {
-
+            this.logger.error("Unable to get all perm-groups", exception);
+            return ObjectSets.emptySet();
         }
     }
 

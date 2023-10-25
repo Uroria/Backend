@@ -7,12 +7,20 @@ import org.slf4j.Logger;
 import java.util.UUID;
 
 public abstract class Wrapper implements Deletable {
-    private final WrapperManager<? extends Wrapper> wrapperManager;
+    protected final WrapperManager<? extends Wrapper> wrapperManager;
     protected final BackendObject<? extends Wrapper> object;
 
     protected Wrapper(WrapperManager<? extends Wrapper> wrapperManager) {
         this.wrapperManager = wrapperManager;
         this.object = new BackendObject<>(this);
+    }
+
+    protected boolean nullCheck(Object object) {
+        if (object == null) {
+            getLogger().warn("Some object seems null while doing null-check", new NullPointerException("object is null"));
+            return false;
+        }
+        return true;
     }
 
     public abstract String getIdentifier();

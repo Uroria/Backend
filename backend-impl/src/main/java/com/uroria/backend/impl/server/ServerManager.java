@@ -9,6 +9,7 @@ import com.uroria.backend.cache.communication.server.GetServerRequest;
 import com.uroria.backend.cache.communication.server.GetServerResponse;
 import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.impl.server.group.ServerGroupWrapper;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.events.ServerDeletedEvent;
 import com.uroria.backend.server.events.ServerUpdatedEvent;
@@ -48,16 +49,18 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
         return wrapper;
     }
 
-    public ServerWrapper createServerWrapper(long groupId, int templateId) {
-        long id = System.currentTimeMillis() + new Random().nextLong(10000) - groupId - templateId;
+    public ServerWrapper createServerWrapper(ServerGroupWrapper group, int templateId) {
+        long id = System.currentTimeMillis() + new Random().nextLong(10000) - templateId;
         Result<GetServerResponse> result = this.idCheck.request(new GetServerRequest(id, true), 2000);
         GetServerResponse response = result.get();
         if (response == null) return null;
         if (!response.isExistent()) return null;
         ServerWrapper wrapper = new ServerWrapper(this, id);
         BackendObject<? extends Wrapper> object = wrapper.getBackendObject();
+        object.set("id", id);
         object.set("templateId", templateId);
-        object.set("group", groupId);
+        object.set("group", group.getName());
+        group.addServer(id);
         this.wrappers.add(wrapper);
         return wrapper;
     }
@@ -69,7 +72,10 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
         ObjectSet<Server> wrappers = new ObjectArraySet<>();
         response.getServers().forEach(id -> {
             ServerWrapper wrapper = getServerWrapper(id);
-            if (wrapper == null) return;
+            if (wrapper == null) {
+                logger.error("Cannot get server with id " + id + " while getting all");
+                return;
+            }
             wrappers.add(wrapper);
         });
         return wrappers;

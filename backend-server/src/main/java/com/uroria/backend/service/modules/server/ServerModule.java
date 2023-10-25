@@ -18,7 +18,6 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
 
-
 public final class ServerModule extends LocalCachingModule {
     
     public ServerModule(BackendServer server) {
@@ -27,7 +26,13 @@ public final class ServerModule extends LocalCachingModule {
             @Override
             protected Optional<GetServerResponse> onRequest(GetServerRequest request) {
                 for (long id : getAll()) {
-                    if (id == request.getId()) return Optional.of(new GetServerResponse(true));
+                    if (id == request.getId()) {
+                        if (request.isAutoCreate()) return Optional.empty();
+                        return Optional.of(new GetServerResponse(true));
+                    }
+                }
+                if (request.isAutoCreate()) {
+                    return Optional.of(new GetServerResponse(true));
                 }
                 return Optional.empty();
             }
@@ -48,7 +53,7 @@ public final class ServerModule extends LocalCachingModule {
     protected Optional<PartResponse> request(PartRequest request) {
         String identifier = request.getIdentifier();
         String key = request.getKey();
-        JsonElement part = getPart("identifier", identifier, key);
+        JsonElement part = getPart("id", identifier, key);
         if (part.isJsonNull()) return Optional.empty();
         return Optional.of(new PartResponse(identifier, key, part));
     }
@@ -57,13 +62,13 @@ public final class ServerModule extends LocalCachingModule {
     protected void update(UpdateBroadcast broadcast) {
         String identifier = broadcast.getIdentifier();
         this.cache.set(prefix + ":" + identifier, new JsonPrimitive(identifier), Duration.ofHours(1));
-        checkPart("identifier", identifier, broadcast.getKey(), broadcast.getElement());
+        checkPart("id", identifier, broadcast.getKey(), broadcast.getElement());
     }
 
     @Override
     protected void delete(DeleteBroadcast broadcast) {
         String identifier = broadcast.getIdentifier();
         this.cache.delete(prefix + ":" + identifier);
-        checkPart("identifier", identifier, "deleted", new JsonPrimitive(true));
+        checkPart("id", identifier, "deleted", new JsonPrimitive(true));
     }
 }

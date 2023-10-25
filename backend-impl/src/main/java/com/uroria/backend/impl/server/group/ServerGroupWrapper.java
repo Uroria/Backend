@@ -1,23 +1,19 @@
 package com.uroria.backend.impl.server.group;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
 import com.uroria.backend.app.ApplicationStatus;
 import com.uroria.backend.cache.Wrapper;
+import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.impl.server.ServerManager;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
-import it.unimi.dsi.fastutil.objects.ObjectLists;
-import lombok.NonNull;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
@@ -26,35 +22,10 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
 
     private boolean deleted;
 
-    public ServerGroupWrapper(ServerManager serverManager, @NonNull CommunicationClient client, String name) {
+    public ServerGroupWrapper(WrapperManager<? extends Wrapper> wrapperManager, ServerManager serverManager, String name) {
+        super(wrapperManager);
         this.serverManager = serverManager;
-        this.object = new CommunicationWrapper(name, client);
         this.name = name;
-    }
-
-    @Override
-    public void refresh() {
-
-    }
-
-    @Override
-    public JsonObject getObject() {
-        return this.object.getObject();
-    }
-
-    @Override
-    public CommunicationWrapper getObjectWrapper() {
-        return this.object;
-    }
-
-    @Override
-    public String getIdentifierKey() {
-        return "name";
-    }
-
-    @Override
-    public String getStringIdentifier() {
-        return this.name;
     }
 
     @Override
@@ -71,12 +42,9 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     @Override
     public boolean isDeleted() {
         if (this.deleted) return true;
-        Result<JsonElement> result = object.get("deleted");
-        JsonElement element = result.get();
-        if (element == null) return false;
-        boolean val = element.getAsBoolean();
-        if (val) this.deleted = true;
-        return val;
+        boolean deleted = this.object.getBooleanOrElse("deleted", false);
+        this.deleted = deleted;
+        return deleted;
     }
 
     @Override
@@ -91,7 +59,7 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     public Collection<Server> getServersWithTemplateId(int templateId) {
         return getRawServers().stream()
                 .map(identifier -> Backend.getServer(identifier).get())
-                .filter(Objects::nonNull)
+                .filter(this::nullCheck)
                 .filter(server -> server.getTemplateId() == templateId)
                 .toList();
     }
@@ -100,30 +68,32 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     public Collection<Server> getServers() {
         return getRawServers().stream()
                 .map(identifier -> Backend.getServer(identifier).get())
-                .filter(Objects::nonNull)
+                .filter(this::nullCheck)
                 .toList();
     }
 
-    public void removeServer(long identifier) {
-
+    public void addServer(long id) {
+        Set<Long> servers = getRawServers();
+        servers.add(id);
+        this.object.set("servers", servers);
     }
 
-    private Collection<Long> getRawServers() {
-        Result<JsonElement> result = this.object.get("servers");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray stringArray = element.getAsJsonArray();
-        return stringArray.asList().stream()
-                .map(JsonElement::getAsLong)
-                .toList();
+    public void removeServer(long id) {
+        Set<Long> servers = getRawServers();
+        servers.remove(id);
+        this.object.set("servers", servers);
     }
 
+    private Set<Long> getRawServers() {
+        return this.object.getSet("servers", Long.class);
+    }
 
     @Override
     public Result<Server> createServer(int templateId) {
         try {
-            return Result.of(this.serverManager.createServerWrapper(templateId, getName(), getMaxUserCount()));
+            return Result.of(this.serverManager.createServerWrapper(this, templateId));
         } catch (Exception exception) {
+            getLogger().error("Cannot create server by group " + getName() + " with templateId " + templateId, exception);
             return Result.problem(Problem.error(exception));
         }
     }
@@ -135,35 +105,30 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
 
     @Override
     public Collection<User> getOnlineUsers() {
-        return getRawOnlineUsers().stream()
-                .map(uuid -> Backend.getUser(uuid).get())
-                .filter(Objects::nonNull)
+        return this.object.getSet("onlineUsers", String.class).stream()
+                .map(uuidString -> {
+                    try {
+                        return Backend.getUser(UUID.fromString(uuidString)).get();
+                    } catch (Exception exception) {
+                        return null;
+                    }
+                })
+                .filter(this::nullCheck)
                 .toList();
     }
 
     @Override
     public int getOnlineUserCount() {
-        Result<JsonElement> result = object.get("playerCount");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        return element.getAsInt();
+        return this.object.getIntOrElse("playerCount", 0);
     }
 
     @Override
     public int getMaxUserCount() {
-        Result<JsonElement> result = object.get("maxPlayerCount");
-        JsonElement element = result.get();
-        if (element == null) return 0;
-        return element.getAsInt();
+        return this.object.getIntOrElse("maxPlayerCount", 0);
     }
 
-    private Collection<UUID> getRawOnlineUsers() {
-        Result<JsonElement> result = this.object.get("onlinePlayers");
-        JsonElement element = result.get();
-        if (element == null) return ObjectLists.emptyList();
-        JsonArray uuidArray = element.getAsJsonArray();
-        return uuidArray.asList().stream()
-                .map(el -> UUID.fromString(el.getAsString()))
-                .toList();
+    @Override
+    public String getIdentifier() {
+        return this.name;
     }
 }
