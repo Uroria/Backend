@@ -45,7 +45,6 @@ public class RabbitUtils {
             return factory.newConnection();
         } catch (Exception exception) {
             logger.error("Cannot connect to RabbitMQ", exception);
-            System.exit(1);
             return null;
         }
     }

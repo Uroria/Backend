@@ -3,3 +3,7 @@ dependencies {
     annotationProcessor(project(":backend-cache"))
 }
 
+tasks.shadowJar {
+    minimize()
+    exclude("Log4j-*", "*.md")
+}

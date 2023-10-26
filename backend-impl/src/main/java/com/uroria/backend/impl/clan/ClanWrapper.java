@@ -26,6 +26,9 @@ public final class ClanWrapper extends Wrapper implements Clan {
     public void delete() {
         if (isDeleted()) return;
         this.deleted = true;
+        for (User user : getMembers()) {
+            user.leaveClan();
+        }
         this.object.set("deleted", true);
     }
 
@@ -133,6 +136,7 @@ public final class ClanWrapper extends Wrapper implements Clan {
         if (isDeleted()) return;
         if (uuid == null) return;
         object.getSet("operators").remove(uuid.toString());
+        if (getOperators().isEmpty()) delete();
     }
 
     @Override

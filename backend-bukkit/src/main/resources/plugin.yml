@@ -1,5 +1,4 @@
-main: "com.uroria.backend.bukkit.BackendBukkitPlugin"
+main: "com.uroria.backend.bukkit.BackendPlugin"
 name: "Backend"
 version: "Autogen"
 load: STARTUP
-api-version: '1.20'

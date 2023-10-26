@@ -1,6 +1,7 @@
 package com.uroria.backend.impl;
 
 import com.uroria.backend.clan.Clan;
+import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.impl.clan.ClanManager;
 import com.uroria.backend.impl.clan.ClanWrapper;
 import com.uroria.backend.impl.permission.GroupWrapper;
@@ -29,8 +30,9 @@ import org.slf4j.Logger;
 import java.util.Collection;
 import java.util.UUID;
 
-public class BackendWrapperImpl extends AbstractBackendWrapper {
+public final class BackendWrapperImpl extends AbstractBackendWrapper {
 
+    private final Communicator communicator;
     private final UserManager userManager;
     private final ProxyManager proxyManager;
     private final PermGroupManager permGroupManager;
@@ -39,19 +41,26 @@ public class BackendWrapperImpl extends AbstractBackendWrapper {
     private final ClanManager clanManager;
     private final StatsManager statsManager;
 
-    public BackendWrapperImpl(@NonNull Logger logger) {
+    BackendWrapperImpl(@NonNull Logger logger) {
         super(logger);
-        this.statsManager = new StatsManager(communicator);
-        this.userManager = new UserManager(this.statsManager, communicator);
-        this.proxyManager = new ProxyManager(communicator);
-        this.permGroupManager = new PermGroupManager(communicator);
-        this.serverManager = new ServerManager(communicator);
-        this.serverGroupManager = new ServerGroupManager(serverManager, communicator);
-        this.clanManager = new ClanManager(communicator);
+        try {
+            this.communicator = new Communicator(logger);
+            this.statsManager = new StatsManager(communicator);
+            this.userManager = new UserManager(this.statsManager, communicator);
+            this.proxyManager = new ProxyManager(communicator);
+            this.permGroupManager = new PermGroupManager(communicator);
+            this.serverManager = new ServerManager(communicator);
+            this.serverGroupManager = new ServerGroupManager(serverManager, communicator);
+            this.clanManager = new ClanManager(communicator);
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     @Override
     public void start() throws Exception {
+        if (this.started) return;
+        this.started = true;
         this.userManager.enable();
         this.proxyManager.enable();
         this.permGroupManager.enable();
@@ -68,7 +77,7 @@ public class BackendWrapperImpl extends AbstractBackendWrapper {
         this.serverGroupManager.disable();
         this.serverManager.disable();
         this.clanManager.disable();
-        super.shutdown();
+        this.communicator.close();
     }
 
     @Override

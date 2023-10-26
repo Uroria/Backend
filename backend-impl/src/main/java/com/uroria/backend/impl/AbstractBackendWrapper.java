@@ -1,22 +1,29 @@
 package com.uroria.backend.impl;
 
-import com.rabbitmq.client.Connection;
 import com.uroria.backend.BackendWrapper;
-import com.uroria.backend.communication.Communicator;
+import com.uroria.backend.Unsafe;
 import com.uroria.base.event.EventManager;
 import com.uroria.base.event.EventManagerFactory;
 import lombok.NonNull;
 import org.slf4j.Logger;
 
 public abstract class AbstractBackendWrapper implements BackendWrapper {
+    protected boolean started;
+    protected final BackendEnvironment environment;
     protected final Logger logger;
-    protected final Communicator communicator;
     private final EventManager eventManager;
 
-    protected AbstractBackendWrapper(@NonNull Logger logger) {
+    @SuppressWarnings("ErrorMarkers")
+    AbstractBackendWrapper(@NonNull Logger logger) {
+        Unsafe.setInstance(this);
         this.logger = logger;
-        this.communicator = new Communicator(logger);
         this.eventManager = EventManagerFactory.create("BackendEvents");
+        this.environment = new BackendEnvironment();
+    }
+
+    @Override
+    public final BackendEnvironment getEnvironment() {
+        return this.environment;
     }
 
     @Override
@@ -26,11 +33,13 @@ public abstract class AbstractBackendWrapper implements BackendWrapper {
 
     abstract public void start() throws Exception;
 
-    public void shutdown() throws Exception {
-        this.communicator.close();
+    abstract public void shutdown() throws Exception;
+
+    public final boolean isStarted() {
+        return this.started;
     }
 
-    public Logger getLogger() {
+    public final Logger getLogger() {
         return this.logger;
     }
 }

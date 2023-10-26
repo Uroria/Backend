@@ -95,4 +95,6 @@ public interface BackendWrapper {
     Statistics getStatistics();
 
     EventManager getEventManager();
+
+    WrapperEnvironment getEnvironment();
 }

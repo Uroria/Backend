@@ -79,7 +79,7 @@ public class Backend {
         return getWrapper().getServerGroup(name);
     }
 
-    public Result<ServerGroup> createGroup(String name, int maxPlayers) {
+    public Result<ServerGroup> createServerGroup(String name, int maxPlayers) {
         return getWrapper().createServerGroup(name, maxPlayers);
     }
 
@@ -105,6 +105,10 @@ public class Backend {
 
     public Statistics getStatistics() {
         return getWrapper().getStatistics();
+    }
+
+    public WrapperEnvironment getEnvironment() {
+        return getWrapper().getEnvironment();
     }
 
     public BackendWrapper getWrapper() {
