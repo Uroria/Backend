@@ -6,6 +6,7 @@ import com.uroria.problemo.result.Result;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
@@ -19,7 +20,7 @@ public final class Listeners implements Listener {
     }
 
     @SuppressWarnings("SafetyWarnings")
-    @EventHandler
+    @EventHandler (priority = EventPriority.LOWEST)
     public void onPlayerLogin(AsyncPlayerPreLoginEvent loginEvent) {
         UUID uuid = loginEvent.getUniqueId();
         Result<User> userResult = wrapper.getUser(uuid);

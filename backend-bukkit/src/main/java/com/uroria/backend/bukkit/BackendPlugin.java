@@ -105,6 +105,7 @@ public final class BackendPlugin extends JavaPlugin {
             ServerGroup group = Backend.getServerGroup("offline").get();
             if (group == null) group = Backend.createServerGroup("offline", 999).get();
             server = Backend.createServer(0, group).get();
+            if (server == null) throw new RuntimeException("Unable to setup server");
         }
         this.server.setStatus(ApplicationStatus.ONLINE);
     }
