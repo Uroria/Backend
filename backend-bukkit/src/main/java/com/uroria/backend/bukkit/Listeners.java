@@ -2,6 +2,7 @@ package com.uroria.backend.bukkit;
 
 import com.uroria.backend.impl.AbstractBackendWrapper;
 import com.uroria.backend.user.User;
+import com.uroria.base.lang.Language;
 import com.uroria.problemo.result.Result;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -33,6 +34,14 @@ public final class Listeners implements Listener {
             disallow(loginEvent, "Unable to fetch user. Please try again later.");
             return;
         }
+        String username = loginEvent.getName();
+        String current = user.getUsername();
+        if (!username.equals(current)) {
+            user.setUsername(username);
+        }
+        user.setLanguage(Language.ENGLISH);
+        user.setLastJoin(0);
+        user.setPlaytime(2005);
         user.getClan(); // Just to verify the clan may be loaded
     }
 

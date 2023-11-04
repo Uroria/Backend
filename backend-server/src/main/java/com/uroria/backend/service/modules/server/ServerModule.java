@@ -25,16 +25,15 @@ public final class ServerModule extends LocalCachingModule {
         responsePoint.registerResponser(GetServerRequest.class, GetServerResponse.class, "CheckId", new RequestListener<>() {
             @Override
             protected Optional<GetServerResponse> onRequest(GetServerRequest request) {
+                if (request.isAutoCreate()) {
+                    return Optional.of(new GetServerResponse(true, null));
+                }
                 for (long id : getAll()) {
                     if (id == request.getId()) {
-                        if (request.isAutoCreate()) return Optional.of(new GetServerResponse(false));
-                        return Optional.of(new GetServerResponse(true));
+                        return Optional.of(new GetServerResponse(true, getPart("id", String.valueOf(id), "name").getAsString()));
                     }
                 }
-                if (request.isAutoCreate()) {
-                    return Optional.of(new GetServerResponse(true));
-                }
-                return Optional.of(new GetServerResponse(false));
+                return Optional.of(new GetServerResponse(false,  null));
             }
         });
         responsePoint.registerResponser(GetAllServersRequest.class, GetAllServersResponse.class, "GetAll", new RequestListener<>() {

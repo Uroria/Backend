@@ -1,6 +1,7 @@
 package com.uroria.backend.service.modules.user;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.uroria.backend.cache.communication.DeleteBroadcast;
 import com.uroria.backend.cache.communication.PartRequest;
@@ -35,7 +36,9 @@ public final class UserModule extends SavingModule {
                 }
                 if (name == null) {
                     if (request.isAutoCreate()) {
-                        db.set("uuid", new JsonPrimitive(uuid.toString()));
+                        if (!db.get("uuid", uuid.toString()).isPresent()) {
+                            db.set("uuid", new JsonPrimitive(uuid.toString()));
+                        }
                         return Optional.of(new GetUserResponse(true, uuid));
                     }
                     JsonElement element = cache.get(prefix + ":" + uuid).get();
@@ -73,6 +76,12 @@ public final class UserModule extends SavingModule {
             if (username != null) this.cache.delete("username" + username);
         } catch (Exception exception) {
             logger.error("Cannot delete old username from cache of " + identifier);
+        }
+        JsonObject object = this.db.get("uuid", identifier).get();
+        if (object != null) {
+            for (String key : object.keySet()) {
+                this.cache.delete(prefix + ":" + identifier + ":" + key);
+            }
         }
         this.cache.delete(prefix + ":" + identifier);
         this.db.delete("uuid", identifier);

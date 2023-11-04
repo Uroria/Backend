@@ -8,4 +8,5 @@ import lombok.Getter;
 @Getter
 public final class GetServerResponse extends Response {
     private final boolean existent;
+    private final String name;
 }

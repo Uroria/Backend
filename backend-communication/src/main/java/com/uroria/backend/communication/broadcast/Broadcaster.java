@@ -40,7 +40,8 @@ public final class Broadcaster<T extends Broadcast> {
             AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .appId(this.point.getAppId())
                     .build();
-            this.point.getChannel().basicPublish("", this.point.getQueue(), properties, output.toByteArray());
+            this.point.getChannel().basicPublish(this.point.getTopic(), "ignored", properties, output.toByteArray());
+            point.logger().info("Publishing broadcast on topic " + messageType);
             return Result.none();
         } catch (Exception exception) {
             return Result.problem(Problem.error(exception));

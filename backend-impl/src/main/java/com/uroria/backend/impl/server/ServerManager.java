@@ -30,7 +30,7 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
     private final Requester<GetAllServersRequest, GetAllServersResponse> allGet;
 
     public ServerManager(Communicator communicator) {
-        super(logger, communicator, "servers", "servers", "servers");
+        super(logger, communicator, "server", "server", "server");
         this.idCheck = requestPoint.registerRequester(GetServerRequest.class, GetServerResponse.class, "CheckId");
         this.allGet = requestPoint.registerRequester(GetAllServersRequest.class, GetAllServersResponse.class, "GetAll");
     }
@@ -44,7 +44,7 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
         GetServerResponse response = result.get();
         if (response == null) return null;
         if (!response.isExistent()) return null;
-        ServerWrapper wrapper = new ServerWrapper(this, id);
+        ServerWrapper wrapper = new ServerWrapper(this, id, response.getName());
         this.wrappers.add(wrapper);
         return wrapper;
     }
@@ -53,9 +53,9 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
         long id = System.currentTimeMillis() + new Random().nextLong(10000) - templateId;
         Result<GetServerResponse> result = this.idCheck.request(new GetServerRequest(id, true), 2000);
         GetServerResponse response = result.get();
-        if (response == null) return null;
-        if (!response.isExistent()) return null;
-        ServerWrapper wrapper = new ServerWrapper(this, id);
+        if (response == null) throw new IllegalStateException("No response from server creation call");
+        if (!response.isExistent()) throw new IllegalStateException("We wanted to create a server, but it's non-existent?!");
+        ServerWrapper wrapper = new ServerWrapper(this, id, group.getName());
         BackendObject<? extends Wrapper> object = wrapper.getBackendObject();
         object.set("id", id);
         object.set("templateId", templateId);

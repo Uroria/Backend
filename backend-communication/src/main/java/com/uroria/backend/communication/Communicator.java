@@ -4,9 +4,11 @@ import com.google.gson.Gson;
 import com.rabbitmq.client.Connection;
 import com.uroria.backend.communication.messenger.RabbitUtils;
 import com.uroria.base.gson.GsonFactory;
+import lombok.Getter;
 import org.slf4j.Logger;
 
 public class Communicator {
+    @Getter
     private static final Gson gson = GsonFactory.create();
     protected final Logger logger;
     protected final Connection connection;
@@ -30,9 +32,5 @@ public class Communicator {
 
     public final Connection getConnection() {
         return connection;
-    }
-
-    public static Gson getGson() {
-        return gson;
     }
 }

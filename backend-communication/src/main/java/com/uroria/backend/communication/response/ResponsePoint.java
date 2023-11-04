@@ -1,9 +1,11 @@
 package com.uroria.backend.communication.response;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.GetResponse;
 import com.uroria.backend.communication.CommunicationPoint;
 import com.uroria.backend.communication.CommunicationThread;
 import com.uroria.backend.communication.Communicator;
@@ -14,22 +16,28 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 
+import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public class ResponsePoint extends CommunicationPoint {
     private final ObjectSet<Responser<?, ?>> responsers;
 
     public ResponsePoint(Communicator communicator, String topic) {
-        super(communicator, "response-" + topic);
+        super(communicator, "request-" + topic);
         this.responsers = new ObjectArraySet<>();
+        try {
+            this.channel.exchangeDeclare(this.topic, BuiltinExchangeType.FANOUT);
+            this.channel.queueBind(queue, this.topic, "ignored");
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
+        RequestThread thread = new RequestThread(this);
+        thread.start();
     }
 
     public final <REQ extends Request, RES extends Response> Responser<REQ, RES> registerResponser(@NonNull Class<REQ> requestClass, @NonNull Class<RES> responseClass, String messageType, RequestListener<REQ, RES> listener) {
-        Responser<REQ, RES> responser = new Responser<>(this, messageType, requestClass, responseClass, listener);
+        Responser<REQ, RES> responser = new Responser<>(messageType, requestClass, responseClass, listener);
         this.responsers.add(responser);
         return responser;
     }
@@ -72,27 +80,26 @@ public class ResponsePoint extends CommunicationPoint {
         @Override
         public void run() {
             while (point.channel.isOpen()) {
-                BlockingQueue<byte[]> byteQueue = new ArrayBlockingQueue<>(1);
-                BlockingQueue<AMQP.BasicProperties> propertiesQueue = new ArrayBlockingQueue<>(1);
-                DeliverCallback callback = (consumerTag, message) -> {
-                    AMQP.BasicProperties properties = message.getProperties();
-                    if (properties.getAppId().equals(this.point.getAppId())) return;
-                    propertiesQueue.add(properties);
-                    byteQueue.add(message.getBody());
-                };
-                Optional<byte[]> optionalBytes;
+                if (!isAlive()) return;
+                if (isInterrupted()) return;
                 AMQP.BasicProperties properties;
+                byte[] bytes;
                 try {
-                    this.point.channel.basicConsume("request-" + point.topic, true, callback, (consumerTag -> {}));
-                    optionalBytes = Optional.ofNullable(byteQueue.poll(5, TimeUnit.SECONDS));
-                    properties = propertiesQueue.poll(5, TimeUnit.SECONDS);
+                    GetResponse response = this.point.channel.basicGet(point.queue, true);
+                    if (response == null) continue;
+                    properties = response.getProps();
+                    bytes = response.getBody();
+                } catch (IOException ignored) {
+                    continue;
                 } catch (Exception exception) {
+                    this.point.logger().error("Unable to consume message for topic " + point.topic, exception);
                     continue;
                 }
-                if (optionalBytes.isEmpty()) continue;
-                if (properties == null) continue;
-                byte[] bytes = optionalBytes.get();
+                if (bytes == null || properties == null) {
+                    return;
+                }
                 CompletableFuture.runAsync(() -> {
+                    //noinspection SpellCheckingInspection
                     try {
                         BackendInputStream input = new BackendInputStream(bytes);
                         String messageType = input.readUTF();
@@ -101,14 +108,25 @@ public class ResponsePoint extends CommunicationPoint {
 
                         Response response = request(this.point.getResponser(messageType), element);
                         BackendOutputStream output = new BackendOutputStream();
-                        output.writeJsonElement(response.toElement());
+                        if (response != null) output.writeJsonElement(response.toElement());
+                        else output.writeJsonElement(JsonNull.INSTANCE);
                         output.close();
 
                         AMQP.BasicProperties responseProperties = new AMQP.BasicProperties.Builder()
                                 .appId(properties.getAppId())
                                 .correlationId(properties.getCorrelationId())
                                 .build();
-                        this.point.channel.basicPublish("", point.queue, responseProperties, output.toByteArray());
+                        this.point.channel.basicPublish("", properties.getReplyTo(), responseProperties, output.toByteArray());
+                    } catch (IOException ignored) {
+                        /*
+                            ███╗░░██╗██╗░█████╗░██╗░░██╗████████╗░██████╗
+                            ████╗░██║██║██╔══██╗██║░░██║╚══██╔══╝██╔════╝
+                            ██╔██╗██║██║██║░░╚═╝███████║░░░██║░░░╚█████╗░
+                            ██║╚████║██║██║░░██╗██╔══██║░░░██║░░░░╚═══██╗
+                            ██║░╚███║██║╚█████╔╝██║░░██║░░░██║░░░██████╔╝
+                            ╚═╝░░╚══╝╚═╝░╚════╝░╚═╝░░╚═╝░░░╚═╝░░░╚═════╝░,
+                            weil wir scheißen auf diesen fehler 😎
+                         */
                     } catch (Exception exception) {
                         point.logger().error("Cannot response to request", exception);
                     }
@@ -117,7 +135,10 @@ public class ResponsePoint extends CommunicationPoint {
         }
 
         private <REQ extends Request, RES extends Response> RES request(Responser<REQ, RES> responser, JsonElement element) {
-            if (responser == null) return null;
+            if (responser == null) {
+                this.point.logger().warn("Cannot find valid responser for");
+                return null;
+            }
             REQ request = Communicator.getGson().fromJson(element, responser.getRequestClass());
             Optional<RES> optionalResponse = responser.getListener().onRequest(request);
             if (optionalResponse.isPresent()) {

@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
+import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
 
 plugins {
     `java-library`
@@ -50,6 +51,9 @@ subprojects {
             manifest {
                 attributes["Multi-Release"] = "true"
             }
+        }
+        shadowJar {
+            transform(Log4j2PluginsCacheFileTransformer::class.java)
         }
     }
 

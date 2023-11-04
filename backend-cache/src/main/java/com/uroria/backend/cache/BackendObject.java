@@ -51,8 +51,10 @@ public final class BackendObject<T extends Wrapper> {
     }
 
     private JsonElement getElement(String key) {
-        if (wrapper.isDeleted()) {
-            return null;
+        if (!key.equals("deleted")) {
+            if (wrapper.isDeleted()) {
+                return null;
+            }
         }
         Result<JsonElement> result = request(key);
         JsonElement element = result.get();
@@ -79,16 +81,20 @@ public final class BackendObject<T extends Wrapper> {
     @SuppressWarnings("unchecked")
     public <O> ObjectSet<O> getSet(@NonNull String key, Class<O> tClass) {
         try {
-            if (cachedKeys.contains(key)) return new ObjectArraySet<>((ObjectSet<O>) sets.get(key));
+            if (cachedKeys.contains(key)) {
+                ObjectSet<O> os = (ObjectSet<O>) sets.get(key);
+                if (os == null) return new ObjectArraySet<>();
+                return new ObjectArraySet<>(os);
+            }
             JsonElement element = getElement(key);
-            if (element == null) return ObjectSets.emptySet();
+            if (element == null) return new ObjectArraySet<>();
             JsonArray array = element.getAsJsonArray();
             ObjectSet<Object> set = GsonUtils.toSet(array);
             this.sets.put(key, set);
             return new ObjectArraySet<>((ObjectSet<O>) set);
         } catch (Exception exception) {
             this.logger.error("Cannot get set " + key + " with type " + tClass.getName(), exception);
-            return ObjectSets.emptySet();
+            return new ObjectArraySet<>();
         }
     }
 
@@ -97,7 +103,7 @@ public final class BackendObject<T extends Wrapper> {
         try {
             if (this.cachedKeys.contains(key)) return new Object2ObjectArrayMap<>(((Object2ObjectMap<String, V>) this.maps.get(key)));
             JsonElement element = getElement(key);
-            if (element == null) return Object2ObjectMaps.emptyMap();
+            if (element == null) return new Object2ObjectArrayMap<>();
             Object2ObjectMap<String, V> map = new Object2ObjectArrayMap<>();
             JsonObject jsonObject = element.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
@@ -109,7 +115,7 @@ public final class BackendObject<T extends Wrapper> {
             return map;
         } catch (Exception exception) {
             this.logger.error("Cannot get map " + key + " with value-type " + valueClass.getName(), exception);
-            return Object2ObjectMaps.emptyMap();
+            return new Object2ObjectArrayMap<>();
         }
     }
 
@@ -117,14 +123,14 @@ public final class BackendObject<T extends Wrapper> {
         try {
             if (cachedKeys.contains(key)) return sets.get(key);
             JsonElement element = getElement(key);
-            if (element == null) return ObjectSets.emptySet();
+            if (element == null) return new ObjectArraySet<>();
             JsonArray array = element.getAsJsonArray();
             ObjectSet<Object> set = GsonUtils.toSet(array);
             this.sets.put(key, set);
             return  set;
         } catch (Exception exception) {
             this.logger.error("Cannot get set " + key, exception);
-            return ObjectSets.emptySet();
+            return new ObjectArraySet<>();
         }
     }
 

@@ -7,24 +7,28 @@ import com.google.gson.JsonPrimitive;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
+import com.uroria.backend.cache.utils.GsonUtils;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
 public class MongoDatabase implements Database {
+    private static final Logger logger = LoggerFactory.getLogger("Database");
     private final MongoCollection<Document> db;
 
     public MongoDatabase(@NonNull MongoCollection<Document> db) {
         this.db = db;
     }
 
-    private Result<Void> set(@NonNull String targetKey, @NonNull JsonPrimitive targetKeyValue, @NonNull String key, @NonNull JsonElement value) {
-        Result<JsonObject> result = get(targetKey, targetKeyValue);
+    private synchronized Result<Void> set(@NonNull String targetKey, @NonNull JsonPrimitive targetKeyValue, @NonNull String key, @NonNull JsonElement value) {
+        Result<JsonObject> result = get(targetKey, GsonUtils.toObject(targetKeyValue));
         if (!result.isPresent()) {
             JsonObject object = new JsonObject();
             object.add(targetKey, targetKeyValue);
@@ -56,10 +60,11 @@ public class MongoDatabase implements Database {
     }
 
     @Override
-    public Result<Void> set(@NonNull String key, @NonNull JsonElement value) {
+    public synchronized Result<Void> set(@NonNull String key, @NonNull JsonElement value) {
         JsonObject object = new JsonObject();
         object.add(key, value);
         if (this.db.insertOne(Document.parse(object.toString())).wasAcknowledged()) {
+            logger.debug("Inserted new document with key " + key + " and value " + value);
             return Result.none();
         }
         return Result.problem(Problem.plain("Cannot insert :/"));
@@ -85,26 +90,33 @@ public class MongoDatabase implements Database {
         return set(key, new JsonPrimitive(keyValue), object);
     }
 
-    public final Result<Void> set(@NonNull String key, @NonNull JsonPrimitive keyValue, @NonNull JsonObject object) {
-        Result<JsonObject> result = get(key, keyValue);
-        if (!result.isPresent()) {
+    public final synchronized Result<Void> set(@NonNull String key, @NonNull JsonPrimitive keyValue, @NonNull JsonObject object) {
+        Object realKeyValue = GsonUtils.toObject(keyValue);
+        synchronized (this.db) {
+            Result<JsonObject> result = get(key, realKeyValue);
+            if (!result.isPresent()) {
+                try {
+                    Document document = Document.parse(object.toString());
+                    if (this.db.insertOne(document).wasAcknowledged()) {
+                        logger.debug("Inserted new document for key " + key + " with value " + keyValue);
+                        return Result.none();
+                    }
+                } catch (Exception exception) {
+                    logger.warn("Cannot insert new document for key " + key + " with value " + keyValue, exception);
+                    return Result.problem(Problem.error(exception));
+                }
+                return Result.problem(Problem.plain("Unable to insert " + key + " for " + keyValue + " of " + db.getNamespace()));
+            }
             try {
-                Document document = Document.parse(object.toString());
-                if (this.db.insertOne(document).wasAcknowledged()) {
+                if (this.db.replaceOne(Filters.eq(key, realKeyValue), Document.parse(object.toString())).wasAcknowledged()) {
+                    logger.debug("Replaced document with key " + key + " with value " + keyValue);
                     return Result.none();
                 }
+                return Result.problem(Problem.plain("Unable to replace " + key + " for " + keyValue + " of " + db.getNamespace()));
             } catch (Exception exception) {
+                logger.warn("Cannot replace new document for key " + key + " with value " + keyValue, exception);
                 return Result.problem(Problem.error(exception));
             }
-            return Result.problem(Problem.plain("Unable to insert " + key + " for " + keyValue + " of " + db.getNamespace()));
-        }
-        try {
-            if (this.db.replaceOne(Filters.eq(key, keyValue), Document.parse(object.toString())).wasAcknowledged()) {
-                return Result.none();
-            }
-            return Result.problem(Problem.plain("Unable to replace " + key + " for " + keyValue + " of " + db.getNamespace()));
-        } catch (Exception exception) {
-            return Result.problem(Problem.error(exception));
         }
     }
 
@@ -120,17 +132,17 @@ public class MongoDatabase implements Database {
 
     @Override
     public Result<JsonObject> get(@NonNull String key, @NonNull Number keyValue) {
-        return get(key, new JsonPrimitive(keyValue));
+        return get(key, (Object) keyValue);
     }
 
     @Override
     public Result<JsonObject> get(@NonNull String key, @NonNull String keyValue) {
-        return get(key, new JsonPrimitive(keyValue));
+        return get(key, (Object) keyValue);
     }
 
     @Override
     public Result<JsonObject> get(@NonNull String key, boolean keyValue) {
-        return get(key, new JsonPrimitive(keyValue));
+        return get(key, (Object) keyValue);
     }
 
     @Override
@@ -223,19 +235,20 @@ public class MongoDatabase implements Database {
         return delete(key, (Object) keyValue);
     }
 
-    public Result<JsonObject> get(@NonNull String key, @NonNull JsonPrimitive keyValue) {
+    public Result<JsonObject> get(@NonNull String key, @NonNull Object keyValue) {
         Document document = this.db.find(Filters.eq(key, keyValue)).first();
         if (document == null) return Result.none();
         try {
             JsonElement element = JsonParser.parseString(document.toJson());
             return Result.of(element.getAsJsonObject());
         } catch (Exception exception) {
+            logger.warn("Cannot parse document for key " + key + " with value " + keyValue, exception);
             return Result.problem(Problem.error(exception));
         }
     }
 
     public Result<JsonElement> get(@NonNull String valueKey, @NonNull JsonPrimitive value, @NonNull String key) {
-        JsonObject object = get(valueKey, value).get();
+        JsonObject object = get(valueKey, GsonUtils.toObject(value)).get();
         if (object != null) return Result.of(object.get(key));
         return Result.none();
     }
@@ -301,10 +314,13 @@ public class MongoDatabase implements Database {
         return Result.some(objects);
     }
 
-    public final Result<Void> delete(@NonNull String key, @NonNull Object keyValue) {
-        if (this.db.deleteOne(Filters.eq(key, keyValue)).wasAcknowledged()) {
-            return Result.none();
+    public final synchronized Result<Void> delete(@NonNull String key, @NonNull Object keyValue) {
+        synchronized (this.db) {
+            logger.debug("Deleted document with key " + key + " and key-value " + keyValue);
+            if (this.db.deleteOne(Filters.eq(key, keyValue)).wasAcknowledged()) {
+                return Result.none();
+            }
+            return Result.problem(Problem.plain("Unable to delete " + key + "for " + keyValue + " of " + db.getNamespace()));
         }
-        return Result.problem(Problem.plain("Unable to delete " + key + "for " + keyValue + " of " + db.getNamespace()));
     }
 }

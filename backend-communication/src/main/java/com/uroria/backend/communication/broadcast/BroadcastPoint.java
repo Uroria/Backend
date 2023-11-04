@@ -1,6 +1,7 @@
 package com.uroria.backend.communication.broadcast;
 
 import com.google.gson.JsonElement;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.uroria.backend.communication.CommunicationPoint;
 import com.uroria.backend.communication.CommunicationThread;
@@ -19,6 +20,12 @@ public class BroadcastPoint extends CommunicationPoint {
     public BroadcastPoint(Communicator communicator, String topic) {
         super(communicator, "broadcast-" + topic);
         this.broadcasters = new ObjectArraySet<>();
+        try {
+            this.channel.exchangeDeclare(this.topic, BuiltinExchangeType.FANOUT);
+            this.channel.queueBind(queue, this.topic, "ignored");
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
         BroadcastThread broadcastThread = new BroadcastThread(this);
         broadcastThread.start();
     }
@@ -57,6 +64,10 @@ public class BroadcastPoint extends CommunicationPoint {
 
     Channel getChannel() {
         return this.channel;
+    }
+
+    String getTopic() {
+        return this.topic;
     }
 
     private static final class BroadcastThread extends CommunicationThread {

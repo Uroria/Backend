@@ -56,7 +56,7 @@ public final class OfflineUser implements User {
 
     @Override
     public Permission getPermission(String node) {
-
+        return null;
     }
 
     @Override

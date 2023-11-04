@@ -7,6 +7,7 @@ import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
@@ -19,7 +20,7 @@ public abstract class LocalCachingModule extends CachingModule {
     public LocalCachingModule(BackendServer server, String responseTopic, String broadcastTopic, String topic, String moduleName, String prefix) {
         super(server, responseTopic, broadcastTopic, topic, moduleName, prefix);
         this.allIdentifiers = new ObjectArraySet<>();
-        this.localCache = new Object2ObjectArrayMap<>();
+        this.localCache = Object2ObjectMaps.synchronize(new Object2ObjectArrayMap<>());
     }
 
     @Override

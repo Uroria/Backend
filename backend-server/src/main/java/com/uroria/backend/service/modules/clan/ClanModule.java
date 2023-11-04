@@ -1,6 +1,7 @@
 package com.uroria.backend.service.modules.clan;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.uroria.backend.cache.communication.DeleteBroadcast;
 import com.uroria.backend.cache.communication.PartRequest;
@@ -67,7 +68,14 @@ public final class ClanModule extends SavingModule {
 
     @Override
     protected void delete(DeleteBroadcast broadcast) {
-        checkPart("name", broadcast.getIdentifier(), "deleted", new JsonPrimitive(true));
+        String identifier = broadcast.getIdentifier();
+        JsonObject object = this.db.get("name", identifier).get();
+        if (object != null) {
+            for (String key : object.keySet()) {
+                this.cache.delete(prefix + ":" + identifier + ":" + key);
+            }
+        }
+        checkPart("name", identifier, "deleted", new JsonPrimitive(true));
     }
 
     public @Nullable String getName(String tag) {

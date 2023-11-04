@@ -1,5 +1,6 @@
 package com.uroria.backend.communication.request;
 
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.uroria.backend.communication.CommunicationPoint;
 import com.uroria.backend.communication.Communicator;
@@ -7,6 +8,7 @@ import com.uroria.backend.communication.response.Response;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
+import org.slf4j.Logger;
 
 public class RequestPoint extends CommunicationPoint {
     private final ObjectSet<Requester<?, ?>> requesters;
@@ -14,6 +16,11 @@ public class RequestPoint extends CommunicationPoint {
     public RequestPoint(Communicator communicator, String topic) {
         super(communicator, "request-" + topic);
         this.requesters = new ObjectArraySet<>();
+        try {
+            this.channel.exchangeDeclare(this.topic, BuiltinExchangeType.FANOUT);
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     public final <REQ extends Request, RES extends Response> Requester<REQ, RES> registerRequester(@NonNull Class<REQ> requestClass, @NonNull Class<RES> responseClass, String messageType) {

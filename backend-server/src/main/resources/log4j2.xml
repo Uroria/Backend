@@ -34,7 +34,7 @@
 
         <Root level="TRACE">
             <!-- <AppenderRef ref="ConsoleDebug" /> -->
-            <AppenderRef ref="TerminalConsole" level="INFO"/>
+            <AppenderRef ref="TerminalConsole" level="DEBUG"/>
             <AppenderRef ref="RollingFile"/>
         </Root>
     </Loggers>

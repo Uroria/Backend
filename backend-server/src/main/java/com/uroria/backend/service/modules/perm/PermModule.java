@@ -89,6 +89,12 @@ public final class PermModule extends SavingModule {
     protected void delete(DeleteBroadcast broadcast) {
         String name = broadcast.getIdentifier();
         this.cache.delete(prefix + ":" + name);
+        JsonObject object = this.db.get("name", name).get();
+        if (object != null) {
+            for (String key : object.keySet()) {
+                this.cache.delete(prefix + ":" + name + ":" + key);
+            }
+        }
         checkPart("name", name, "deleted", new JsonPrimitive(true));
     }
 }

@@ -11,6 +11,7 @@ import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.server.events.ServerUpdatedEvent;
 import com.uroria.base.event.Listener;
+import com.uroria.problemo.result.Result;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
@@ -88,7 +89,11 @@ public final class BackendPlugin extends JavaPlugin {
                     group = Backend.createServerGroup(groupName, 999).get();
                     if (group == null) throw new IllegalStateException("Unable to create server-group");
                 }
-                this.server = Backend.createServer(templateId, group).get();
+                Result<Server> result = Backend.createServer(templateId, group);
+                if (result instanceof Result.Problematic<Server> problematic) {
+                    throw new RuntimeException(problematic.getProblem().getError().orElseThrow(() -> new IllegalStateException("Some problem while trying to create server?")));
+                }
+                this.server = result.get();
                 if (this.server == null) throw new IllegalStateException("Unable to create server");
             }
             this.server.setStatus(ApplicationStatus.ONLINE);

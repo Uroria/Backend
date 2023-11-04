@@ -35,19 +35,24 @@ public abstract class SavingModule extends CachingModule {
         if (cacheResult.isPresent()) {
             JsonElement element = cacheResult.get();
             if (element == null) return JsonNull.INSTANCE;
+            this.logger.debug("Getting " + key + " from cache with key " + identifierKey + " and keyValue " + identifier);
             return element;
         }
         Result<JsonElement> result = this.db.get(identifierKey, identifier.toString(), key);
         if (result.isPresent()) {
             JsonElement element = result.get();
-            if (element == null) return JsonNull.INSTANCE;
+            if (element == null) {
+                this.logger.debug("Cannot find " + key + " in database with key " + identifierKey + " and keyValue " + identifier);
+                return JsonNull.INSTANCE;
+            }
             Result<Void> setResult = this.cache.set(prefix + ":" + identifier + ":" + key, element, Duration.ofDays(1));
             if (!setResult.isProblematic()) {
                 logger.info("Added in cache " + key + " of " + identifier);
             } else {
                 Problem problem = setResult.getAsProblematic().getProblem();
-                logger.warn("Unable to update in cache " + key + " of " + identifier, problem.getError().orElse(null));
+                logger.warn("Unable to update in database " + key + " of " + identifier, problem.getError().orElse(null));
             }
+            this.logger.debug("Getting " + key + " from database with key " + identifierKey + " and keyValue " + identifier);
             return element;
         }
         return JsonNull.INSTANCE;
@@ -57,6 +62,7 @@ public abstract class SavingModule extends CachingModule {
     public final void checkPart(String identifierKey, Object identifier, String key, JsonElement value) {
         String cacheKey = prefix + ":" + identifier + ":" + key;
         this.cache.delete(cacheKey);
+        this.logger.debug("Updating " + key + " and value " + value + " with key " + identifierKey + " and keyValue " + identifier);
         Result<Void> cacheResult = this.cache.set(cacheKey, value, Duration.ofHours(8));
         Result<Void> result = this.db.set(identifierKey, identifier.toString(), key, value);
         if (!cacheResult.isProblematic()) {

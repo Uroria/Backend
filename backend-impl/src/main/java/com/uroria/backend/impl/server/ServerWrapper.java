@@ -17,17 +17,19 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 public final class ServerWrapper extends Wrapper implements Server {
     private final long identifier;
+    private final String name;
     private boolean deleted;
     private InetSocketAddress address;
 
-    public ServerWrapper(WrapperManager<? extends Wrapper> wrapperManager, long identifier) {
+    public ServerWrapper(WrapperManager<? extends Wrapper> wrapperManager, long identifier, String name) {
         super(wrapperManager);
         this.identifier = identifier;
+        this.name = name;
+        if (name == null) throw new IllegalStateException("Name is null");
     }
 
     @Override
@@ -87,7 +89,7 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public ServerGroupWrapper getGroup() {
-        return (ServerGroupWrapper) Backend.getServerGroup(getName()).get();
+        return (ServerGroupWrapper) Backend.getServerGroup(this.name).get();
     }
 
     @Override

@@ -64,6 +64,7 @@ public final class BackendServer {
         try {
             this.redis = connectRedisClient();
             this.redisCache = connectRedisCache();
+            this.redisCache.sync().flushdb();
         } catch (Exception exception) {
             LOGGER.error("Unable initialize redis connection", exception);
             try {

@@ -1,10 +1,7 @@
 package com.uroria.backend.communication.request;
 
 import com.google.gson.JsonElement;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Consumer;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.*;
 import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.io.BackendInputStream;
 import com.uroria.backend.communication.io.BackendOutputStream;
@@ -27,6 +24,7 @@ public final class Requester<REQ extends Request, RES extends Response> {
     private final Class<REQ> requestClass;
     private final Class<RES> responseClass;
     private final ObjectSet<String> openedRequests;
+    private final Channel channel;
 
     Requester(RequestPoint point, String messageType, Class<REQ> requestClass, Class<RES> responseClass) {
         this.point = point;
@@ -34,9 +32,11 @@ public final class Requester<REQ extends Request, RES extends Response> {
         this.requestClass = requestClass;
         this.responseClass = responseClass;
         this.openedRequests = new ObjectArraySet<>();
+        this.channel = point.getChannel();
     }
     
     public Result<RES> request(@NonNull REQ request, long timeoutMs) {
+        point.logger().info("Requesting on topic " + messageType + " with timeout " + timeoutMs);
         try {
             JsonElement element = request.toElement();
             BackendOutputStream output = new BackendOutputStream();
@@ -47,46 +47,42 @@ public final class Requester<REQ extends Request, RES extends Response> {
             AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .appId(this.point.getAppId())
                     .correlationId(correlationId)
+                    .replyTo(this.point.getQueue())
                     .build();
 
             this.openedRequests.add(correlationId);
-            this.point.getChannel().basicPublish("request", this.point.getQueue(), properties, output.toByteArray());
+            this.channel.basicPublish(point.getTopic(), "ignored", properties, output.toByteArray());
 
-            BlockingQueue<byte[]> responseQueue = new ArrayBlockingQueue<>(1);
-
-            Consumer consumer = new DefaultConsumer(point.getChannel()) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    long deliveryTag = envelope.getDeliveryTag();
-                    String appId = properties.getAppId();
-                    if (appId == null || !appId.equals(point.getAppId())) {
-                        point.getChannel().basicNack(deliveryTag, false, true);
-                        return;
-                    }
-                    String id = properties.getCorrelationId();
-                    if (id == null || !id.equals(correlationId)) {
-                        if (!openedRequests.contains(id)) {
-                            point.getChannel().basicNack(deliveryTag, false, false);
-                            return;
-                        }
-                        point.getChannel().basicNack(deliveryTag, false, true);
-                        return;
-                    }
-                    point.getChannel().basicAck(deliveryTag, false);
-                    responseQueue.add(body);
+            long start = System.currentTimeMillis();
+            while (true) {
+                if ((System.currentTimeMillis() - start) > timeoutMs) return Result.none();
+                GetResponse response = this.channel.basicGet(this.point.getQueue(), false);
+                if (response == null) continue;
+                long deliveryTag = response.getEnvelope().getDeliveryTag();
+                AMQP.BasicProperties responseProps = response.getProps();
+                String appId = responseProps.getAppId();
+                if (appId == null || !appId.equals(point.getAppId())) {
+                    this.channel.basicNack(deliveryTag, false, true);
+                    continue;
                 }
-            };
-            this.point.getChannel().basicConsume("response-" + this.point.getTopic(), false, consumer);
+                String id = responseProps.getCorrelationId();
+                if (id == null || !id.equals(correlationId)) {
+                    if (!openedRequests.contains(id)) {
+                        this.channel.basicNack(deliveryTag, false, false);
+                        continue;
+                    }
+                    this.channel.basicNack(deliveryTag, false, true);
+                    continue;
+                }
+                this.channel.basicAck(deliveryTag, false);
+                byte[] bytes = response.getBody();
 
-            byte[] bytes = responseQueue.poll(timeoutMs, TimeUnit.MILLISECONDS);
-            if (bytes == null) {
-                return Result.none();
+                BackendInputStream input = new BackendInputStream(bytes);
+                JsonElement responseElement = input.readJsonElement();
+                input.close();
+                if (responseElement.isJsonNull()) return Result.none();
+                return Result.some(Communicator.getGson().fromJson(responseElement, getResponseClass()));
             }
-
-            BackendInputStream input = new BackendInputStream(bytes);
-            JsonElement responseElement = input.readJsonElement();
-            input.close();
-            return Result.some(Communicator.getGson().fromJson(responseElement, getResponseClass()));
         } catch (Exception exception) {
             return Result.problem(Problem.error(exception));
         }
