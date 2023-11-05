@@ -41,7 +41,6 @@ public final class Broadcaster<T extends Broadcast> {
                     .appId(this.point.getAppId())
                     .build();
             this.point.getChannel().basicPublish(this.point.getTopic(), "ignored", properties, output.toByteArray());
-            point.logger().info("Publishing broadcast on topic " + messageType);
             return Result.none();
         } catch (Exception exception) {
             return Result.problem(Problem.error(exception));

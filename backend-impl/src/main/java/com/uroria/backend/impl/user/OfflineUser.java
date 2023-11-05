@@ -155,6 +155,11 @@ public final class OfflineUser implements User {
     }
 
     @Override
+    public @NotNull String getRealUsername() {
+        return getUsername();
+    }
+
+    @Override
     public boolean isOnline() {
         return false;
     }

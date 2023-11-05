@@ -35,13 +35,16 @@ public final class ServerModule extends LocalCachingModule {
         this.pingBroadcaster = broadcastPoint.registerBroadcaster(ServerPing.class, "Ping");
     }
 
-    private synchronized void tick() {
-        for (ServerApp app : this.apps) {
-            long id = app.getId();
-            long lastPing = app.getLastPing();
-            if ((System.currentTimeMillis() - lastPing) < 10000) continue;
-            logger.warn("Server " + id + " timed out after 10 seconds");
-            delete(new DeleteBroadcast(String.valueOf(id)));
+    private void tick() {
+        synchronized (apps) {
+            for (ServerApp app : this.apps) {
+                long id = app.getId();
+                long lastPing = app.getLastPing();
+                if ((System.currentTimeMillis() - lastPing) < 10000) continue;
+                logger.warn("Server " + id + " timed out after 10 seconds");
+                delete(new DeleteBroadcast(String.valueOf(id)));
+                this.apps.remove(app);
+            }
         }
     }
 

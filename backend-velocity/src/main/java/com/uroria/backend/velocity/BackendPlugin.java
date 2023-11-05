@@ -39,6 +39,7 @@ public final class BackendPlugin {
     private final ProxyServer proxyServer;
     private final AbstractBackendWrapper wrapper;
     private Proxy proxy;
+    private Broadcaster<ProxyPing> ping;
 
     @Inject
     public BackendPlugin(Logger logger, ProxyServer proxyServer) {
@@ -59,22 +60,6 @@ public final class BackendPlugin {
     @Subscribe
     public void onProxyInitializeEvent(ProxyInitializeEvent event) {
         try {
-            EventManager eventManager = this.wrapper.getEventManager();
-            eventManager.subscribe(new Listener<>(ProxyUpdatedEvent.class, 1) {
-                @Override
-                public void onEvent(ProxyUpdatedEvent event) {
-                    long id = event.getProxy().getId();
-                    if (proxy.getId() != id) return;
-                    if (event.getProxy().getStatus() == ApplicationStatus.STOPPED) proxyServer.shutdown();
-                }
-            });
-            eventManager.subscribe(new Listener<>(ProxyDeletedEvent.class, 1) {
-                @Override
-                public void onEvent(ProxyDeletedEvent event) {
-                    long id = event.getProxy().getId();
-                    if (proxy.getId() == id) proxyServer.shutdown();
-                }
-            });
             this.wrapper.start();
             if (!this.wrapper.isStarted())
                 throw new IllegalStateException("Wrapper was never started or plugin has been illegally reloaded");
@@ -92,12 +77,27 @@ public final class BackendPlugin {
                 this.proxy = Backend.createProxy(groupName, templateId, 999).get();
                 if (proxy == null) throw new IllegalStateException("Proxy still null after registration");
             }
+            EventManager eventManager = this.wrapper.getEventManager();
+            eventManager.subscribe(new Listener<>(ProxyUpdatedEvent.class, 1) {
+                @Override
+                public void onEvent(ProxyUpdatedEvent event) {
+                    long id = event.getProxy().getId();
+                    if (proxy.getId() != id) return;
+                    if (event.getProxy().getStatus() == ApplicationStatus.STOPPED) proxyServer.shutdown();
+                }
+            });
+            eventManager.subscribe(new Listener<>(ProxyDeletedEvent.class, 1) {
+                @Override
+                public void onEvent(ProxyDeletedEvent event) {
+                    long id = event.getProxy().getId();
+                    if (proxy.getId() == id) proxyServer.shutdown();
+                }
+            });
             if (wrapper instanceof BackendWrapperImpl onlineWrapper) {
-                Broadcaster<ProxyPing> ping = onlineWrapper.getProxyManager().getBroadcastPoint().registerBroadcaster(ProxyPing.class, "Ping");
+                this.ping = onlineWrapper.getProxyManager().getBroadcastPoint().registerBroadcaster(ProxyPing.class, "Ping");
                 CompletableFuture.runAsync(() -> {
                     while (true) {
-                        if (this.proxy.isDeleted()) return;
-                        if (this.proxy.getStatus() == ApplicationStatus.STOPPED) {
+                        if (this.proxy.getStatus() == ApplicationStatus.STOPPED || this.proxy.isDeleted()) {
                             ping.broadcast(new ProxyPing(this.proxy.getId(), System.currentTimeMillis(), true));
                             return;
                         }
@@ -128,6 +128,9 @@ public final class BackendPlugin {
         try {
             if (this.proxy != null) {
                 this.proxy.delete();
+                if (this.ping != null) {
+                    this.ping.broadcast(new ProxyPing(this.proxy.getId(), System.currentTimeMillis(), true));
+                }
             }
             this.wrapper.shutdown();
         } catch (Exception exception) {
