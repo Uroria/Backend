@@ -3,13 +3,14 @@ package com.uroria.backend.impl.proxy;
 import com.uroria.backend.app.ApplicationStatus;
 import com.uroria.backend.cache.BackendObject;
 import com.uroria.backend.cache.Wrapper;
-import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.controls.UnavailableException;
 import com.uroria.backend.cache.communication.proxy.GetAllProxiesRequest;
 import com.uroria.backend.cache.communication.proxy.GetAllProxiesResponse;
 import com.uroria.backend.cache.communication.proxy.GetProxyRequest;
 import com.uroria.backend.cache.communication.proxy.GetProxyResponse;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.impl.BackendWrapperImpl;
+import com.uroria.backend.impl.StatedManager;
 import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.proxy.events.ProxyDeletedEvent;
 import com.uroria.backend.proxy.events.ProxyUpdatedEvent;
@@ -23,19 +24,20 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Random;
 
-public final class ProxyManager extends WrapperManager<ProxyWrapper> {
+public final class ProxyManager extends StatedManager<ProxyWrapper> {
     private static final Logger logger = LoggerFactory.getLogger("Proxies");
 
     private final Requester<GetProxyRequest, GetProxyResponse> idCheck;
     private final Requester<GetAllProxiesRequest, GetAllProxiesResponse> allGet;
 
-    public ProxyManager(Communicator communicator) {
-        super(logger, communicator, "proxies", "proxies", "proxies");
+    public ProxyManager(BackendWrapperImpl wrapper) {
+        super(logger, wrapper, "proxies");
         this.idCheck = requestPoint.registerRequester(GetProxyRequest.class, GetProxyResponse.class, "CheckId");
         this.allGet = requestPoint.registerRequester(GetAllProxiesRequest.class, GetAllProxiesResponse.class, "GetAll");
     }
 
     public Collection<Proxy> getAllWithName(String name) {
+        if (!wrapper.isAvailable()) throw new UnavailableException();
         Result<GetAllProxiesResponse> result = allGet.request(new GetAllProxiesRequest(name), 5000);
         GetAllProxiesResponse response = result.get();
         if (response == null) return ObjectSets.emptySet();
@@ -57,6 +59,7 @@ public final class ProxyManager extends WrapperManager<ProxyWrapper> {
     }
 
     public Collection<Proxy> getAll() {
+        if (!wrapper.isAvailable()) throw new UnavailableException();
         Result<GetAllProxiesResponse> result = allGet.request(new GetAllProxiesRequest(null), 5000);
         GetAllProxiesResponse response = result.get();
         if (response == null) return ObjectSets.emptySet();
@@ -77,6 +80,8 @@ public final class ProxyManager extends WrapperManager<ProxyWrapper> {
             if (wrapper.getId() == id) return wrapper;
         }
 
+        if (!wrapper.isAvailable()) throw new UnavailableException();
+
         Result<GetProxyResponse> result = this.idCheck.request(new GetProxyRequest(id, false), 2000);
         GetProxyResponse response = result.get();
         if (response == null) return null;
@@ -87,6 +92,7 @@ public final class ProxyManager extends WrapperManager<ProxyWrapper> {
     }
 
     public ProxyWrapper createProxyWrapper(String name, int templateId, int maxPlayers) {
+        if (!wrapper.isAvailable()) throw new UnavailableException();
         long id = System.currentTimeMillis() + new Random().nextLong(10000) - maxPlayers - templateId;
         Result<GetProxyResponse> result = this.idCheck.request(new GetProxyRequest(id, true), 5000);
         GetProxyResponse response = result.get();

@@ -2,28 +2,29 @@ package com.uroria.backend.impl.clan;
 
 import com.uroria.backend.cache.BackendObject;
 import com.uroria.backend.cache.Wrapper;
-import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.cache.communication.clan.CheckClanRequest;
 import com.uroria.backend.cache.communication.clan.CheckClanResponse;
 import com.uroria.backend.cache.communication.clan.GetClanRequest;
 import com.uroria.backend.cache.communication.clan.GetClanResponse;
+import com.uroria.backend.cache.communication.controls.UnavailableException;
 import com.uroria.backend.clan.events.ClanDeletedEvent;
 import com.uroria.backend.clan.events.ClanUpdatedEvent;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.impl.BackendWrapperImpl;
+import com.uroria.backend.impl.StatedManager;
 import com.uroria.backend.user.User;
 import com.uroria.problemo.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class ClanManager extends WrapperManager<ClanWrapper> {
+public final class ClanManager extends StatedManager<ClanWrapper> {
     private static final Logger logger = LoggerFactory.getLogger("Clans");
 
     private final Requester<CheckClanRequest, CheckClanResponse> tagCheck;
     private final Requester<GetClanRequest, GetClanResponse> nameCheck;
 
-    public ClanManager(Communicator communicator) {
-        super(logger, communicator, "clan", "clan", "clan");
+    public ClanManager(BackendWrapperImpl wrapper) {
+        super(logger, wrapper, "clan");
         this.tagCheck = requestPoint.registerRequester(CheckClanRequest.class, CheckClanResponse.class, "CheckTag");
         this.nameCheck = requestPoint.registerRequester(GetClanRequest.class, GetClanResponse.class, "CheckName");
     }
@@ -32,6 +33,8 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
         for (ClanWrapper wrapper : this.wrappers) {
             if (wrapper.getTag().equals(tag)) return wrapper;
         }
+
+        if (!wrapper.isAvailable()) throw new UnavailableException();
 
         Result<CheckClanResponse> result = this.tagCheck.request(new CheckClanRequest(tag), 2000);
         CheckClanResponse response = result.get();
@@ -44,6 +47,8 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
         for (ClanWrapper wrapper : this.wrappers) {
             if (wrapper.getName().equals(name)) return wrapper;
         }
+
+        if (!wrapper.isAvailable()) throw new UnavailableException();
 
         Result<GetClanResponse> result = this.nameCheck.request(new GetClanRequest(name, false), 2000);
         GetClanResponse response = result.get();
@@ -59,6 +64,8 @@ public final class ClanManager extends WrapperManager<ClanWrapper> {
             if (wrapper.getTag().equals(tag)) return wrapper;
             if (wrapper.getName().equals(name)) return wrapper;
         }
+
+        if (!wrapper.isAvailable()) throw new UnavailableException();
 
         Result<GetClanResponse> request = this.nameCheck.request(new GetClanRequest(name, true), 5000);
         GetClanResponse response = request.get();

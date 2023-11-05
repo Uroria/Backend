@@ -2,13 +2,14 @@ package com.uroria.backend.impl.server;
 
 import com.uroria.backend.cache.BackendObject;
 import com.uroria.backend.cache.Wrapper;
-import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.controls.UnavailableException;
 import com.uroria.backend.cache.communication.server.GetAllServersRequest;
 import com.uroria.backend.cache.communication.server.GetAllServersResponse;
 import com.uroria.backend.cache.communication.server.GetServerRequest;
 import com.uroria.backend.cache.communication.server.GetServerResponse;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.impl.BackendWrapperImpl;
+import com.uroria.backend.impl.StatedManager;
 import com.uroria.backend.impl.server.group.ServerGroupWrapper;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.events.ServerDeletedEvent;
@@ -23,14 +24,14 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Random;
 
-public final class ServerManager extends WrapperManager<ServerWrapper> {
+public final class ServerManager extends StatedManager<ServerWrapper> {
     private static final Logger logger = LoggerFactory.getLogger("Servers");
 
     private final Requester<GetServerRequest, GetServerResponse> idCheck;
     private final Requester<GetAllServersRequest, GetAllServersResponse> allGet;
 
-    public ServerManager(Communicator communicator) {
-        super(logger, communicator, "server", "server", "server");
+    public ServerManager(BackendWrapperImpl wrapper) {
+        super(logger, wrapper, "server");
         this.idCheck = requestPoint.registerRequester(GetServerRequest.class, GetServerResponse.class, "CheckId");
         this.allGet = requestPoint.registerRequester(GetAllServersRequest.class, GetAllServersResponse.class, "GetAll");
     }
@@ -39,6 +40,8 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
         for (ServerWrapper wrapper : this.wrappers) {
             if (wrapper.getId() == id) return wrapper;
         }
+
+        if (!wrapper.isAvailable()) throw new UnavailableException();
 
         Result<GetServerResponse> result = this.idCheck.request(new GetServerRequest(id, false), 2000);
         GetServerResponse response = result.get();
@@ -50,6 +53,7 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
     }
 
     public ServerWrapper createServerWrapper(ServerGroupWrapper group, int templateId) {
+        if (!wrapper.isAvailable()) throw new UnavailableException();
         long id = System.currentTimeMillis() + new Random().nextLong(10000) - templateId;
         Result<GetServerResponse> result = this.idCheck.request(new GetServerRequest(id, true), 2000);
         GetServerResponse response = result.get();
@@ -66,6 +70,7 @@ public final class ServerManager extends WrapperManager<ServerWrapper> {
     }
 
     public Collection<Server> getAll() {
+        if (!wrapper.isAvailable()) return this.wrappers.stream().map(s -> (Server) s).toList();
         Result<GetAllServersResponse> result = this.allGet.request(new GetAllServersRequest(true), 5000);
         GetAllServersResponse response = result.get();
         if (response == null) return ObjectSets.emptySet();

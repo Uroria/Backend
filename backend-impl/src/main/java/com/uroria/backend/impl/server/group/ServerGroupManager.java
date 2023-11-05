@@ -2,13 +2,14 @@ package com.uroria.backend.impl.server.group;
 
 import com.uroria.backend.cache.BackendObject;
 import com.uroria.backend.cache.Wrapper;
-import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.controls.UnavailableException;
 import com.uroria.backend.cache.communication.server.group.GetAllServersGroupsRequest;
 import com.uroria.backend.cache.communication.server.group.GetAllServersGroupsResponse;
 import com.uroria.backend.cache.communication.server.group.GetServerGroupRequest;
 import com.uroria.backend.cache.communication.server.group.GetServerGroupResponse;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.impl.BackendWrapperImpl;
+import com.uroria.backend.impl.StatedManager;
 import com.uroria.backend.impl.server.ServerManager;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.server.events.ServerGroupDeletedEvent;
@@ -22,21 +23,22 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
-public final class ServerGroupManager extends WrapperManager<ServerGroupWrapper> {
+public final class ServerGroupManager extends StatedManager<ServerGroupWrapper> {
     private static final Logger logger = LoggerFactory.getLogger("ServerGroups");
 
     private final ServerManager serverManager;
     private final Requester<GetServerGroupRequest, GetServerGroupResponse> nameCheck;
     private final Requester<GetAllServersGroupsRequest, GetAllServersGroupsResponse> allGet;
 
-    public ServerGroupManager(ServerManager serverManager, Communicator communicator) {
-        super(logger, communicator, "server_group", "server_group", "server_group");
-        this.serverManager = serverManager;
+    public ServerGroupManager(BackendWrapperImpl wrapper) {
+        super(logger, wrapper, "server_group");
+        this.serverManager = wrapper.getServerManager();
         this.nameCheck = requestPoint.registerRequester(GetServerGroupRequest.class, GetServerGroupResponse.class, "CheckName");
         this.allGet = requestPoint.registerRequester(GetAllServersGroupsRequest.class, GetAllServersGroupsResponse.class, "GetAll");
     }
 
     public Collection<ServerGroup> getAll() {
+        if (!wrapper.isAvailable()) return this.wrappers.stream().map(s -> (ServerGroup) s).toList();
         Result<GetAllServersGroupsResponse> result = this.allGet.request(new GetAllServersGroupsRequest(true), 5000);
         GetAllServersGroupsResponse response = result.get();
         if (response == null) return ObjectSets.emptySet();
@@ -57,6 +59,8 @@ public final class ServerGroupManager extends WrapperManager<ServerGroupWrapper>
             if (wrapper.getName().equals(name)) return wrapper;
         }
 
+        if (!wrapper.isAvailable()) throw new UnavailableException();
+
         Result<GetServerGroupResponse> result = this.nameCheck.request(new GetServerGroupRequest(name, false), 2000);
         GetServerGroupResponse response = result.get();
         if (response == null) return null;
@@ -67,6 +71,7 @@ public final class ServerGroupManager extends WrapperManager<ServerGroupWrapper>
     }
 
     public ServerGroupWrapper createServerGroupWrapper(String name, int maxPlayers) {
+        if (!wrapper.isAvailable()) throw new UnavailableException();
         Result<GetServerGroupResponse> result = this.nameCheck.request(new GetServerGroupRequest(name, true), 2000);
         GetServerGroupResponse response = result.get();
         if (response == null) return null;

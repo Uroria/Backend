@@ -1,12 +1,11 @@
 package com.uroria.backend.impl.user;
 
-import com.uroria.backend.cache.BackendObject;
-import com.uroria.backend.cache.Wrapper;
-import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.controls.UnavailableException;
 import com.uroria.backend.cache.communication.user.GetUserRequest;
 import com.uroria.backend.cache.communication.user.GetUserResponse;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.impl.BackendWrapperImpl;
+import com.uroria.backend.impl.StatedManager;
 import com.uroria.backend.impl.stats.StatsManager;
 import com.uroria.backend.user.events.UserDeletedEvent;
 import com.uroria.backend.user.events.UserUpdatedEvent;
@@ -16,15 +15,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-public final class UserManager extends WrapperManager<UserWrapper> {
+public final class UserManager extends StatedManager<UserWrapper> {
     private static final Logger logger = LoggerFactory.getLogger("Users");
 
     private final StatsManager statsManager;
     private final Requester<GetUserRequest, GetUserResponse> check;
 
-    public UserManager(StatsManager statsManager, Communicator communicator) {
-        super(logger, communicator, "user", "user", "user");
-        this.statsManager = statsManager;
+    public UserManager(BackendWrapperImpl wrapper) {
+        super(logger, wrapper, "user");
+        this.statsManager = wrapper.getStatsManager();
         this.check = requestPoint.registerRequester(GetUserRequest.class, GetUserResponse.class, "Check");
     }
 
@@ -32,6 +31,8 @@ public final class UserManager extends WrapperManager<UserWrapper> {
         for (UserWrapper wrapper : this.wrappers) {
             if (wrapper.getUniqueId().equals(uuid)) return wrapper;
         }
+
+        if (!wrapper.isAvailable()) throw new UnavailableException();
 
         Result<GetUserResponse> result = this.check.request(new GetUserRequest(uuid, null, true), 5000);
         GetUserResponse response = result.get();
@@ -45,6 +46,8 @@ public final class UserManager extends WrapperManager<UserWrapper> {
         for (UserWrapper wrapper : this.wrappers) {
             if (wrapper.getUsername().equals(username)) return wrapper;
         }
+
+        if (!wrapper.isAvailable()) throw new UnavailableException();
 
         Result<GetUserResponse> result = this.check.request(new GetUserRequest(null, username, false), 5000);
         GetUserResponse response = result.get();

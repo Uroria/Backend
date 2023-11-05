@@ -2,13 +2,14 @@ package com.uroria.backend.impl.permission;
 
 import com.uroria.backend.cache.BackendObject;
 import com.uroria.backend.cache.Wrapper;
-import com.uroria.backend.cache.WrapperManager;
+import com.uroria.backend.cache.communication.controls.UnavailableException;
 import com.uroria.backend.cache.communication.permgroup.GetAllGroupRequest;
 import com.uroria.backend.cache.communication.permgroup.GetAllGroupResponse;
 import com.uroria.backend.cache.communication.permgroup.GetGroupRequest;
 import com.uroria.backend.cache.communication.permgroup.GetGroupResponse;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.communication.request.Requester;
+import com.uroria.backend.impl.BackendWrapperImpl;
+import com.uroria.backend.impl.StatedManager;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.events.GroupDeletedEvent;
 import com.uroria.backend.permission.events.GroupUpdatedEvent;
@@ -21,19 +22,20 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
-public final class PermGroupManager extends WrapperManager<GroupWrapper> {
+public final class PermGroupManager extends StatedManager<GroupWrapper> {
     private static final Logger logger = LoggerFactory.getLogger("PermGroups");
 
     private final Requester<GetGroupRequest, GetGroupResponse> nameCheck;
     private final Requester<GetAllGroupRequest, GetAllGroupResponse> allGet;
 
-    public PermGroupManager(Communicator communicator) {
-        super(logger, communicator, "perm_group", "perm_group", "perm_group");
+    public PermGroupManager(BackendWrapperImpl wrapper) {
+        super(logger, wrapper, "perm_group");
         this.nameCheck = requestPoint.registerRequester(GetGroupRequest.class, GetGroupResponse.class, "CheckName");
         this.allGet = requestPoint.registerRequester(GetAllGroupRequest.class, GetAllGroupResponse.class, "GetAll");
     }
 
     public Collection<PermGroup> getAll() {
+        if (!wrapper.isAvailable()) throw new UnavailableException();
         Result<GetAllGroupResponse> result = this.allGet.request(new GetAllGroupRequest(true), 5000);
         GetAllGroupResponse response = result.get();
         if (response == null) {
@@ -57,6 +59,8 @@ public final class PermGroupManager extends WrapperManager<GroupWrapper> {
             if (wrapper.getName().equals(name)) return wrapper;
         }
 
+        if (!wrapper.isAvailable()) throw new UnavailableException();
+
         Result<GetGroupResponse> result = this.nameCheck.request(new GetGroupRequest(name, false), 2000);
         GetGroupResponse response = result.get();
         if (response == null) return null;
@@ -70,6 +74,8 @@ public final class PermGroupManager extends WrapperManager<GroupWrapper> {
         for (GroupWrapper wrapper : this.wrappers) {
             if (wrapper.getName().equals(name)) return wrapper;
         }
+
+        if (!wrapper.isAvailable()) throw new UnavailableException();
 
         Result<GetGroupResponse> result = this.nameCheck.request(new GetGroupRequest(name, true), 5000);
         GetGroupResponse response = result.get();

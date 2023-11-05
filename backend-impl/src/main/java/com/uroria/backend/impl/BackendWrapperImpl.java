@@ -24,12 +24,15 @@ import com.uroria.backend.user.User;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.UUID;
 
+@Getter
 public final class BackendWrapperImpl extends AbstractBackendWrapper {
 
     private final Communicator communicator;
@@ -40,18 +43,21 @@ public final class BackendWrapperImpl extends AbstractBackendWrapper {
     private final ServerManager serverManager;
     private final ClanManager clanManager;
     private final StatsManager statsManager;
+    @Setter
+    private boolean available;
 
     BackendWrapperImpl(@NonNull Logger logger) {
         super(logger);
+        available = true;
         try {
             this.communicator = new Communicator(logger);
-            this.statsManager = new StatsManager(communicator);
-            this.userManager = new UserManager(this.statsManager, communicator);
-            this.proxyManager = new ProxyManager(communicator);
-            this.permGroupManager = new PermGroupManager(communicator);
-            this.serverManager = new ServerManager(communicator);
-            this.serverGroupManager = new ServerGroupManager(serverManager, communicator);
-            this.clanManager = new ClanManager(communicator);
+            this.statsManager = new StatsManager(this);
+            this.userManager = new UserManager(this);
+            this.proxyManager = new ProxyManager(this);
+            this.permGroupManager = new PermGroupManager(this);
+            this.serverManager = new ServerManager(this);
+            this.serverGroupManager = new ServerGroupManager(this);
+            this.clanManager = new ClanManager(this);
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }

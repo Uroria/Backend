@@ -1,6 +1,6 @@
 package com.uroria.backend.impl.stats;
 
-import com.uroria.backend.communication.Communicator;
+import com.uroria.backend.impl.BackendWrapperImpl;
 import com.uroria.backend.stats.Stat;
 import com.uroria.backend.stats.Statistics;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
@@ -10,7 +10,7 @@ import java.util.List;
 
 public final class StatsManager implements Statistics {
 
-    public StatsManager(Communicator communicator) {
+    public StatsManager(BackendWrapperImpl wrapper) {
 
     }
 
