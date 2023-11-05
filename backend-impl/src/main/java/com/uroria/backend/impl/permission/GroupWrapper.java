@@ -1,6 +1,5 @@
 package com.uroria.backend.impl.permission;
 
-import com.google.gson.JsonElement;
 import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.permission.PermGroup;

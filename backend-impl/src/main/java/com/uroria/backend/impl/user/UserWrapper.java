@@ -1,15 +1,9 @@
 package com.uroria.backend.impl.user;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
 import com.uroria.backend.Backend;
-import com.uroria.backend.Deletable;
 import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.clan.Clan;
-import com.uroria.backend.communication.Communicator;
 import com.uroria.backend.impl.stats.StatsManager;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
@@ -27,8 +21,6 @@ import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
@@ -37,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -79,6 +70,27 @@ public final class UserWrapper extends Wrapper implements User {
                 .map(name -> Backend.getPermissionGroup(name).get())
                 .filter(Objects::nonNull)
                 .toList();
+    }
+
+    @Override
+    public void addGroup(@NonNull PermGroup group) {
+        ObjectSet<String> groups = this.object.getSet("groups", String.class);
+        groups.add(group.getName());
+        this.object.set("groups", groups);
+    }
+
+    @Override
+    public void removeGroup(PermGroup group) {
+        if (group == null) return;
+        removeGroup(group.getName());
+    }
+
+    @Override
+    public void removeGroup(String groupName) {
+        if (groupName == null) return;
+        ObjectSet<String> groups = this.object.getSet("groups", String.class);
+        groups.remove(groupName);
+        this.object.set("groups", groups);
     }
 
     private void setPermission(String node, boolean value) {

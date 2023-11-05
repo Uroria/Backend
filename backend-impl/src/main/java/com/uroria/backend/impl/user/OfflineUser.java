@@ -55,6 +55,21 @@ public final class OfflineUser implements User {
     }
 
     @Override
+    public void addGroup(@NonNull PermGroup group) {
+
+    }
+
+    @Override
+    public void removeGroup(PermGroup group) {
+
+    }
+
+    @Override
+    public void removeGroup(String groupName) {
+
+    }
+
+    @Override
     public Permission getPermission(String node) {
         return null;
     }
