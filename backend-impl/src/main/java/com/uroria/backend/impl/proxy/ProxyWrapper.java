@@ -30,7 +30,7 @@ public final class ProxyWrapper extends Wrapper implements Proxy {
 
     @Override
     public String getName() {
-        return this.object.getStringOrElse("name", getIdentifier());
+        return this.object.getStringOrElse("name", getIdentifier()) + "-" + getId();
     }
 
     @Override

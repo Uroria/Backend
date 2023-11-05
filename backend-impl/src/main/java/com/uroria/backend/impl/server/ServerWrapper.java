@@ -130,7 +130,7 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public String getName() {
-        return getGroup().getName();
+        return getGroup().getName() + "-" + getId();
     }
 
     @Override
