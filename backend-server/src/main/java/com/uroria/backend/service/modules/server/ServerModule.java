@@ -2,6 +2,7 @@ package com.uroria.backend.service.modules.server;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
+import com.mongodb.lang.Nullable;
 import com.uroria.backend.cache.communication.DeleteBroadcast;
 import com.uroria.backend.cache.communication.PartRequest;
 import com.uroria.backend.cache.communication.PartResponse;
@@ -10,18 +11,55 @@ import com.uroria.backend.cache.communication.server.GetAllServersRequest;
 import com.uroria.backend.cache.communication.server.GetAllServersResponse;
 import com.uroria.backend.cache.communication.server.GetServerRequest;
 import com.uroria.backend.cache.communication.server.GetServerResponse;
+import com.uroria.backend.cache.communication.server.ServerPing;
+import com.uroria.backend.communication.broadcast.BroadcastListener;
+import com.uroria.backend.communication.broadcast.Broadcaster;
 import com.uroria.backend.communication.response.RequestListener;
 import com.uroria.backend.service.BackendServer;
 import com.uroria.backend.service.modules.LocalCachingModule;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
+import lombok.AllArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
 
 public final class ServerModule extends LocalCachingModule {
-    
+    private final Broadcaster<ServerPing> pingBroadcaster;
+    private final ObjectSet<ServerApp> apps;
     public ServerModule(BackendServer server) {
         super(server, "server", "server", "server", "ServerModule", "server");
+        this.apps = new ObjectArraySet<>();
+        this.pingBroadcaster = broadcastPoint.registerBroadcaster(ServerPing.class, "Ping");
+    }
+
+    private synchronized void tick() {
+        for (ServerApp app : this.apps) {
+            long id = app.getId();
+            long lastPing = app.getLastPing();
+            if ((System.currentTimeMillis() - lastPing) < 10000) continue;
+            logger.warn("Server " + id + " timed out after 10 seconds");
+            delete(new DeleteBroadcast(String.valueOf(id)));
+        }
+    }
+
+    @AllArgsConstructor
+    private static final class TickThread extends Thread {
+        private final ServerModule module;
+
+        @Override
+        public void run() {
+            while (isAlive()) {
+                module.tick();
+            }
+        }
+    }
+
+    @Override
+    public void enable() {
+        new TickThread(this).start();
         responsePoint.registerResponser(GetServerRequest.class, GetServerResponse.class, "CheckId", new RequestListener<>() {
             @Override
             protected Optional<GetServerResponse> onRequest(GetServerRequest request) {
@@ -42,6 +80,31 @@ public final class ServerModule extends LocalCachingModule {
                 return Optional.of(new GetAllServersResponse(getAll()));
             }
         });
+        pingBroadcaster.registerListener(new BroadcastListener<>() {
+            @Override
+            protected void onBroadcast(ServerPing broadcast) {
+                long id = broadcast.getIdentifier();
+                if (broadcast.isDisabled()) {
+                    apps.removeIf(app -> app.getId() == id);
+                    return;
+                }
+                ServerApp app = getOrCreateApp(id);
+                app.setLastPing(broadcast.getCurrentMs());
+            }
+        });
+    }
+
+    private @NotNull ServerApp getOrCreateApp(long id) {
+        ServerApp app = getApp(id);
+        if (app == null) {
+            app = new ServerApp(id);
+            this.apps.add(app);
+        }
+        return app;
+    }
+
+    private @Nullable ServerApp getApp(long id) {
+        return this.apps.stream().filter(app -> app.getId() == id).findAny().orElse(null);
     }
 
     public Collection<Long> getAll() {

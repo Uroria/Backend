@@ -10,7 +10,7 @@ import com.uroria.backend.service.BackendServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BackendModule extends WrapperModule {
+public abstract class BackendModule extends WrapperModule implements ControllableModule {
     protected final BackendServer server;
     protected final String moduleName;
 
@@ -28,36 +28,11 @@ public abstract class BackendModule extends WrapperModule {
 
     public abstract void checkPart(String identifierKey, Object identifier, String key, JsonElement value);
 
-    protected void enable() throws Exception {
-
-    }
-
-    protected void disable() throws Exception {
-
-    }
-
-    public final void start() {
-        try {
-            this.logger.info("Enabling module " + moduleName);
-            disable();
-        } catch (Exception exception) {
-            this.logger.error("Unable to enable module " + moduleName, exception);
-        }
-    }
-
-    public final void shutdown() {
-        try {
-            this.logger.info("Disabling module " + moduleName);
-            disable();
-        } catch (Exception exception) {
-            this.logger.error("Unable to disable module " + moduleName, exception);
-        }
-    }
-
     public final Logger getLogger() {
         return logger;
     }
 
+    @Override
     public final String getModuleName() {
         return moduleName;
     }

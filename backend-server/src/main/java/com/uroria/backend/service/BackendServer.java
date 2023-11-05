@@ -11,6 +11,7 @@ import com.uroria.backend.service.configuration.MongoConfiguration;
 import com.uroria.backend.service.configuration.RedisConfiguration;
 import com.uroria.backend.service.console.BackendConsole;
 import com.uroria.backend.service.modules.BackendModule;
+import com.uroria.backend.service.modules.ControllableModule;
 import com.uroria.backend.service.modules.perm.PermModule;
 import com.uroria.backend.service.modules.server.ServerModule;
 import com.uroria.backend.service.modules.server.group.ServerGroupModule;
@@ -33,7 +34,7 @@ public final class BackendServer {
     @Getter private boolean running;
     @Getter private final CommandManager commandManager;
     @Getter private final BackendConsole console;
-    @Getter private final ObjectSet<BackendModule> modules;
+    @Getter private final ObjectSet<ControllableModule> modules;
     @Getter private final Communicator communicator;
     @Getter private final MongoClient mongo;
     @Getter private final MongoDatabase database;
@@ -130,8 +131,13 @@ public final class BackendServer {
         long start = System.currentTimeMillis();
         LOGGER.info("Starting...");
 
-        for (BackendModule module : this.modules) {
-            module.start();
+        for (ControllableModule module : this.modules) {
+            try {
+                LOGGER.info("Enabling module " + module.getModuleName());
+                module.enable();
+            } catch (Exception exception) {
+                LOGGER.error("Unable to enable module " + module.getModuleName(), exception);
+            }
         }
 
         registerCommands();
@@ -157,8 +163,13 @@ public final class BackendServer {
         long start = System.currentTimeMillis();
         LOGGER.info("Shutting down...");
 
-        for (BackendModule module : this.modules) {
-            module.shutdown();
+        for (ControllableModule module : this.modules) {
+            try {
+                LOGGER.info("Disabling module " + module.getModuleName());
+                module.disable();
+            } catch (Exception exception) {
+                LOGGER.error("Unable to disable module " + module.getModuleName(), exception);
+            }
         }
 
         shutdownRabbit();

@@ -24,6 +24,10 @@ public final class ClanModule extends SavingModule {
 
     public ClanModule(BackendServer server) {
         super(server, "clan", "ClanModule", "clan", "clans");
+    }
+
+    @Override
+    public void enable() {
         responsePoint.registerResponser(CheckClanRequest.class, CheckClanResponse.class, "CheckTag", new RequestListener<>() {
             @Override
             protected Optional<CheckClanResponse> onRequest(CheckClanRequest request) {

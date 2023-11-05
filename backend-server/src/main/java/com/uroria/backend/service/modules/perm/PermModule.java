@@ -26,6 +26,10 @@ public final class PermModule extends SavingModule {
 
     public PermModule(BackendServer server) {
         super(server, "perm_group", "PermModule", "perm_group", "perm_groups");
+    }
+
+    @Override
+    public void enable() {
         responsePoint.registerResponser(GetGroupRequest.class, GetGroupResponse.class, "CheckName", new RequestListener<>() {
             @Override
             protected Optional<GetGroupResponse> onRequest(GetGroupRequest request) {

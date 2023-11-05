@@ -4,18 +4,27 @@ import com.uroria.are.Application;
 import com.uroria.backend.Backend;
 import com.uroria.backend.WrapperEnvironment;
 import com.uroria.backend.app.ApplicationStatus;
+import com.uroria.backend.cache.communication.server.ServerPing;
+import com.uroria.backend.communication.broadcast.Broadcaster;
 import com.uroria.backend.impl.AbstractBackendWrapper;
 import com.uroria.backend.impl.BackendInitializer;
+import com.uroria.backend.impl.BackendWrapperImpl;
 import com.uroria.backend.impl.utils.WrapperUtils;
 import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
+import com.uroria.backend.server.events.ServerDeletedEvent;
 import com.uroria.backend.server.events.ServerUpdatedEvent;
+import com.uroria.base.event.EventManager;
 import com.uroria.base.event.Listener;
+import com.uroria.base.utils.ThreadUtils;
 import com.uroria.problemo.result.Result;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public final class BackendPlugin extends JavaPlugin {
     private final Logger logger;
@@ -60,6 +69,22 @@ public final class BackendPlugin extends JavaPlugin {
     @Override
     public void onLoad() {
         try {
+            EventManager eventManager = this.wrapper.getEventManager();
+            eventManager.subscribe(new Listener<>(ServerUpdatedEvent.class, 0) {
+                @Override
+                public void onEvent(ServerUpdatedEvent event) {
+                    long id = event.getServer().getId();
+                    if (server.getId() != id) return;
+                    if (event.getServer().getStatus() == ApplicationStatus.STOPPED) Bukkit.shutdown();
+                }
+            });
+            eventManager.subscribe(new Listener<>(ServerDeletedEvent.class, 0) {
+                @Override
+                public void onEvent(ServerDeletedEvent event) {
+                    long id = event.getServer().getId();
+                    if (server.getId() == id) Bukkit.shutdown();
+                }
+            });
             this.wrapper.start();
         } catch (Exception exception) {
             this.logger.error("Cannot start backend", exception);
@@ -95,6 +120,20 @@ public final class BackendPlugin extends JavaPlugin {
                 }
                 this.server = result.get();
                 if (this.server == null) throw new IllegalStateException("Unable to create server");
+            }
+            if (wrapper instanceof BackendWrapperImpl onlineWrapper) {
+                Broadcaster<ServerPing> ping = onlineWrapper.getServerManager().getBroadcastPoint().registerBroadcaster(ServerPing.class, "Ping");
+                CompletableFuture.runAsync(() -> {
+                    while (true) {
+                        if (this.server.isDeleted()) return;
+                        if (this.server.getStatus() == ApplicationStatus.STOPPED) {
+                            ping.broadcast(new ServerPing(this.server.getId(), System.currentTimeMillis(), true));
+                            return;
+                        }
+                        ping.broadcast(new ServerPing(this.server.getId(), System.currentTimeMillis(), false));
+                        ThreadUtils.sleep(1, TimeUnit.SECONDS);
+                    }
+                });
             }
             this.server.setStatus(ApplicationStatus.ONLINE);
         } catch (Exception exception) {

@@ -23,6 +23,10 @@ public final class UserModule extends SavingModule {
 
     public UserModule(BackendServer server) {
         super(server, "user", "UserModule", "user", "users");
+    }
+
+    @Override
+    public void enable() {
         responsePoint.registerResponser(GetUserRequest.class, GetUserResponse.class, "Check", new RequestListener<>() {
             @Override
             protected Optional<GetUserResponse> onRequest(GetUserRequest request) {

@@ -16,8 +16,10 @@ import com.uroria.backend.communication.request.Requester;
 import com.uroria.base.event.EventManager;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import lombok.Getter;
 import org.slf4j.Logger;
 
+@Getter
 public abstract class WrapperManager<T extends Wrapper> {
     protected final Logger logger;
     protected final RequestPoint requestPoint;

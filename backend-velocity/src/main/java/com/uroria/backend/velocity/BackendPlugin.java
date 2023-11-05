@@ -5,10 +5,18 @@ import com.uroria.are.Application;
 import com.uroria.backend.Backend;
 import com.uroria.backend.WrapperEnvironment;
 import com.uroria.backend.app.ApplicationStatus;
+import com.uroria.backend.cache.communication.proxy.ProxyPing;
+import com.uroria.backend.communication.broadcast.Broadcaster;
 import com.uroria.backend.impl.AbstractBackendWrapper;
 import com.uroria.backend.impl.BackendInitializer;
+import com.uroria.backend.impl.BackendWrapperImpl;
 import com.uroria.backend.impl.utils.WrapperUtils;
 import com.uroria.backend.proxy.Proxy;
+import com.uroria.backend.proxy.events.ProxyDeletedEvent;
+import com.uroria.backend.proxy.events.ProxyUpdatedEvent;
+import com.uroria.base.event.EventManager;
+import com.uroria.base.event.Listener;
+import com.uroria.base.utils.ThreadUtils;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -17,6 +25,9 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Plugin(
         id = "backend",
@@ -48,6 +59,22 @@ public final class BackendPlugin {
     @Subscribe
     public void onProxyInitializeEvent(ProxyInitializeEvent event) {
         try {
+            EventManager eventManager = this.wrapper.getEventManager();
+            eventManager.subscribe(new Listener<>(ProxyUpdatedEvent.class, 1) {
+                @Override
+                public void onEvent(ProxyUpdatedEvent event) {
+                    long id = event.getProxy().getId();
+                    if (proxy.getId() != id) return;
+                    if (event.getProxy().getStatus() == ApplicationStatus.STOPPED) proxyServer.shutdown();
+                }
+            });
+            eventManager.subscribe(new Listener<>(ProxyDeletedEvent.class, 1) {
+                @Override
+                public void onEvent(ProxyDeletedEvent event) {
+                    long id = event.getProxy().getId();
+                    if (proxy.getId() == id) proxyServer.shutdown();
+                }
+            });
             this.wrapper.start();
             if (!this.wrapper.isStarted())
                 throw new IllegalStateException("Wrapper was never started or plugin has been illegally reloaded");
@@ -64,6 +91,20 @@ public final class BackendPlugin {
                 String groupName = environment.getProxyName().orElseThrow(() -> new IllegalStateException("Group and proxy id were never assigned besides templateId"));
                 this.proxy = Backend.createProxy(groupName, templateId, 999).get();
                 if (proxy == null) throw new IllegalStateException("Proxy still null after registration");
+            }
+            if (wrapper instanceof BackendWrapperImpl onlineWrapper) {
+                Broadcaster<ProxyPing> ping = onlineWrapper.getProxyManager().getBroadcastPoint().registerBroadcaster(ProxyPing.class, "Ping");
+                CompletableFuture.runAsync(() -> {
+                    while (true) {
+                        if (this.proxy.isDeleted()) return;
+                        if (this.proxy.getStatus() == ApplicationStatus.STOPPED) {
+                            ping.broadcast(new ProxyPing(this.proxy.getId(), System.currentTimeMillis(), true));
+                            return;
+                        }
+                        ping.broadcast(new ProxyPing(this.proxy.getId(), System.currentTimeMillis(), false));
+                        ThreadUtils.sleep(1, TimeUnit.SECONDS);
+                    }
+                });
             }
             this.proxy.setStatus(ApplicationStatus.ONLINE);
         } catch (Exception exception) {

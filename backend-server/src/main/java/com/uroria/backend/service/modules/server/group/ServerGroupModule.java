@@ -26,6 +26,10 @@ public final class ServerGroupModule extends SavingModule {
 
     public ServerGroupModule(BackendServer server) {
         super(server, "server_group", "ServerGroupModule", "servergroup", "servergroups");
+    }
+
+    @Override
+    public void enable() {
         responsePoint.registerResponser(GetAllServersGroupsRequest.class, GetAllServersGroupsResponse.class, "GetAll", new RequestListener<>() {
             @Override
             protected Optional<GetAllServersGroupsResponse> onRequest(GetAllServersGroupsRequest request) {
