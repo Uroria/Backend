@@ -26,7 +26,17 @@ public interface User extends Punishable, CrewHolder, Player, Languageable {
 
     void setDiscordUserId(long id);
 
+    /**
+     * Returns the username in lowercase.
+     * If you need the true cased name use {@link User#getRealUsername()}.
+     */
     @NotNull String getUsername();
+
+    /**
+     * Returns the true cased username.
+     * It's not used to query players.
+     */
+    @NotNull String getRealUsername();
 
     boolean isOnline();
 

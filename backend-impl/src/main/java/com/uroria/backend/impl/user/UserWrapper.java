@@ -328,6 +328,11 @@ public final class UserWrapper extends Wrapper implements User {
     }
 
     @Override
+    public @NotNull String getRealUsername() {
+        return this.object.getStringOrElse("realUsername", getUsername());
+    }
+
+    @Override
     public @NotNull Language getLanguage() {
         String lang = this.object.getStringOrElse("lang", null);
         if (lang == null) return Language.DEFAULT;
