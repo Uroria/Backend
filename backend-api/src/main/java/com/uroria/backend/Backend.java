@@ -9,6 +9,7 @@ import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.stats.Statistics;
 import com.uroria.backend.user.User;
 import com.uroria.base.event.EventManager;
+import com.uroria.base.scheduler.Scheduler;
 import com.uroria.problemo.result.Result;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -109,6 +110,10 @@ public class Backend {
 
     public WrapperEnvironment getEnvironment() {
         return getWrapper().getEnvironment();
+    }
+
+    public Scheduler getScheduler() {
+        return getWrapper().getScheduler();
     }
 
     public BackendWrapper getWrapper() {

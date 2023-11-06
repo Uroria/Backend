@@ -11,6 +11,8 @@ import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.stats.Statistics;
 import com.uroria.backend.user.User;
+import com.uroria.base.scheduler.Scheduler;
+import com.uroria.base.scheduler.SchedulerFactory;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 import lombok.NonNull;
@@ -20,6 +22,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 public final class OfflineBackendWrapper extends AbstractBackendWrapper implements BackendWrapper {
+    private final Scheduler scheduler;
     private final OfflineClanManager clanManager;
     private final OfflineUserManager userManager;
 
@@ -27,6 +30,7 @@ public final class OfflineBackendWrapper extends AbstractBackendWrapper implemen
     OfflineBackendWrapper(Logger logger) {
         super(logger);
         Unsafe.setInstance(this);
+        this.scheduler = SchedulerFactory.create("Scheduler");
         this.clanManager = new OfflineClanManager();
         this.userManager = new OfflineUserManager();
     }
@@ -130,5 +134,10 @@ public final class OfflineBackendWrapper extends AbstractBackendWrapper implemen
     @Override
     public Statistics getStatistics() {
         return null;
+    }
+
+    @Override
+    public Scheduler getScheduler() {
+        return this.scheduler;
     }
 }

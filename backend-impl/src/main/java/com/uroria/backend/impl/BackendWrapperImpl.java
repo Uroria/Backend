@@ -21,6 +21,8 @@ import com.uroria.backend.server.Server;
 import com.uroria.backend.server.ServerGroup;
 import com.uroria.backend.stats.Statistics;
 import com.uroria.backend.user.User;
+import com.uroria.base.scheduler.Scheduler;
+import com.uroria.base.scheduler.SchedulerFactory;
 import com.uroria.problemo.Problem;
 import com.uroria.problemo.result.Result;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
@@ -34,7 +36,7 @@ import java.util.UUID;
 
 @Getter
 public final class BackendWrapperImpl extends AbstractBackendWrapper {
-
+    private final Scheduler scheduler;
     private final Communicator communicator;
     private final UserManager userManager;
     private final ProxyManager proxyManager;
@@ -49,6 +51,7 @@ public final class BackendWrapperImpl extends AbstractBackendWrapper {
     BackendWrapperImpl(@NonNull Logger logger) {
         super(logger);
         available = true;
+        this.scheduler = SchedulerFactory.create("Scheduler");
         try {
             this.communicator = new Communicator(logger);
             this.statsManager = new StatsManager(this);
@@ -288,5 +291,10 @@ public final class BackendWrapperImpl extends AbstractBackendWrapper {
     @Override
     public Statistics getStatistics() {
         return this.statsManager;
+    }
+
+    @Override
+    public Scheduler getScheduler() {
+        return this.scheduler;
     }
 }
