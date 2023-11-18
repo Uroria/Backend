@@ -8,7 +8,7 @@ plugins {
 }
 
 allprojects {
-    group = "com.uroria.backend"
+    group = "com.uroria"
     version = project.properties["projectVersion"].toString()
 }
 

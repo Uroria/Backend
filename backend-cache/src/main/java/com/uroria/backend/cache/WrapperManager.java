@@ -38,7 +38,7 @@ public abstract class WrapperManager<T extends Wrapper> {
         this.partRequester = requestPoint.registerRequester(PartRequest.class, PartResponse.class, topic + "-part");
         this.updateBroadcaster = broadcastPoint.registerBroadcaster(UpdateBroadcast.class, topic + "-part");
         this.deleteBroadcaster = broadcastPoint.registerBroadcaster(DeleteBroadcast.class, topic + "-delete");
-        this.eventManager = Backend.getEventManager();
+        this.eventManager = Backend.eventManager();
     }
 
     public WrapperManager(Logger logger, Communicator communicator, String requestPointTopic, String broadcastPointTopic, String topic) {

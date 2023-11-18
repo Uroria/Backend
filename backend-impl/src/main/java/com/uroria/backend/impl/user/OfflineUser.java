@@ -51,7 +51,7 @@ public final class OfflineUser implements User {
 
     @Override
     public List<PermGroup> getPermGroups() {
-        return this.groups.stream().map(name -> Backend.getPermissionGroup(name).get()).toList();
+        return this.groups.stream().map(name -> Backend.permissionGroup(name).get()).toList();
     }
 
     @Override

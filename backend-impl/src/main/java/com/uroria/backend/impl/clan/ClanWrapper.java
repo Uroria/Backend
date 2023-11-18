@@ -164,7 +164,7 @@ public final class ClanWrapper extends Wrapper implements Clan {
                     }
                 })
                 .filter(Objects::nonNull)
-                .map(uuid -> Backend.getUser(uuid).get())
+                .map(uuid -> Backend.user(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }

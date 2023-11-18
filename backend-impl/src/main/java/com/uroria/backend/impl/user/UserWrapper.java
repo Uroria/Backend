@@ -67,7 +67,7 @@ public final class UserWrapper extends Wrapper implements User {
     @Override
     public List<PermGroup> getPermGroups() {
         return this.object.getSet("groups", String.class).stream()
-                .map(name -> Backend.getPermissionGroup(name).get())
+                .map(name -> Backend.permissionGroup(name).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -305,21 +305,21 @@ public final class UserWrapper extends Wrapper implements User {
     public Optional<Proxy> getConnectedProxy() {
         long identifier = this.object.getLongOrElse("connectedProxy", -1);
         if (identifier == -1) return Optional.empty();
-        return Optional.ofNullable(Backend.getProxy(identifier).get());
+        return Optional.ofNullable(Backend.proxy(identifier).get());
     }
 
     @Override
     public Optional<ServerGroup> getConnectedServerGroup() {
         String serverGroup = this.object.getStringOrElse("connectedServerGroup", null);
         if (serverGroup == null) return Optional.empty();
-        return Optional.ofNullable(Backend.getServerGroup(serverGroup).get());
+        return Optional.ofNullable(Backend.serverGroup(serverGroup).get());
     }
 
     @Override
     public Optional<Server> getConnectedServer() {
         long identifier = this.object.getLongOrElse("connectedServer", -1);
         if (identifier == -1) return Optional.empty();
-        return Optional.ofNullable(Backend.getServer(identifier).get());
+        return Optional.ofNullable(Backend.server(identifier).get());
     }
 
     @Override
@@ -414,7 +414,7 @@ public final class UserWrapper extends Wrapper implements User {
     @Override
     public List<User> getFriends() {
         return getRawFriends().stream()
-                .map(uuid -> Backend.getUser(uuid).get())
+                .map(uuid -> Backend.user(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -429,7 +429,7 @@ public final class UserWrapper extends Wrapper implements User {
     @Override
     public List<User> getFriendRequests() {
         return getRawFriendRequests().stream()
-                .map(uuid -> Backend.getUser(uuid).get())
+                .map(uuid -> Backend.user(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -482,7 +482,7 @@ public final class UserWrapper extends Wrapper implements User {
     @Override
     public Result<Clan> getClan() {
         String tag = this.object.getStringOrElse("clan", null);
-        if (tag != null) return Backend.getClan(tag);
+        if (tag != null) return Backend.clan(tag);
         return Result.none();
     }
 
@@ -503,7 +503,7 @@ public final class UserWrapper extends Wrapper implements User {
 
     @Override
     public List<User> getCrew() {
-        return getRawCrew().stream().map(uuid -> Backend.getUser(uuid).get())
+        return getRawCrew().stream().map(uuid -> Backend.user(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }

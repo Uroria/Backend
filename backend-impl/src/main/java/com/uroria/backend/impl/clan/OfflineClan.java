@@ -129,21 +129,21 @@ public final class OfflineClan implements Clan {
 
     @Override
     public Collection<User> getOperators() {
-        return this.operators.stream().map(uuid -> Backend.getUser(uuid).get())
+        return this.operators.stream().map(uuid -> Backend.user(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
 
     @Override
     public Collection<User> getMembers() {
-        return this.members.stream().map(uuid -> Backend.getUser(uuid).get())
+        return this.members.stream().map(uuid -> Backend.user(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }
 
     @Override
     public Collection<User> getModerators() {
-        return this.moderators.stream().map(uuid -> Backend.getUser(uuid).get())
+        return this.moderators.stream().map(uuid -> Backend.user(uuid).get())
                 .filter(Objects::nonNull)
                 .toList();
     }

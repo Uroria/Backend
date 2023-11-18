@@ -38,7 +38,7 @@ public final class ProxyWrapper extends Wrapper implements Proxy {
         return this.object.getSet("onlineUsers", String.class).stream()
                 .map(uuidString -> {
                     try {
-                        return Backend.getUser(UUID.fromString(uuidString)).get();
+                        return Backend.user(UUID.fromString(uuidString)).get();
                     } catch (Exception exception) {
                         return null;
                     }
@@ -52,7 +52,7 @@ public final class ProxyWrapper extends Wrapper implements Proxy {
         return getRawServers().stream()
                 .map(identifier -> {
                     try {
-                        return Backend.getServer(identifier).get();
+                        return Backend.server(identifier).get();
                     } catch (Exception exception) {
                         return null;
                     }

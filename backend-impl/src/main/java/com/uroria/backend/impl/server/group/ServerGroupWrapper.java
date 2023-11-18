@@ -52,13 +52,14 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
         return getRawServers().stream()
                 .filter(id -> id == identifier)
                 .findAny()
-                .map(id -> Backend.getServer(identifier).get());
+                .map(id -> Backend.server(identifier).get());
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public Collection<Server> getServersWithTemplateId(int templateId) {
         return getRawServers().stream()
-                .map(identifier -> Backend.getServer(identifier).get())
+                .map(identifier -> Backend.server(identifier).get())
                 .filter(this::nullCheck)
                 .filter(server -> server.getTemplateId() == templateId)
                 .toList();
@@ -67,7 +68,7 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
     @Override
     public Collection<Server> getServers() {
         return getRawServers().stream()
-                .map(identifier -> Backend.getServer(identifier).get())
+                .map(identifier -> Backend.server(identifier).get())
                 .filter(this::nullCheck)
                 .toList();
     }
@@ -108,7 +109,7 @@ public final class ServerGroupWrapper extends Wrapper implements ServerGroup {
         return this.object.getSet("onlineUsers", String.class).stream()
                 .map(uuidString -> {
                     try {
-                        return Backend.getUser(UUID.fromString(uuidString)).get();
+                        return Backend.user(UUID.fromString(uuidString)).get();
                     } catch (Exception exception) {
                         return null;
                     }

@@ -89,17 +89,17 @@ public final class BackendPlugin extends JavaPlugin {
                 serverSetupIfOffline();
                 return;
             }
-            WrapperEnvironment environment = Backend.getEnvironment();
+            WrapperEnvironment environment = Backend.environment();
             this.server = environment.getServer().orElse(null);
             if (this.server == null) {
                 int templateId = environment.getTemplateId().orElseThrow(() -> new IllegalStateException("Template and server id were never assigned even if one of them has to"));
                 String groupName = environment.getServerGroupName().orElseThrow(() -> new IllegalStateException("Group and server id were never assigned even if one of them has to beside template-id"));
-                ServerGroup group = Backend.getServerGroup(groupName).get();
+                ServerGroup group = Backend.serverGroup(groupName).get();
                 if (group == null) {
-                    group = Backend.createServerGroup(groupName, 999).get();
+                    group = Backend.wrapper().createServerGroup(groupName, 999).get();
                     if (group == null) throw new IllegalStateException("Unable to create server-group");
                 }
-                Result<Server> result = Backend.createServer(templateId, group);
+                Result<Server> result = Backend.wrapper().createServer(templateId, group);
                 if (result instanceof Result.Problematic<Server> problematic) {
                     throw new RuntimeException(problematic.getProblem().getError().orElseThrow(() -> new IllegalStateException("Some problem while trying to create server?")));
                 }
@@ -144,11 +144,12 @@ public final class BackendPlugin extends JavaPlugin {
 
     @SuppressWarnings("WarningMarkers")
     private void serverSetupIfOffline() {
-        this.server = Backend.getEnvironment().getServer().orElse(null);
+        this.server = Backend.environment().getServer().orElse(null);
         if (server == null) {
-            ServerGroup group = Backend.getServerGroup("offline").get();
-            if (group == null) group = Backend.createServerGroup("offline", 999).get();
-            server = Backend.createServer(0, group).get();
+            ServerGroup group = Backend.serverGroup("offline").get();
+            if (group == null) group = Backend.wrapper().createServerGroup("offline", 999).get();
+            if (group == null) throw new IllegalStateException("Group still null");
+            server = Backend.wrapper().createServer(0, group).get();
             if (server == null) throw new RuntimeException("Unable to setup server");
         }
         this.server.setStatus(ApplicationStatus.ONLINE);

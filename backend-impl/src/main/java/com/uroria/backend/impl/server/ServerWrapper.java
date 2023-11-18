@@ -78,7 +78,7 @@ public final class ServerWrapper extends Wrapper implements Server {
         return getRawProxies().stream()
                 .map(identifier -> {
                     try {
-                        return Backend.getProxy(identifier).get();
+                        return Backend.proxy(identifier).get();
                     } catch (Exception exception) {
                         return null;
                     }
@@ -89,7 +89,7 @@ public final class ServerWrapper extends Wrapper implements Server {
 
     @Override
     public ServerGroupWrapper getGroup() {
-        return (ServerGroupWrapper) Backend.getServerGroup(this.name).get();
+        return (ServerGroupWrapper) Backend.serverGroup(this.name).get();
     }
 
     @Override
@@ -138,7 +138,7 @@ public final class ServerWrapper extends Wrapper implements Server {
         return this.object.getSet("onlineUsers", String.class).stream()
                 .map(uuidString -> {
                     try {
-                        return Backend.getUser(UUID.fromString(uuidString)).get();
+                        return Backend.user(UUID.fromString(uuidString)).get();
                     } catch (Exception exception) {
                         return null;
                     }

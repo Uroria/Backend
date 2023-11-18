@@ -39,7 +39,7 @@ public final class BackendEnvironment implements WrapperEnvironment {
 
     @Override
     public Optional<Proxy> getProxy() {
-        return getProxyId().map(id -> Backend.getProxy(id).get());
+        return getProxyId().map(id -> Backend.proxy(id).get());
     }
 
     @Override
@@ -50,6 +50,6 @@ public final class BackendEnvironment implements WrapperEnvironment {
 
     @Override
     public Optional<Server> getServer() {
-        return getServerId().map(id -> Backend.getServer(id).get());
+        return getServerId().map(id -> Backend.server(id).get());
     }
 }

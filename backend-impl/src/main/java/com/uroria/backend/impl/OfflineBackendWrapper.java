@@ -1,6 +1,6 @@
 package com.uroria.backend.impl;
 
-import com.uroria.backend.BackendWrapper;
+import com.uroria.backend.Backend;
 import com.uroria.backend.Unsafe;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.impl.clan.OfflineClanManager;
@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import java.util.Collection;
 import java.util.UUID;
 
-public final class OfflineBackendWrapper extends AbstractBackendWrapper implements BackendWrapper {
+public final class OfflineBackendWrapper extends AbstractBackendWrapper implements Backend {
     private final Scheduler scheduler;
     private final OfflineClanManager clanManager;
     private final OfflineUserManager userManager;

@@ -1,13 +1,13 @@
 package com.uroria.backend.impl;
 
-import com.uroria.backend.BackendWrapper;
+import com.uroria.backend.Backend;
 import com.uroria.backend.Unsafe;
 import com.uroria.base.event.EventManager;
 import com.uroria.base.event.EventManagerFactory;
 import lombok.NonNull;
 import org.slf4j.Logger;
 
-public abstract class AbstractBackendWrapper implements BackendWrapper {
+public abstract class AbstractBackendWrapper implements Backend {
     protected boolean started;
     protected final BackendEnvironment environment;
     protected final Logger logger;

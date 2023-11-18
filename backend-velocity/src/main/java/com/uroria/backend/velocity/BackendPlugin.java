@@ -69,12 +69,12 @@ public final class BackendPlugin {
                 serverSetupIfOffline();
                 return;
             }
-            WrapperEnvironment environment = Backend.getEnvironment();
+            WrapperEnvironment environment = Backend.environment();
             this.proxy = environment.getProxy().orElse(null);
             if (this.proxy == null) {
                 int templateId = environment.getTemplateId().orElseThrow(() -> new IllegalStateException("Template and proxy id were never assigned"));
                 String groupName = environment.getProxyName().orElseThrow(() -> new IllegalStateException("Group and proxy id were never assigned besides templateId"));
-                this.proxy = Backend.createProxy(groupName, templateId, 999).get();
+                this.proxy = Backend.wrapper().createProxy(groupName, templateId, 999).get();
                 if (proxy == null) throw new IllegalStateException("Proxy still null after registration");
             }
             EventManager eventManager = this.wrapper.getEventManager();
@@ -115,9 +115,9 @@ public final class BackendPlugin {
 
     @SuppressWarnings("WarningMarkers")
     private void serverSetupIfOffline() {
-        this.proxy = Backend.getEnvironment().getProxy().orElse(null);
+        this.proxy = Backend.environment().getProxy().orElse(null);
         if (proxy == null) {
-            proxy = Backend.createProxy("offline", 0, 999).get();
+            proxy = Backend.wrapper().createProxy("offline", 0, 999).get();
             if (proxy == null) throw new RuntimeException("Unable to setup proxy");
         }
         this.proxy.setStatus(ApplicationStatus.ONLINE);

@@ -1,6 +1,7 @@
 package com.uroria.backend;
 
 import com.uroria.annotations.markers.Warning;
+import com.uroria.annotations.safety.TimeConsuming;
 import com.uroria.backend.clan.Clan;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.proxy.Proxy;
@@ -12,112 +13,165 @@ import com.uroria.base.event.EventManager;
 import com.uroria.base.scheduler.Scheduler;
 import com.uroria.problemo.result.Result;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Collection;
 import java.util.UUID;
 
-@UtilityClass
-public class Backend {
+import static com.uroria.backend.Unsafe.getInstance;
 
-    public Result<User> getUser(UUID uuid) {
-        return getWrapper().getUser(uuid);
+public interface Backend {
+
+    /**
+     * Searches for an existing database entry for the given uuid of a user
+     * and if not exists, create a new one.
+     */
+    Result<User> getUser(UUID uuid);
+    
+    static Result<User> user(UUID uuid) {
+        return getInstance().getUser(uuid);
     }
 
-    public Result<User> getUser(String username) {
-        return getWrapper().getUser(username);
-    }
-
-    public Result<User> getUser(long discordUserId) {
-        return getWrapper().getUser(discordUserId);
-    }
-
-    public Result<Clan> getClan(String tag) {
-        return getWrapper().getClan(tag);
-    }
-
-    public Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator) {
-        return getWrapper().createClan(name, tag, operator);
-    }
-
-    public Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator, long foundingDate) {
-        return getWrapper().createClan(name, tag, operator, foundingDate);
-    }
-
-    public Result<Server> getServer(long identifier) {
-        return getWrapper().getServer(identifier);
-    }
-    @SuppressWarnings("WarningMarkers")
-    @Warning(message = "Ordering a server could take more than 30 seconds. Use this method only if you know what you're doing.", suppress = "Okay, I understand")
-    public Result<Server> createServer(int templateId, ServerGroup group) {
-        return getWrapper().createServer(templateId, group);
-    }
-
-    @SuppressWarnings("SafetyWarnings")
-    public Collection<Server> getServers() {
-        return getWrapper().getServers();
-    }
-
-    public Result<Proxy> getProxy(long identifier) {
-        return getWrapper().getProxy(identifier);
-    }
-
-    public Collection<Proxy> getProxies(String name) {
-        return getWrapper().getProxies(name);
+    /**
+     * Looks for a User with the given username.
+     */
+    Result<User> getUser(String username);
+    
+    static Result<User> user(String username) {
+        return getInstance().getUser(username);
     }
 
     @ApiStatus.Experimental
-    public Result<Proxy> createProxy(String name, int templateId, int maxPlayers) {
-        return getWrapper().createProxy(name, templateId, maxPlayers);
+    Result<User> getUser(long discordUserId);
+    
+    static Result<User> user(long discordUserId) {
+        return getInstance().getUser(discordUserId);
     }
 
-    public Collection<Proxy> getProxies() {
-        return getWrapper().getProxies();
+    /**
+     * Gets a clan by it's changeable tag.
+     */
+    Result<Clan> getClan(String tag);
+    
+    static Result<Clan> clan(String tag) {
+        return getInstance().getClan(tag);
     }
 
-    public Result<ServerGroup> getServerGroup(String name) {
-        return getWrapper().getServerGroup(name);
+    default Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator) {
+        return createClan(name, tag, operator, System.currentTimeMillis());
     }
 
-    public Result<ServerGroup> createServerGroup(String name, int maxPlayers) {
-        return getWrapper().createServerGroup(name, maxPlayers);
+    Result<Clan> createClan(@NonNull String name, @NonNull String tag, @NonNull User operator, long foundingDate);
+
+    /**
+     * Gets a registered server with the given id.
+     */
+    Result<Server> getServer(long identifier);
+    
+    static Result<Server> server(long identifier) {
+        return getInstance().getServer(identifier);
     }
 
-    public Collection<ServerGroup> getServerGroups() {
-        return getWrapper().getServerGroups();
+    /**
+     * Gets all existing servers.
+     */
+    @TimeConsuming
+    Collection<Server> getServers();
+    
+    static Collection<Server> servers() {
+        return getInstance().getServers();
     }
 
-    public Result<PermGroup> getPermissionGroup(String name) {
-        return getWrapper().getPermissionGroup(name);
+    /**
+     * Creates a server instance.
+     * You need a {@link ServerGroup} for sorting purposes.
+     */
+    @SuppressWarnings("WarningMarkers")
+    @Warning(message = "Ordering a server could take more than 30 seconds. Use this method only if you know what you're doing.", suppress = "Okay, I understand")
+    default Result<Server> createServer(int templateId, @NonNull ServerGroup group) {
+        return group.createServer(templateId);
     }
 
-    public Result<PermGroup> createPermissionGroup(String name) {
-        return getWrapper().createPermissionGroup(name);
+    /**
+     * Gets a registered proxy with the given id.
+     */
+    Result<Proxy> getProxy(long identifier);
+    
+    static Result<Proxy> proxy(long identifier) {
+        return getInstance().getProxy(identifier);
     }
 
-    public Collection<PermGroup> getPermissionGroups() {
-        return getWrapper().getPermissionGroups();
+    /**
+     * Creates a proxy instance.
+     */
+    @ApiStatus.Experimental
+    Result<Proxy> createProxy(String name, int templateId, int maxPlayers);
+
+    Collection<Proxy> getProxies(String name);
+    
+    static Collection<Proxy> proxies(String name) {
+        return getInstance().getProxies(name);
     }
 
-    public EventManager getEventManager() {
-        return getWrapper().getEventManager();
+    Collection<Proxy> getProxies();
+    
+    static Collection<Proxy> proxies() {
+        return getInstance().getProxies();
     }
 
-    public Statistics getStatistics() {
-        return getWrapper().getStatistics();
+    Result<ServerGroup> getServerGroup(String type);
+    
+    static Result<ServerGroup> serverGroup(String type) {
+        return getInstance().getServerGroup(type);
     }
 
-    public WrapperEnvironment getEnvironment() {
-        return getWrapper().getEnvironment();
+    Collection<ServerGroup> getServerGroups();
+    
+    static Collection<ServerGroup> serverGroups() {
+        return getInstance().getServerGroups();
     }
 
-    public Scheduler getScheduler() {
-        return getWrapper().getScheduler();
+    Result<ServerGroup> createServerGroup(String name, int maxPlayers);
+
+    Result<PermGroup> getPermissionGroup(String name);
+    
+    static Result<PermGroup> permissionGroup(String name) {
+        return getInstance().getPermissionGroup(name);
     }
 
-    public BackendWrapper getWrapper() {
-        //noinspection WeakWarningMarkers
-        return Unsafe.getInstance();
+    Collection<PermGroup> getPermissionGroups();
+    
+    static Collection<PermGroup> permissionGroups() {
+        return getInstance().getPermissionGroups();
+    }
+
+    Result<PermGroup> createPermissionGroup(String name);
+
+    Statistics getStatistics();
+    
+    static Statistics statistics() {
+        return getInstance().getStatistics();
+    }
+
+    Scheduler getScheduler();
+    
+    static Scheduler scheduler() {
+        return getInstance().getScheduler();
+    }
+
+    EventManager getEventManager();
+    
+    static EventManager eventManager() {
+        return getInstance().getEventManager();
+    }
+
+    WrapperEnvironment getEnvironment();
+    
+    static WrapperEnvironment environment() {
+        return getInstance().getEnvironment();
+    }
+
+    static Backend wrapper() {
+        return getInstance();
     }
 }
