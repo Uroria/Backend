@@ -11,17 +11,22 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.proxy.Player;
+import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.util.UUID;
 
+@AllArgsConstructor
 public final class Listeners {
     private final AbstractBackendWrapper wrapper;
+    private final BackendPlugin plugin;
 
-    public Listeners(AbstractBackendWrapper wrapper) {
-        this.wrapper = wrapper;
+    @Subscribe
+    public void onPermissionsSetupEvent(PermissionsSetupEvent setupEvent) {
+        setupEvent.setProvider(plugin.getPermissionProvider());
     }
 
     @Subscribe(order = PostOrder.FIRST)

@@ -14,6 +14,7 @@ import com.uroria.backend.impl.utils.WrapperUtils;
 import com.uroria.backend.proxy.Proxy;
 import com.uroria.backend.proxy.events.ProxyDeletedEvent;
 import com.uroria.backend.proxy.events.ProxyUpdatedEvent;
+import com.uroria.backend.velocity.perm.BackendPermissionProvider;
 import com.uroria.base.event.EventManager;
 import com.uroria.base.event.Listener;
 import com.uroria.base.utils.ThreadUtils;
@@ -23,6 +24,7 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,12 +40,15 @@ public final class BackendPlugin {
     private final Logger logger;
     private final ProxyServer proxyServer;
     private final AbstractBackendWrapper wrapper;
+    @Getter
+    private final BackendPermissionProvider permissionProvider;
     private Proxy proxy;
     private Broadcaster<ProxyPing> ping;
 
     @Inject
     public BackendPlugin(Logger logger, ProxyServer proxyServer) {
         this.proxyServer = proxyServer;
+        this.permissionProvider = new BackendPermissionProvider(logger);
         try {
             this.wrapper = BackendInitializer.initialize();
             this.logger = wrapper.getLogger();
@@ -63,7 +68,7 @@ public final class BackendPlugin {
             this.wrapper.start();
             if (!this.wrapper.isStarted())
                 throw new IllegalStateException("Wrapper was never started or plugin has been illegally reloaded");
-            proxyServer.getEventManager().register(this, new Listeners(this.wrapper));
+            proxyServer.getEventManager().register(this, new Listeners(this.wrapper, this));
             if (Application.isOffline()) {
                 this.logger.warn("Running in offline mode. No connections will be established");
                 serverSetupIfOffline();
