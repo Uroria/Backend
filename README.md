@@ -41,3 +41,13 @@ graph LR
     SERVER --> |Query data| DB1[MongoDB]
     SERVER --> |Query other data| DB2[SurrealDB]
 ```
+
+# Off-topic
+
+#### Language-keys
+| Key                      | Description                                                       |
+|--------------------------|-------------------------------------------------------------------|
+| kick.format              | The kick screen format                                            |
+| backend.perm.applyError  | In case of an exception while trying to apply permission-provider |
+| backend.user.unfetchable | When the user is not fetch able via Backend                       |
+| backend.user.joinError   | When the user is unable to join                                   |

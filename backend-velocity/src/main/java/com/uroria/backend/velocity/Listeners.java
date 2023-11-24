@@ -4,7 +4,10 @@ import com.uroria.backend.cache.BackendObject;
 import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.impl.AbstractBackendWrapper;
 import com.uroria.backend.impl.user.UserWrapper;
+import com.uroria.backend.impl.utils.TranslationUtils;
 import com.uroria.backend.user.User;
+import com.uroria.base.lang.Language;
+import com.uroria.base.lang.Translation;
 import com.uroria.problemo.result.Result;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
@@ -38,12 +41,13 @@ public final class Listeners {
                 UUID uuid = player.getUniqueId();
                 Result<User> userResult = this.wrapper.getUser(uuid);
                 if (userResult instanceof Result.Problematic<User> problematic) {
-                    disallow(loginEvent, problematic.getProblem().getCause());
-                    return;
+                    throw new RuntimeException(problematic.getProblem().getCause());
                 }
                 UserWrapper user = (UserWrapper) userResult.get();
                 if (user == null) {
-                    disallow(loginEvent, "Unable to fetch user. Please try again later.");
+                    loginEvent.setResult(ResultedEvent.ComponentResult.denied(TranslationUtils.disconnect(
+                            Translation.component(Language.DEFAULT, "backend.user.unfetchable")
+                    )));
                     return;
                 }
                 String username = player.getUsername();
@@ -60,14 +64,12 @@ public final class Listeners {
                 user.setLastJoin(currentMs);
                 user.getClan();
             } catch (Exception exception) {
-                disallow(loginEvent, "Internal connection error. Please try again later.");
+                loginEvent.setResult(ResultedEvent.ComponentResult.denied(TranslationUtils.disconnect(
+                        Translation.component(Language.DEFAULT, "backend.user.joinError"),
+                        exception.getMessage()
+                )));
                 wrapper.getLogger().error("Unexpected exception while login", exception);
             }
         });
-    }
-
-    private void disallow(LoginEvent loginEvent, String reason) {
-        wrapper.getLogger().warn(loginEvent.getPlayer().getUniqueId() + " kicked with reason: " + reason);
-        loginEvent.setResult(ResultedEvent.ComponentResult.denied(Component.text(reason, NamedTextColor.RED)));
     }
 }

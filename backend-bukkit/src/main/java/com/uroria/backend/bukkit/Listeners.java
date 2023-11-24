@@ -2,8 +2,10 @@ package com.uroria.backend.bukkit;
 
 import com.uroria.backend.Backend;
 import com.uroria.backend.impl.AbstractBackendWrapper;
+import com.uroria.backend.impl.utils.TranslationUtils;
 import com.uroria.backend.user.User;
 import com.uroria.base.lang.Language;
+import com.uroria.base.lang.Translation;
 import com.uroria.problemo.result.Result;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -39,38 +41,44 @@ public final class Listeners implements Listener {
             permField.set(player, new BackendPermissible(user));
         } catch (Exception exception) {
             wrapper.getLogger().error("Cannot apply permField to player", exception);
-            loginEvent.disallow(PlayerLoginEvent.Result.KICK_OTHER, Component.text("Permission exception: " + exception.getMessage()));
+            loginEvent.disallow(PlayerLoginEvent.Result.KICK_OTHER, TranslationUtils.disconnect(
+                    Translation.component(Language.DEFAULT, "backend.perm.applyError"),
+                    exception.getMessage()
+            ));
         }
     }
 
     @SuppressWarnings("SafetyWarnings")
     @EventHandler (priority = EventPriority.LOWEST)
     public void onPlayerLogin(AsyncPlayerPreLoginEvent loginEvent) {
-        UUID uuid = loginEvent.getUniqueId();
-        Result<User> userResult = wrapper.getUser(uuid);
-        if (userResult instanceof Result.Problematic<User> problematic) {
-            disallow(loginEvent, problematic.getProblem().getCause());
-            return;
+        try {
+            UUID uuid = loginEvent.getUniqueId();
+            Result<User> userResult = wrapper.getUser(uuid);
+            if (userResult instanceof Result.Problematic<User> problematic) {
+                throw new RuntimeException(problematic.getProblem().getCause());
+            }
+            User user = userResult.get();
+            if (user == null) {
+                loginEvent.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, TranslationUtils.disconnect(
+                        Translation.component(Language.DEFAULT, "backend.user.unfetchable")
+                ));
+                return;
+            }
+            String username = loginEvent.getName();
+            String current = user.getUsername();
+            if (!username.equals(current)) {
+                user.setUsername(username);
+            }
+            user.setLanguage(Language.ENGLISH);
+            user.setLastJoin(0);
+            user.setPlaytime(2005);
+            user.getClan(); // Just to verify the clan may be loaded
+        } catch (Exception exception) {
+            loginEvent.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, TranslationUtils.disconnect(
+                    Translation.component(Language.DEFAULT, "backend.user.joinError"),
+                    exception.getMessage()
+            ));
         }
-        User user = userResult.get();
-        if (user == null) {
-            disallow(loginEvent, "Unable to fetch user. Please try again later.");
-            return;
-        }
-        String username = loginEvent.getName();
-        String current = user.getUsername();
-        if (!username.equals(current)) {
-            user.setUsername(username);
-        }
-        user.setLanguage(Language.ENGLISH);
-        user.setLastJoin(0);
-        user.setPlaytime(2005);
-        user.getClan(); // Just to verify the clan may be loaded
-    }
-
-    private void disallow(AsyncPlayerPreLoginEvent loginEvent, String reason) {
-        wrapper.getLogger().warn(loginEvent.getUniqueId() + " kicked with reason: " + reason);
-        loginEvent.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Component.text(reason, NamedTextColor.RED));
     }
 
     private Field getPermField() {
