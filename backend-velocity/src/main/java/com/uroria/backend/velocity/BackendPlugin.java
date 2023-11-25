@@ -32,9 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Plugin(
-        id = "backend",
-        name = "Backend",
-        authors = "Verklickt"
+        id = "backend"
 )
 public final class BackendPlugin {
     private final Logger logger;
@@ -51,10 +49,16 @@ public final class BackendPlugin {
         this.permissionProvider = new BackendPermissionProvider(logger);
         try {
             this.wrapper = BackendInitializer.initialize();
-            this.logger = wrapper.getLogger();
-            WrapperUtils.getServerId(logger).ifPresent(id -> wrapper.getEnvironment().setProxyId(id));
-            WrapperUtils.getTemplateId(logger).ifPresent(id -> wrapper.getEnvironment().setTemplateId(id));
-            WrapperUtils.getGroupName().ifPresent(name -> wrapper.getEnvironment().setProxyGroupName(name));
+            this.logger = logger;
+            WrapperUtils.getServerId(logger).ifPresentOrElse(id -> wrapper.getEnvironment().setProxyId(id), () -> {
+                logger.warn("No server-id found");
+            });
+            WrapperUtils.getTemplateId(logger).ifPresentOrElse(id -> wrapper.getEnvironment().setTemplateId(id), () -> {
+                logger.warn("No template-id found");
+            });
+            WrapperUtils.getGroupName().ifPresentOrElse(name -> wrapper.getEnvironment().setProxyGroupName(name), () -> {
+                logger.warn("No group-name found");
+            });
         } catch (Exception exception) {
             LoggerFactory.getLogger("BackendEmergency").error("Unable to initialize", exception);
             proxyServer.shutdown();

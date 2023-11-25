@@ -36,9 +36,15 @@ public final class BackendPlugin extends JavaPlugin {
         try {
             this.wrapper = BackendInitializer.initialize();
             this.logger = this.wrapper.getLogger();
-            WrapperUtils.getServerId(logger).ifPresent(id -> wrapper.getEnvironment().setServerId(id));
-            WrapperUtils.getTemplateId(logger).ifPresent(id -> wrapper.getEnvironment().setTemplateId(id));
-            WrapperUtils.getGroupName().ifPresent(name -> wrapper.getEnvironment().setServerGroupName(name));
+            WrapperUtils.getServerId(logger).ifPresentOrElse(id -> wrapper.getEnvironment().setServerId(id), () -> {
+                logger.warn("No server-id found");
+            });
+            WrapperUtils.getTemplateId(logger).ifPresentOrElse(id -> wrapper.getEnvironment().setTemplateId(id), () -> {
+                logger.warn("No template-id found");
+            });
+            WrapperUtils.getGroupName().ifPresentOrElse(name -> wrapper.getEnvironment().setServerGroupName(name), () -> {
+                logger.warn("No group-name found");
+            });
             this.wrapper.getEventManager().subscribe(new Listener<>(ServerUpdatedEvent.class, 1) {
                 @Override
                 public void onEvent(ServerUpdatedEvent event) {
