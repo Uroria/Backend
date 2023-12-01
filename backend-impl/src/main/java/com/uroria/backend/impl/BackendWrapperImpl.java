@@ -36,6 +36,8 @@ import java.util.UUID;
 
 @Getter
 public final class BackendWrapperImpl extends AbstractBackendWrapper {
+    @Getter
+    private static BackendWrapperImpl instance;
     private final Scheduler scheduler;
     private final Communicator communicator;
     private final UserManager userManager;
@@ -50,6 +52,7 @@ public final class BackendWrapperImpl extends AbstractBackendWrapper {
 
     BackendWrapperImpl(@NonNull Logger logger) {
         super(logger);
+        instance = this;
         available = true;
         this.scheduler = SchedulerFactory.create("Scheduler");
         try {

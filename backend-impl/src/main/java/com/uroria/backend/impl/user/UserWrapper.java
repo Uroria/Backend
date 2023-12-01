@@ -4,6 +4,7 @@ import com.uroria.backend.Backend;
 import com.uroria.backend.cache.Wrapper;
 import com.uroria.backend.cache.WrapperManager;
 import com.uroria.backend.clan.Clan;
+import com.uroria.backend.impl.BackendInitializer;
 import com.uroria.backend.impl.stats.StatsManager;
 import com.uroria.backend.permission.PermGroup;
 import com.uroria.backend.permission.Permission;
@@ -25,6 +26,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,6 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 public final class UserWrapper extends Wrapper implements User {
     private final StatsManager statsManager;

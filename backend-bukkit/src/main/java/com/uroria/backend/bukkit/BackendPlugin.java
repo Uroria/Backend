@@ -19,6 +19,7 @@ import com.uroria.base.event.Listener;
 import com.uroria.base.utils.ThreadUtils;
 import com.uroria.problemo.result.Result;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
