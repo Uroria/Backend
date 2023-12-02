@@ -11,7 +11,3 @@ dependencies {
     compileOnly("com.velocitypowered:velocity-api:${velocityVersion}")
     annotationProcessor("com.velocitypowered:velocity-api:${velocityVersion}")
 }
-
-tasks.shadowJar {
-    relocate("it.unimi.dsi.fastutil", "com.uroria.fastutils")
-}
