@@ -10,9 +10,10 @@ import com.uroria.backend.service.commands.CommandManager;
 import com.uroria.backend.service.configuration.MongoConfiguration;
 import com.uroria.backend.service.configuration.RedisConfiguration;
 import com.uroria.backend.service.console.BackendConsole;
-import com.uroria.backend.service.modules.BackendModule;
 import com.uroria.backend.service.modules.ControllableModule;
+import com.uroria.backend.service.modules.clan.ClanModule;
 import com.uroria.backend.service.modules.perm.PermModule;
+import com.uroria.backend.service.modules.proxy.ProxyModule;
 import com.uroria.backend.service.modules.server.ServerModule;
 import com.uroria.backend.service.modules.server.group.ServerGroupModule;
 import com.uroria.backend.service.modules.user.UserModule;
@@ -25,21 +26,21 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
+@Getter
 public final class BackendServer {
     private static final Logger LOGGER = LoggerFactory.getLogger("Backend");
 
-    @Getter private boolean running;
-    @Getter private final CommandManager commandManager;
-    @Getter private final BackendConsole console;
-    @Getter private final ObjectSet<ControllableModule> modules;
-    @Getter private final Communicator communicator;
-    @Getter private final MongoClient mongo;
-    @Getter private final MongoDatabase database;
-    @Getter private final RedisClient redis;
-    @Getter private final StatefulRedisConnection<String, String> redisCache;
+    private boolean running;
+    private final CommandManager commandManager;
+    private final BackendConsole console;
+    private final ObjectSet<ControllableModule> modules;
+    private final Communicator communicator;
+    private final MongoClient mongo;
+    private final MongoDatabase database;
+    private final RedisClient redis;
+    private final StatefulRedisConnection<String, String> redisCache;
 
     public BackendServer() {
         long start = System.currentTimeMillis();
@@ -82,6 +83,8 @@ public final class BackendServer {
             this.modules.add(new PermModule(this));
             this.modules.add(new ServerGroupModule(this));
             this.modules.add(new ServerModule(this));
+            this.modules.add(new ProxyModule(this));
+            this.modules.add(new ClanModule(this));
         } catch (Exception exception) {
             LOGGER.error("Unable to initialize some module", exception);
             try {
@@ -179,7 +182,7 @@ public final class BackendServer {
         LOGGER.info("Shutdown in " + (System.currentTimeMillis() - start) + "ms");
     }
 
-    private void shutdownRabbit() throws IOException {
+    private void shutdownRabbit() {
         LOGGER.info("Shutting down Rabbit connection");
         this.communicator.close();
     }

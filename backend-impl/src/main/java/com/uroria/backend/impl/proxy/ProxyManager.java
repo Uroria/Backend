@@ -31,7 +31,7 @@ public final class ProxyManager extends StatedManager<ProxyWrapper> {
     private final Requester<GetAllProxiesRequest, GetAllProxiesResponse> allGet;
 
     public ProxyManager(BackendWrapperImpl wrapper) {
-        super(logger, wrapper, "proxies");
+        super(logger, wrapper, "proxy");
         this.idCheck = requestPoint.registerRequester(GetProxyRequest.class, GetProxyResponse.class, "CheckId");
         this.allGet = requestPoint.registerRequester(GetAllProxiesRequest.class, GetAllProxiesResponse.class, "GetAll");
     }
@@ -95,6 +95,10 @@ public final class ProxyManager extends StatedManager<ProxyWrapper> {
         if (!wrapper.isAvailable()) throw new UnavailableException();
         long id = System.currentTimeMillis() + new Random().nextLong(10000) - maxPlayers - templateId;
         Result<GetProxyResponse> result = this.idCheck.request(new GetProxyRequest(id, true), 5000);
+        if (result instanceof Result.Problematic<GetProxyResponse> problematic) {
+            logger.error("Cannot create new proxy wrapper", problematic.getAsProblematic().getProblem().getError().orElse(null));
+            return null;
+        }
         GetProxyResponse response = result.get();
         if (response == null) return null;
         if (!response.isExistent()) return null;

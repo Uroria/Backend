@@ -187,9 +187,9 @@ public final class BackendWrapperImpl extends AbstractBackendWrapper {
     @Override
     public Result<Proxy> createProxy(String name, int templateId, int maxPlayers) {
         try {
-            if (name == null) return Result.none();
-            if (templateId == 0) return Result.none();
-            if (maxPlayers == 0) return Result.none();
+            if (name == null) throw new NullPointerException("Name cannot be null");
+            if (templateId == 0) throw new IllegalArgumentException("templateId cannot be 0");
+            if (maxPlayers == 0) throw new IllegalArgumentException("maxPlayers cannot be 0");
             ProxyWrapper wrapper = this.proxyManager.createProxyWrapper(name, templateId, maxPlayers);
             if (wrapper == null) return Result.none();
             return Result.some(wrapper);

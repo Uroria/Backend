@@ -28,7 +28,7 @@ public class ResponsePoint extends CommunicationPoint {
         this.responsers = new ObjectArraySet<>();
         try {
             this.channel.exchangeDeclare(this.topic, BuiltinExchangeType.FANOUT);
-            this.channel.queueBind(queue, this.topic, "ignored");
+            this.channel.queueBind(queue, this.topic, "");
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
@@ -74,14 +74,22 @@ public class ResponsePoint extends CommunicationPoint {
 
         RequestThread(ResponsePoint point) {
             super(point);
+            point.logger().info("Initializing request-thread for " + point.topic);
             this.point = point;
         }
 
         @Override
         public void run() {
+            point.logger().info("Starting request-thread for " + point.topic);
             while (point.channel.isOpen()) {
-                if (!isAlive()) return;
-                if (isInterrupted()) return;
+                if (!isAlive()) {
+                    point.logger().info("request-thread of " + point.topic + " is dead");
+                    return;
+                }
+                if (isInterrupted()) {
+                    point.logger().info("request-thread of " + point.topic + " was interrupted");
+                    return;
+                }
                 AMQP.BasicProperties properties;
                 byte[] bytes;
                 try {
@@ -89,18 +97,18 @@ public class ResponsePoint extends CommunicationPoint {
                     if (response == null) continue;
                     properties = response.getProps();
                     bytes = response.getBody();
-                } catch (IOException ignored) {
-                    continue;
                 } catch (Exception exception) {
+                    if (!point.channel.isOpen()) continue;
                     this.point.logger().error("Unable to consume message for topic " + point.topic, exception);
                     continue;
                 }
                 if (bytes == null || properties == null) {
-                    return;
+                    continue;
                 }
                 CompletableFuture.runAsync(() -> {
                     //noinspection SpellCheckingInspection
                     try {
+                        point.logger().info("Reading");
                         BackendInputStream input = new BackendInputStream(bytes);
                         String messageType = input.readUTF();
                         JsonElement element = input.readJsonElement();
@@ -116,6 +124,7 @@ public class ResponsePoint extends CommunicationPoint {
                                 .appId(properties.getAppId())
                                 .correlationId(properties.getCorrelationId())
                                 .build();
+                        point.logger().info("Replying");
                         this.point.channel.basicPublish("", properties.getReplyTo(), responseProperties, output.toByteArray());
                     } catch (IOException ignored) {
                         /*
@@ -132,6 +141,7 @@ public class ResponsePoint extends CommunicationPoint {
                     }
                 });
             }
+            point.logger().info("Closed request-thread " + point.topic);
         }
 
         private <REQ extends Request, RES extends Response> RES request(Responser<REQ, RES> responser, JsonElement element) {

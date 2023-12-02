@@ -23,7 +23,6 @@ public final class Requester<REQ extends Request, RES extends Response> {
     private final String messageType;
     private final Class<REQ> requestClass;
     private final Class<RES> responseClass;
-    private final ObjectSet<String> openedRequests;
     private final Channel channel;
 
     Requester(RequestPoint point, String messageType, Class<REQ> requestClass, Class<RES> responseClass) {
@@ -31,12 +30,12 @@ public final class Requester<REQ extends Request, RES extends Response> {
         this.messageType = messageType;
         this.requestClass = requestClass;
         this.responseClass = responseClass;
-        this.openedRequests = new ObjectArraySet<>();
         this.channel = point.getChannel();
     }
     
     public Result<RES> request(@NonNull REQ request, long timeoutMs) {
         point.logger().info("Requesting on topic " + messageType + " with timeout " + timeoutMs);
+        long start = System.currentTimeMillis();
         try {
             JsonElement element = request.toElement();
             BackendOutputStream output = new BackendOutputStream();
@@ -50,10 +49,8 @@ public final class Requester<REQ extends Request, RES extends Response> {
                     .replyTo(this.point.getQueue())
                     .build();
 
-            this.openedRequests.add(correlationId);
-            this.channel.basicPublish(point.getTopic(), "ignored", properties, output.toByteArray());
+            this.channel.basicPublish(point.getTopic(), "", properties, output.toByteArray());
 
-            long start = System.currentTimeMillis();
             while (true) {
                 if ((System.currentTimeMillis() - start) > timeoutMs) return Result.none();
                 GetResponse response = this.channel.basicGet(this.point.getQueue(), false);
@@ -67,15 +64,14 @@ public final class Requester<REQ extends Request, RES extends Response> {
                 }
                 String id = responseProps.getCorrelationId();
                 if (id == null || !id.equals(correlationId)) {
-                    if (!openedRequests.contains(id)) {
-                        this.channel.basicNack(deliveryTag, false, false);
-                        continue;
-                    }
                     this.channel.basicNack(deliveryTag, false, true);
                     continue;
                 }
                 this.channel.basicAck(deliveryTag, false);
+
                 byte[] bytes = response.getBody();
+
+                point.logger().info("Received response on topic " + messageType + " in " + (System.currentTimeMillis() - start) + "ms");
 
                 BackendInputStream input = new BackendInputStream(bytes);
                 JsonElement responseElement = input.readJsonElement();
@@ -84,6 +80,7 @@ public final class Requester<REQ extends Request, RES extends Response> {
                 return Result.some(Communicator.getGson().fromJson(responseElement, getResponseClass()));
             }
         } catch (Exception exception) {
+            point.logger().error("Cannot request " + messageType, exception);
             return Result.problem(Problem.error(exception));
         }
     }

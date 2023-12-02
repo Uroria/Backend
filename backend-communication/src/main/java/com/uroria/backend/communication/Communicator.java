@@ -21,9 +21,7 @@ public class Communicator {
     public void close() {
         try {
             this.connection.close();
-        } catch (Exception exception) {
-            logger.error("Unable to close connection to rabbitmq", exception);
-        }
+        } catch (Exception ignored) {}
     }
 
     public final Logger getLogger() {
