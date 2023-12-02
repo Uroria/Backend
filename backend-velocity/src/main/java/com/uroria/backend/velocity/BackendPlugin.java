@@ -59,6 +59,7 @@ public final class BackendPlugin {
             WrapperUtils.getGroupName().ifPresentOrElse(name -> wrapper.getEnvironment().setProxyGroupName(name), () -> {
                 logger.warn("No group-name found");
             });
+            setupProxy();
         } catch (Exception exception) {
             LoggerFactory.getLogger("BackendEmergency").error("Unable to initialize", exception);
             proxyServer.shutdown();
@@ -66,13 +67,11 @@ public final class BackendPlugin {
         }
     }
 
-    @Subscribe
-    public void onProxyInitializeEvent(ProxyInitializeEvent event) {
+    private void setupProxy() {
         try {
             this.wrapper.start();
             if (!this.wrapper.isStarted())
                 throw new IllegalStateException("Wrapper was never started or plugin has been illegally reloaded");
-            proxyServer.getEventManager().register(this, new Listeners(this.wrapper, this));
             if (Application.isOffline()) {
                 this.logger.warn("Running in offline mode. No connections will be established");
                 serverSetupIfOffline();
@@ -83,9 +82,24 @@ public final class BackendPlugin {
             if (this.proxy == null) {
                 int templateId = environment.getTemplateId().orElseThrow(() -> new IllegalStateException("Template and proxy id were never assigned"));
                 String groupName = environment.getProxyName().orElseThrow(() -> new IllegalStateException("Group and proxy id were never assigned besides templateId"));
+                long id = environment.getProxyId().orElseThrow(() -> new IllegalStateException("Id not assigned"));
+                logger.info("Trying to create new proxy with name " + groupName + " and templateId " + templateId);
+                if (this.wrapper instanceof BackendWrapperImpl unsafeWrapper) {
+                    unsafeWrapper.getProxyManager().createProxyWrapper(groupName, templateId, 500, id);
+                }
                 this.proxy = Backend.wrapper().createProxy(groupName, templateId, 999).get();
                 if (proxy == null) throw new IllegalStateException("Proxy still null after registration");
             }
+        } catch (Exception exception) {
+            this.logger.error("Cannot initialize backend", exception);
+            this.proxyServer.shutdown();
+        }
+    }
+
+    @Subscribe
+    public void onProxyInitializeEvent(ProxyInitializeEvent event) {
+        try {
+            proxyServer.getEventManager().register(this, new Listeners(this.wrapper, this));
             EventManager eventManager = this.wrapper.getEventManager();
             eventManager.subscribe(new Listener<>(ProxyUpdatedEvent.class, 1) {
                 @Override

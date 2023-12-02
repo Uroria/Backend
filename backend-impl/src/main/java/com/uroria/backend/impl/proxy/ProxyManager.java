@@ -92,8 +92,12 @@ public final class ProxyManager extends StatedManager<ProxyWrapper> {
     }
 
     public ProxyWrapper createProxyWrapper(String name, int templateId, int maxPlayers) {
-        if (!wrapper.isAvailable()) throw new UnavailableException();
         long id = System.currentTimeMillis() + new Random().nextLong(10000) - maxPlayers - templateId;
+        return createProxyWrapper(name, templateId, maxPlayers, id);
+    }
+
+    public ProxyWrapper createProxyWrapper(String name, int templateId, int maxPlayers, long id) {
+        if (!wrapper.isAvailable()) throw new UnavailableException();
         Result<GetProxyResponse> result = this.idCheck.request(new GetProxyRequest(id, true), 5000);
         if (result instanceof Result.Problematic<GetProxyResponse> problematic) {
             logger.error("Cannot create new proxy wrapper", problematic.getAsProblematic().getProblem().getError().orElse(null));

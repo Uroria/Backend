@@ -141,7 +141,7 @@ public final class UserWrapper extends Wrapper implements User {
         final String[] nodeParts = node.split("\\.");
         final StringBuilder currentNode = new StringBuilder();
         int i = 0;
-        while (i <= nodeParts.length) {
+        while (i < nodeParts.length) {
             if (i > 0) currentNode.append(".");
 
             currentNode.append(nodeParts[i]);
