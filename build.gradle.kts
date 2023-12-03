@@ -47,26 +47,10 @@ subprojects {
     }
 
     val baseVersion: String by project.extra
-    val adventureVersion = "4.14.0"
 
     dependencies {
-        implementation("com.uroria:base:${baseVersion}")
+        api("com.uroria:base:${baseVersion}")
         annotationProcessor("com.uroria:base:${baseVersion}")
-
-        implementation("com.google.code.gson:gson:2.10.1")
-
-        compileOnly("org.jetbrains:annotations:24.1.0")
-        compileOnly("org.projectlombok:lombok:1.18.30")
-        annotationProcessor("org.jetbrains:annotations:24.1.0")
-        annotationProcessor("org.projectlombok:lombok:1.18.30")
-
-        implementation("it.unimi.dsi:fastutil:8.5.12")
-
-        implementation("net.kyori:adventure-api:${adventureVersion}")
-        implementation("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
-        implementation("net.kyori:adventure-text-minimessage:${adventureVersion}")
-        implementation("net.kyori:adventure-text-serializer-plain:${adventureVersion}")
-        implementation("net.kyori:adventure-text-serializer-legacy:${adventureVersion}")
     }
 
     tasks {
@@ -77,10 +61,6 @@ subprojects {
         }
         shadowJar {
             transform(Log4j2PluginsCacheFileTransformer::class.java)
-
-            relocate("it.unimi.dsi.fastutil", "com.uroria.backend.fastutils")
-
-            minimize()
         }
     }
 
